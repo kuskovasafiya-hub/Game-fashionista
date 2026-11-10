@@ -1,7 +1,8 @@
 import { useState } from 'preact/hooks';
 import { Doll } from '../art/Doll';
-import { resetGame, useGame, type LevelUp } from '../game/store';
+import { useGame, type LevelUp } from '../game/store';
 import { CreateScreen } from './CreateScreen';
+import { DEBUG_ENABLED, DebugPanel } from './DebugPanel';
 import { ShopScreen, ShopsScreen } from './ShopScreen';
 import { WardrobeScreen } from './WardrobeScreen';
 import { EnergyModal, Hud, LevelUpModal } from './common';
@@ -13,8 +14,16 @@ export function App() {
   const [route, setRoute] = useState<Route>({ name: 'home' });
   const [energyOpen, setEnergyOpen] = useState(false);
   const [levelUp, setLevelUp] = useState<LevelUp | null>(null);
+  const [debugOpen, setDebugOpen] = useState(false);
 
-  if (!g.created) return <div class="app"><CreateScreen /></div>;
+  const debug = DEBUG_ENABLED && (
+    <>
+      <button class="dbg-fab" onClick={() => setDebugOpen(true)} aria-label="Панель разработчика">🛠</button>
+      {debugOpen && <DebugPanel onClose={() => setDebugOpen(false)} onLevelUp={setLevelUp} />}
+    </>
+  );
+
+  if (!g.created) return <div class="app"><CreateScreen />{debug}</div>;
 
   const back = route.name === 'shop' ? () => setRoute({ name: 'shops' }) : () => setRoute({ name: 'home' });
 
@@ -33,9 +42,6 @@ export function App() {
               <button class="btn big violet" onClick={() => setRoute({ name: 'wardrobe' })}>👗 Гардероб</button>
               <button class="btn big" disabled>🎉 Ивенты <small>скоро</small></button>
             </div>
-            <button class="link" onClick={() => { if (confirm('Начать игру заново? Весь прогресс удалится.')) resetGame(); }}>
-              Сбросить прогресс
-            </button>
           </div>
         )}
         {route.name === 'shops' && <ShopsScreen open={(id) => setRoute({ name: 'shop', id })} />}
@@ -47,6 +53,7 @@ export function App() {
       {route.name !== 'home' && <button class="back" onClick={back}>←</button>}
       {energyOpen && <EnergyModal onClose={() => setEnergyOpen(false)} />}
       {levelUp && <LevelUpModal lu={levelUp} onClose={() => setLevelUp(null)} />}
+      {debug}
     </div>
   );
 }

@@ -214,3 +214,37 @@ button:disabled { cursor: default; }
 .price { font-size: 20px; font-weight: 800; margin: 4px 0; }
 .burst { font-size: 56px; animation: pop 0.5s; }
 .rewards { list-style: none; padding: 0; margin: 8px 0; font-weight: 700; line-height: 1.9; }
+
+/* Debug panel (dev builds, or ?debug in the URL) */
+.dbg-fab {
+  position: absolute; right: 10px; top: 62px; z-index: 9; width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.75); font-size: 18px; box-shadow: 0 2px 8px rgba(80, 20, 60, 0.2);
+}
+.overlay:has(.dbg) { place-items: end center; padding: 8px; z-index: 20; }
+.modal.dbg { max-width: 460px; max-height: 88%; text-align: left; padding: 14px 16px 18px; border-radius: 22px; }
+.dbg-head { display: flex; align-items: center; justify-content: space-between; }
+.dbg-head h2 { margin: 0; font-size: 18px; }
+.dbg-close { width: 32px; height: 32px; border-radius: 50%; background: #f6e7ef; font-weight: 800; }
+.dbg section { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.dbg section:last-of-type { border-bottom: none; }
+.dbg h3 { margin: 0 0 8px; font-size: 14px; }
+.dbg h3 small { margin-left: 6px; color: var(--muted); font-weight: 600; }
+.dbg-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.dbg-btn {
+  padding: 7px 11px; border-radius: 10px; background: #f6e7ef; font-size: 13px; font-weight: 700;
+  box-shadow: 0 2px 0 var(--line);
+}
+.dbg-btn:active { transform: translateY(1px); box-shadow: none; }
+.dbg-btn.danger { background: #ffe0e0; color: #c62828; }
+.dbg-row { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.dbg-label { font-size: 13px; color: var(--muted); font-weight: 700; min-width: 76px; }
+.dbg-input {
+  flex: 1; min-width: 0; padding: 7px 10px; border-radius: 10px; border: 2px solid var(--line);
+  font: inherit; font-size: 14px; font-weight: 700; color: var(--ink); background: #fff;
+}
+.dbg-input:focus { outline: none; border-color: var(--pink); }
+.dbg-hint { margin: 8px 0 0; font-size: 11px; color: var(--muted); }
+.dbg-note {
+  position: sticky; bottom: 0; margin-top: 8px; padding: 8px 12px; border-radius: 10px;
+  background: var(--ink); color: #fff; font-size: 13px; font-weight: 700; text-align: center;
+}

@@ -251,3 +251,32 @@ export function resetGame() {
   try { localStorage.removeItem(SAVE_KEY); } catch { /* ignore */ }
   commit(fresh());
 }
+
+/* ---------- debug panel ---------- */
+
+/** Dev helper: patch the save directly (no rewards, no level-up popups). */
+export function debugPatch(patch: Partial<Save> | ((s: Save) => Partial<Save>)) {
+  const p = typeof patch === 'function' ? patch(state) : patch;
+  commit({ ...state, ...p });
+}
+
+/** Dev helper: grant XP through the normal progression, so level rewards apply. */
+export function debugXp(amount: number): LevelUp | null {
+  const [next, levelUp] = withXp(state, amount);
+  commit(next);
+  return levelUp;
+}
+
+/** Dev helper: XP needed to reach the next level from the current progress. */
+export const xpLeft = () => xpToNext(state.level) - state.xp;
+
+export function debugExport(): string { return JSON.stringify(state); }
+
+export function debugImport(json: string): boolean {
+  try {
+    const data = JSON.parse(json);
+    if (!data || typeof data !== 'object') return false;
+    commit({ ...fresh(), ...data });
+    return true;
+  } catch { return false; }
+}
