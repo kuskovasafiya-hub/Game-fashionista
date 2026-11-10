@@ -1,21 +1,26 @@
 import { useState } from 'preact/hooks';
-import { Doll, HAIRSTYLES, type Look, type Outfit } from '../art/Doll';
+import { DEFAULT_LOOK, Doll, HAIRSTYLES, MAKEUPS, SKIN_TONES, type Look, type Outfit } from '../art/Doll';
 import { STARTER, type Slot } from '../game/catalog';
 import { createCharacter } from '../game/store';
 import { ItemCard } from './common';
 
-type Tab = 'hair' | 'clothes' | 'shoes' | 'acc';
-const TABS: [Tab, string][] = [['hair', 'Причёска'], ['clothes', 'Одежда'], ['shoes', 'Обувь'], ['acc', 'Аксессуары']];
+type Tab = 'skin' | 'makeup' | 'hair' | 'clothes' | 'shoes' | 'acc';
+const TABS: [Tab, string][] = [
+  ['skin', 'Кожа'], ['makeup', 'Макияж'], ['hair', 'Причёска'],
+  ['clothes', 'Одежда'], ['shoes', 'Обувь'], ['acc', 'Аксессуары'],
+];
 const HEAD_VIEW: [number, number, number, number] = [312, 20, 400, 440];
+/** Close-up of the face for makeup cards. */
+const FACE_VIEW: [number, number, number, number] = [420, 90, 180, 198];
 const DEFAULT_TOP = 'starter-top-tee-1';
 const DEFAULT_BOTTOM = 'starter-bottom-jeans-1';
 
 export function CreateScreen() {
-  const [look, setLook] = useState<Look>({ hair: 1 });
+  const [look, setLook] = useState<Look>({ ...DEFAULT_LOOK });
   const [outfit, setOutfit] = useState<Outfit>({
     top: DEFAULT_TOP, bottom: DEFAULT_BOTTOM, shoes: 'starter-shoes-sneakers-1',
   });
-  const [tab, setTab] = useState<Tab>('hair');
+  const [tab, setTab] = useState<Tab>('skin');
   const [name, setName] = useState('');
 
   const toggle = (slot: Slot, id: string, required = false) => {
@@ -48,11 +53,31 @@ export function CreateScreen() {
           ))}
         </nav>
         <div class="options">
+          {tab === 'skin' && (
+            <div class="grid">
+              {SKIN_TONES.map((t, i) => (
+                <button class={'card face' + (look.skin === i ? ' selected' : '')} onClick={() => setLook({ ...look, skin: i })}>
+                  <Doll class="thumb" look={{ ...look, skin: i }} outfit={{}} view={HEAD_VIEW} />
+                  <span class="cap"><i class="tone-dot" style={{ background: t.color }} />{t.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {tab === 'makeup' && (
+            <div class="grid">
+              {MAKEUPS.map((m, i) => (
+                <button class={'card face' + (look.makeup === i ? ' selected' : '')} onClick={() => setLook({ ...look, makeup: i })}>
+                  <Doll class="thumb" look={{ ...look, makeup: i }} outfit={{}} view={FACE_VIEW} />
+                  <span class="cap">{m.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
           {tab === 'hair' && (
             <div class="grid">
               {HAIRSTYLES.map((h, i) => (
                 <button class={'card face' + (look.hair === i ? ' selected' : '')} onClick={() => setLook({ ...look, hair: i })}>
-                  <Doll class="thumb" look={{ hair: i }} outfit={{}} view={HEAD_VIEW} />
+                  <Doll class="thumb" look={{ ...look, hair: i }} outfit={{}} view={HEAD_VIEW} />
                   <span class="cap">{h.name}</span>
                 </button>
               ))}

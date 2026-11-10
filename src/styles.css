@@ -118,6 +118,10 @@ button:disabled { cursor: default; }
 .card.face { aspect-ratio: auto; }
 .card.face .thumb { height: 104px; width: auto; }
 .card .cap { font-size: 12px; font-weight: 700; }
+.tone-dot {
+  display: inline-block; width: 10px; height: 10px; margin-right: 4px; border-radius: 50%;
+  vertical-align: -1px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
 .thumb.silhouette { filter: brightness(0); opacity: 0.12; }
 .badge {
   position: absolute; top: 4px; right: 4px; min-width: 20px; height: 20px; padding: 0 4px;

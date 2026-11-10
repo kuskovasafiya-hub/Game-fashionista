@@ -110,9 +110,24 @@ def save_mask(img, mask, out):
     return save_cropped(*matte(img, mask), out)
 
 
-def cmd_body(base_path, out, feet_out=None):
-    """Body without feet (feet go to a separate layer that shoes replace)."""
+def cmd_body(base_path, out, feet_out=None, nobun_path=None, bun_out=None):
+    """Body without feet (feet go to a separate layer that shoes replace).
+
+    With nobun_path (the base edited to a short haircut) the base's low bun is taken
+    out of the body into its own layer, bun_out: otherwise it would stick out from
+    under every other hairstyle. Where the bun covered the jaw and neck, the body
+    takes those pixels from the short-haircut image."""
     img = load(base_path)
+    bun_info = None
+    if nobun_path:
+        other, _ = shift_to(img, load(nobun_path))
+        box = np.zeros(img.shape[:2], bool)
+        box[180:262, 425:500] = True
+        hair = (img.max(axis=2) < 170) & (np.abs(other - img).max(axis=2) > 40) & box
+        bun = ndi.binary_dilation(ndi.binary_closing(hair, iterations=3), iterations=2) & box
+        bun &= ~background_mask(img)
+        bun_info = save_mask(img, bun, bun_out)
+        img = np.where(bun[..., None], other, img)
     fg = foreground(img)
     body = fg.copy()
     body[FEET_Y + 6:] = False          # small overlap with the feet layer hides the seam
@@ -121,6 +136,8 @@ def cmd_body(base_path, out, feet_out=None):
         feet = fg.copy()
         feet[:FEET_Y] = False
         info['feet'] = save_mask(img, feet, feet_out)
+    if bun_info:
+        info['bun'] = bun_info
     return info
 
 
@@ -325,7 +342,14 @@ def show_through(mask, raw, bg, zmask):
     the item's own silhouette (holes, and notches narrower than ~20 px)."""
     solid = ndi.binary_fill_holes(ndi.binary_closing(mask, iterations=10, border_value=0))
     seen = ndi.binary_opening(raw > 22, iterations=1)
-    return solid & seen & ~mask & ~bg & zmask
+    # pinholes are filled whatever is under them: with another skin tone on the body
+    # even skin-over-skin specks would show
+    gaps = solid & ~mask & ~bg & zmask
+    labels, n = ndi.label(gaps)
+    if n:
+        sizes = ndi.sum(gaps, labels, range(1, n + 1))
+        seen |= np.isin(labels, [i + 1 for i, s in enumerate(sizes) if s < 200])
+    return gaps & seen
 
 
 def zone_mask(shape, zone):
@@ -374,10 +398,17 @@ def split_hair(base_path, dressed_path, zone):
     body = foreground(base)
     # the base's glow ring is see-through on the body layer: hair behind it must fill it
     body_solid = body & ~glow_ring(base)
-    light = dressed.min(axis=2) > 200          # glow / speckles, never hair
-    mask &= ~light
+    # glow / speckles: thin light strips, never hair. Bulk light areas are hair
+    # (platinum blonde), and dropping them would bare the base's dark hair beneath.
+    light = dressed.min(axis=2) > 200
+    bulk = ndi.binary_dilation(ndi.binary_opening(light, iterations=3), iterations=3)
+    mask &= ~(light & ~bulk)
     seed = drop_small(mask & ndi.binary_erosion(body, iterations=5), 300)
     front = drop_small(mask & body_solid & ndi.binary_dilation(seed, iterations=5), 300)
+    # whatever the strands enclose belongs to the hairstyle too (forehead between
+    # curls, a bit of highlight that matched the base): a hole would show the base's
+    # own dark hair, or the skin of another tone
+    front = ndi.binary_fill_holes(front) & body_solid & ~background_mask(dressed)
     back = mask & ~body_solid
     # Codex also draws a light glow around the body over the hair behind it: fill that
     # thin strip next to the body with the colour of the nearest strand

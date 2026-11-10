@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import type { Look, Outfit } from '../art/Doll';
+import { DEFAULT_LOOK, type Look, type Outfit } from '../art/Doll';
 import { DEPT_SLOTS, ITEM_BY_ID, RARITY, SHOPS, shopItems, type Dept, type Item, type Rarity, type Slot } from './catalog';
 
 export const ENERGY_MAX = 20;
@@ -39,7 +39,7 @@ export const xpToNext = (level: number) => Math.round(40 * Math.pow(level, 1.4))
 function fresh(): Save {
   return {
     v: 1, created: false, name: '',
-    look: { hair: 1 },
+    look: { ...DEFAULT_LOOK },
     outfit: {}, owned: [], discovered: [], wish: [],
     coins: 1500, gems: 10, energy: ENERGY_MAX, energyTs: Date.now(),
     level: 1, xp: 0, pityRare: 0, pityEpic: 0, adsDay: '', adsCount: 0,
