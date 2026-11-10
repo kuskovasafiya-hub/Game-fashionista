@@ -1,0 +1,6 @@
+node_modules
+dist
+.DS_Store
+art-src/.venv
+art-src/raw/**/*.log
+art-src/cut
