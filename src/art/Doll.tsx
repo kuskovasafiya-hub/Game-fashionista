@@ -78,7 +78,15 @@ export function Doll({ look, outfit, class: cls, view }: {
   const makeup = MAKEUPS[look.makeup ?? 0]?.art;
   const layer = (s: Slot) => {
     const it = items[s];
-    return it ? <Layer name={it.art} filter={it.filter} tone={tone} /> : null;
+    if (!it) return null;
+    // a colour filter would tint the skin the item shows (leg in a slit, ankle in a
+    // shoe): put that skin back on top, unfiltered
+    return (
+      <>
+        <Layer name={it.art} filter={it.filter} tone={tone} />
+        {it.filter && <Layer name={`${it.art}-skin`} tone={tone} />}
+      </>
+    );
   };
   return (
     <div class={'doll ' + (cls ?? '')} style={{ aspectRatio: `${vw} / ${vh}` }}>

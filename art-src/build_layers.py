@@ -104,11 +104,11 @@ def main():
 
 def skin_variants(layers):
     """<name>~<tone>.webp for every layer that shows skin; marks it with 'skin': true."""
-    for old in OUT.glob('*~*.webp'):
+    for old in [*OUT.glob('*~*.webp'), *OUT.glob('*-skin.webp')]:
         old.unlink()
     base = load(str(RAW / 'base.png'))
     mean, under = skin.base_skin_lab(base), skin.underwear_mask(base)
-    for name, box in layers.items():
+    for name, box in list(layers.items()):
         if name.startswith('product-') or name.endswith('-back'):
             continue
         if name in ('body', 'feet'):
@@ -121,9 +121,12 @@ def skin_variants(layers):
             mode = 'colour'        # skin-coloured pixels: necklines, toes in sandals, blush on the face
         tol = 80 if name.startswith('shoes') else 40
         palette = skin.hair_palette(TMP / f'{name}-back.png') if mode == 'hair' else None
+        overlay = mode in ('item', 'colour')       # items can be recoloured with a CSS filter
         if skin.make_variants(name, TMP / f'{name}.png', box, base, under, mean, OUT, mode=mode, tol=tol,
-                              palette=palette):
+                              palette=palette, overlay=overlay):
             box['skin'] = True
+            if overlay:
+                layers[f'{name}-skin'] = {**box}
             print('skin tones', name)
 
 

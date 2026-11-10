@@ -142,9 +142,15 @@ def hair_palette(back_png):
     return ndi.binary_dilation(hist > max(len(q) * 0.0005, 1), iterations=1)
 
 
-def make_variants(name, png, box, base, under, mean_lab, out_dir, mode='item', tol=40.0, palette=None):
+def make_variants(name, png, box, base, under, mean_lab, out_dir, mode='item', tol=40.0, palette=None,
+                  overlay=False):
     """Write <out_dir>/<name>~<tone>.webp for every tone; returns False if the layer
-    has no skin worth recolouring (then no files are written)."""
+    has no skin worth recolouring (then no files are written).
+
+    overlay: also write <name>-skin.webp and <name>-skin~<tone>.webp, the layer's skin
+    alone. An item recoloured with a CSS filter (a sapphire gown, nude heels) would tint
+    the leg in its slit or the ankle in the shoe too; the game draws this overlay on
+    top of the filtered item, unfiltered."""
     rgba = np.asarray(Image.open(png).convert('RGBA'), dtype=np.float64)
     x, y = box['x'], box['y']
     base_crop = base[y:y + rgba.shape[0], x:x + rgba.shape[1]]
@@ -162,10 +168,15 @@ def make_variants(name, png, box, base, under, mean_lab, out_dir, mode='item', t
     w = w * (rgba[..., 3] > 0)
     if (w > 0.5).sum() < 150:
         return False
+    # the overlay must hide the filtered skin under it: half-sure pixels count fully
+    cover = rgba[..., 3] * np.clip(w * 2, 0, 1)
     for tone in TONES:
-        if TONES[tone] is None:
-            continue
-        rgb = recolour(rgba[..., :3], w, mean_lab, tone)
-        img = np.dstack([rgb, rgba[..., 3]]).round().astype(np.uint8)
-        Image.fromarray(img).save(out_dir / f'{name}~{tone}.webp', 'WEBP', quality=88, method=6)
+        rgb = rgba[..., :3] if TONES[tone] is None else recolour(rgba[..., :3], w, mean_lab, tone)
+        suffix = '' if TONES[tone] is None else f'~{tone}'
+        if TONES[tone] is not None:
+            img = np.dstack([rgb, rgba[..., 3]]).round().astype(np.uint8)
+            Image.fromarray(img).save(out_dir / f'{name}{suffix}.webp', 'WEBP', quality=88, method=6)
+        if overlay:
+            img = np.dstack([rgb, cover]).round().astype(np.uint8)
+            Image.fromarray(img).save(out_dir / f'{name}-skin{suffix}.webp', 'WEBP', quality=88, method=6)
     return True
