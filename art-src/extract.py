@@ -19,6 +19,15 @@ from PIL import Image
 from scipy import ndimage as ndi
 
 FEET_Y = 1300  # below this row the doll's feet/shoes live in their own layers
+# Her right hand (viewer's left), below the wrist: its own layer, which a bag replaces
+# with the hand that holds it. (rows from y0, columns x0..x1; the thigh starts at 376)
+HAND_BOX = (740, 240, 368)
+
+
+def hand_box(shape, y0=None):
+    m = np.zeros(shape[:2], bool)
+    m[HAND_BOX[0] if y0 is None else y0:, HAND_BOX[1]:HAND_BOX[2]] = True
+    return m
 BG_TOL = 6     # background pixels are within 6 levels of pure white
 
 
@@ -110,7 +119,7 @@ def save_mask(img, mask, out):
     return save_cropped(*matte(img, mask), out)
 
 
-def cmd_body(base_path, out, feet_out=None, nobun_path=None, bun_out=None):
+def cmd_body(base_path, out, feet_out=None, nobun_path=None, bun_out=None, hand_out=None):
     """Body without feet (feet go to a separate layer that shoes replace).
 
     With nobun_path (the base edited to a short haircut) the base's low bun is taken
@@ -131,13 +140,42 @@ def cmd_body(base_path, out, feet_out=None, nobun_path=None, bun_out=None):
     fg = foreground(img)
     body = fg.copy()
     body[FEET_Y + 6:] = False          # small overlap with the feet layer hides the seam
+    if hand_out:
+        body &= ~hand_box(body.shape, HAND_BOX[0] + 6)
     info = save_mask(img, body, out)
+    if hand_out:
+        info['hand'] = save_mask(img, fg & hand_box(fg.shape), hand_out)
     if feet_out:
         feet = fg.copy()
         feet[:FEET_Y] = False
         info['feet'] = save_mask(img, feet, feet_out)
     if bun_info:
         info['bun'] = bun_info
+    return info
+
+
+def cmd_bag(base_path, dressed_path, out, **kw):
+    """A bag carried in the hand: the bag, plus the whole hand below the wrist as
+    drawn holding it (fingers around the handle). The doll's own hand layer is hidden
+    under a bag, like bare feet under shoes."""
+    # The bag never covers bare skin except the hand, which is added whole below, so
+    # no skin test: a beige bag's shadows look like skin and would be cut out.
+    dressed, mask, offset = layer_mask(base_path, dressed_path, strict=True, skin_coloured=True, **kw)
+    # (not foreground(): that fills holes, and the background inside a handle's loop
+    # is one)
+    near_white = (255 - dressed).max(axis=2) < 12
+    hand = ~background_mask(dressed) & ~near_white & hand_box(mask.shape)
+    hand = ndi.binary_opening(hand, iterations=1)
+    mask |= hand
+    # background seen through a handle's loop, where the base had her fingers: it is
+    # not background on the base, so the cleanup took it for a hole in the bag. Real
+    # white on a bag is only small highlights.
+    labels, n = ndi.label(near_white & mask)
+    if n:
+        sizes = ndi.sum(near_white & mask, labels, range(1, n + 1))
+        mask &= ~np.isin(labels, [i + 1 for i, s in enumerate(sizes) if s > 40])
+    info = save_mask(dressed, mask, out)
+    info['align'] = offset
     return info
 
 
@@ -184,8 +222,10 @@ def drop_small(mask, min_px):
 
 
 def layer_mask(base_path, dressed_path, zone=None, thr=30.0, hair=False, strict=False,
-               near_skin=False, skin_coloured=False, top=False):
-    """Aligned dressed image + boolean mask of the pixels the new item changed."""
+               near_skin=False, skin_coloured=False, top=False, clean=True):
+    """Aligned dressed image + boolean mask of the pixels the new item changed.
+    clean=False skips clean_item: for items that lie on skin entirely (makeup,
+    necklaces), whose colours the skin test cannot tell from the skin under them."""
     global BASE_BG
     base = load(base_path)
     BASE_BG = None
@@ -256,7 +296,95 @@ def layer_mask(base_path, dressed_path, zone=None, thr=30.0, hair=False, strict=
         mask |= show_through(mask, raw, bg, zmask)
         mask &= ~skin_slivers(mask, base, dressed, ink)
         mask = trim_to_outline(mask, base, dressed, raw, skin_coloured)
+    if clean and not hair and not near_skin:
+        mask = clean_item(mask, dressed, bg, raw, zmask, accessory=strict, skin_coloured=skin_coloured)
     return dressed, mask, offset
+
+
+def clean_item(mask, dressed, bg, raw, zmask, accessory=False, skin_coloured=False):
+    """Last pass over an item's mask, checked on the doll over other clothes:
+
+    - skin fringes: Codex redraws the arm or the waist next to an item, and a thin
+      strip of skin (often its orange shadow) lands on the item's edge. Over a sleeve
+      it shows as an orange line. Thin skin pieces on the edge go; an accessory also
+      loses skin that is just the base's skin redrawn (a pink bag or a gold chain can
+      look like skin by colour, but differs from the base). Wide skin in clothes (a
+      neckline, a leg in a slit) stays: the base has underwear or other skin there.
+    - stray lines: bits of the body's own outline, and the glow along them, left
+      without any fabric next to them.
+    - holes: a strap the colour of the skin or the bandeau under it did not differ
+      enough from the base; gaps narrower than ~8 px inside the item are filled.
+    """
+    from skin import skin_weight      # noqa: PLC0415 (skin.py imports nothing from here)
+    v = dressed.max(axis=2)
+    dark = v < 100
+    line = dark & ~ndi.binary_opening(dark, iterations=2)
+    # skin keeps blue well under green (b/g 0.63..0.85); pink and beige fabric do not
+    bg_ratio = dressed[..., 2] / np.maximum(dressed[..., 1], 1)
+    strict = (skin_weight(dressed) > 0.5) & (bg_ratio < 0.85)
+    gr = dressed[..., 1] / np.maximum(dressed[..., 0], 1)
+    loose = (skin_weight(dressed, strict=False) > 0.5) & (gr < 0.76) & (bg_ratio < 0.85)
+    skin = strict | (loose & ndi.binary_dilation(strict, iterations=6))
+    # the soft rim between skin and an ink line belongs with the skin
+    skin |= ndi.binary_dilation(skin, iterations=1) & ~dark & (loose | (v > 150)) & ~(mask & ~skin & ~loose)
+
+    # (fabric that looks like skin in its shadows, a champagne skirt: no skin test)
+    sk = mask & skin if not skin_coloured else np.zeros_like(mask)
+    labels, n = ndi.label(sk, structure=np.ones((3, 3)))
+    if n:
+        idx = range(1, n + 1)
+        thick = ndi.sum(ndi.binary_opening(sk, iterations=3), labels, idx)
+        edge = ndi.binary_dilation(~mask | bg, iterations=2)
+        touch = ndi.maximum(edge, labels, idx)
+        same = ndi.mean(raw, labels, idx)       # redrawn skin barely differs from the base
+        # a fringe lies along the item's edge, not inside it
+        depth = ndi.median(ndi.distance_transform_edt(mask & ~bg), labels, idx)
+        # an accessory has no skin of its own (pink and beige fail the b/g test above,
+        # gold chains skip this pass): any skin in it is the arm seen between handles
+        drop = [i + 1 for i in range(n)
+                if (touch[i] and thick[i] < 60 and depth[i] <= 3) or accessory]
+        mask = mask & ~np.isin(labels, drop)
+
+    # everything must lie within 3 px of real fabric
+    if accessory:
+        # the white glow Codex draws along straps
+        light = dressed.min(axis=2) > 205
+        mask &= ~(light & ~ndi.binary_opening(light, iterations=2))
+        # and background trapped between a handle and the arm: near-white pieces that
+        # reach the item's outside (a highlight on a clasp is enclosed by the clasp)
+        white = mask & (dressed.min(axis=2) > 238)
+        labels, n = ndi.label(white)
+        if n:
+            outside = ndi.binary_dilation(~mask, iterations=1)
+            touching = np.unique(labels[outside & white])
+            mask &= ~np.isin(labels, touching[touching > 0])
+
+    def fill_gaps(m):
+        closed = ndi.binary_fill_holes(ndi.binary_closing(m, iterations=4, border_value=0))
+        return m | (closed & ~bg & ~skin & zmask & (raw > 12))
+
+    # holes first: a strap with gaps would look too thin to be fabric
+    mask = fill_gaps(mask)
+    # Not fabric: dark strokes under 3 px (body outlines; the thin tip of a black strap
+    # is wider) and the thin light glow along them. The skin left after the fringe
+    # pass (a neckline) is fabric.
+    thin_line = dark & ~ndi.binary_opening(dark, iterations=1)
+    light = dressed.min(axis=2) > 205
+    glow = light & ~ndi.binary_opening(light, iterations=1)
+    # thin pieces count only when they are coloured and not skin (a red strap); the
+    # soft rim along a body outline is greyish or skin-coloured
+    sat = (v - dressed.min(axis=2)) / np.maximum(v, 1)
+    # (5 px: body outlines are 3-4 px wide, the tapering tip of a black strap wider)
+    # dark parts must be wider still (7 px) to be fabric rather than an outline: the
+    # handles of a black tote are, the shoulder line Codex redrew next to a strap is not
+    fabric = (ndi.binary_opening(mask & ~dark & ~glow, iterations=2)
+              | ndi.binary_opening(mask & dark, iterations=3)
+              | (mask & ~thin_line & (sat > 0.35) & ~skin & ~dark))
+    # clothes: an outline can sit behind a few px of dark shadow fabric (grey trousers)
+    mask &= ndi.binary_dilation(fabric, iterations=3 if accessory else 6)
+
+    mask = fill_gaps(mask)
+    return drop_small(mask, 150 if accessory else 400)
 
 
 def trim_to_outline(mask, base, dressed, raw, skin_coloured=False):
@@ -376,12 +504,25 @@ def cmd_layer(base_path, dressed_path, out, **kw):
 def cmd_shoes(base_path, dressed_path, out):
     """Shoes replace the bare feet entirely: everything below FEET_Y, plus whatever
     changed higher up the legs (tall boots)."""
+    global BASE_BG
     dressed, upper, offset = layer_mask(base_path, dressed_path, zone=(700, FEET_Y + 20))
+    # white parts of a sneaker lie where the base had background around her feet:
+    # only white connected to the border is background here
+    BASE_BG = None
     feet = foreground(dressed)
     feet[:FEET_Y] = False
     info = save_mask(dressed, feet | upper, out)
     info['align'] = offset
     return info
+
+
+def _drop_specks(mask, min_px):
+    """Remove pieces smaller than min_px (glow specks around the hair)."""
+    labels, n = ndi.label(mask, structure=np.ones((3, 3)))
+    if not n:
+        return mask
+    sizes = ndi.sum(mask, labels, range(1, n + 1))
+    return np.isin(labels, [i + 1 for i, s in enumerate(sizes) if s >= min_px])
 
 
 def split_hair(base_path, dressed_path, zone):
@@ -402,7 +543,9 @@ def split_hair(base_path, dressed_path, zone):
     # (platinum blonde), and dropping them would bare the base's dark hair beneath.
     light = dressed.min(axis=2) > 200
     bulk = ndi.binary_dilation(ndi.binary_opening(light, iterations=3), iterations=3)
-    mask &= ~(light & ~bulk)
+    changed = mask & ~light
+    fair_hair = changed.any() and np.median(dressed[changed].mean(axis=1)) > 150
+    mask &= ~(light & ~bulk) if fair_hair else ~light
     seed = drop_small(mask & ndi.binary_erosion(body, iterations=5), 300)
     front = drop_small(mask & body_solid & ndi.binary_dilation(seed, iterations=5), 300)
     # whatever the strands enclose belongs to the hairstyle too (forehead between
@@ -410,6 +553,8 @@ def split_hair(base_path, dressed_path, zone):
     # own dark hair, or the skin of another tone
     front = ndi.binary_fill_holes(front) & body_solid & ~background_mask(dressed)
     back = mask & ~body_solid
+    back = _drop_specks(back, 60)
+    front = _drop_specks(front, 60)
     # Codex also draws a light glow around the body over the hair behind it: fill that
     # thin strip next to the body with the colour of the nearest strand
     strip = (ndi.binary_dilation(body_solid, iterations=5) & ~body_solid

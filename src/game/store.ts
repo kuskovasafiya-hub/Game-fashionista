@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { DEFAULT_LOOK, type Look, type Outfit } from '../art/Doll';
 import { DEPT_SLOTS, ITEM_BY_ID, RARITY, SHOPS, shopItems, type Dept, type Item, type Rarity, type Slot } from './catalog';
+import { RESULT_DELAY_MS, activeEvents, eventByKey, hasClothes, rewardFor, scoreLook, seedOf, type Reward, type Score } from './events';
 
 export const ENERGY_MAX = 20;
 export const ENERGY_REGEN_MS = 6 * 60 * 1000;
@@ -9,6 +10,12 @@ export const ADS_PER_DAY = 6;
 export const PITY_RARE = 15;
 export const PITY_EPIC = 60;
 const SELL_SHARE = 0.4;
+export const START_TICKETS = 3;
+export const VOTES_PER_TICKET = 10;
+export const MAJORITY_COINS = 5;
+/** Crystals to see an event result right away. */
+export const RUSH_GEMS = 2;
+export const TICKET_GEMS = 3;
 const SAVE_KEY = 'modshop-save-v2';
 
 export interface Save {
@@ -30,6 +37,21 @@ export interface Save {
   pityEpic: number;
   adsDay: string;
   adsCount: number;
+  tickets: number;
+  /** All votes ever cast; every VOTES_PER_TICKET-th gives a ticket. */
+  votes: number;
+  entries: Entry[];
+}
+
+/** A look sent to an event. The score is rolled on submission and revealed at resultAt. */
+export interface Entry {
+  key: string;
+  look: Look;
+  outfit: Outfit;
+  at: number;
+  resultAt: number;
+  score: Score;
+  claimed?: boolean;
 }
 
 export interface LevelUp { level: number; coins: number; gems: number; shops: string[] }
@@ -43,6 +65,7 @@ function fresh(): Save {
     outfit: {}, owned: [], discovered: [], wish: [],
     coins: 1500, gems: 10, energy: ENERGY_MAX, energyTs: Date.now(),
     level: 1, xp: 0, pityRare: 0, pityEpic: 0, adsDay: '', adsCount: 0,
+    tickets: START_TICKETS, votes: 0, entries: [],
   };
 }
 
@@ -244,6 +267,94 @@ export function ownedInSlot(slot: Slot) {
 
 export function deptOf(slot: Slot): Dept {
   return (Object.keys(DEPT_SLOTS) as Dept[]).find((d) => DEPT_SLOTS[d].includes(slot))!;
+}
+
+/* ---------- events ---------- */
+
+export const entryFor = (key: string) => state.entries.find((e) => e.key === key);
+export const resultsReady = (now = Date.now()) => state.entries.filter((e) => !e.claimed && e.resultAt <= now);
+
+export type EnterError = 'closed' | 'entered' | 'level' | 'tickets' | 'clothes';
+
+export function enterEvent(key: string): EnterError | null {
+  const ev = activeEvents().find((e) => e.key === key);
+  if (!ev) return 'closed';
+  if (entryFor(key)) return 'entered';
+  if (state.level < ev.level) return 'level';
+  if (state.tickets < ev.cost) return 'tickets';
+  if (!hasClothes(state.outfit)) return 'clothes';
+  const at = Date.now();
+  const entry: Entry = {
+    key, look: { ...state.look }, outfit: { ...state.outfit }, at,
+    resultAt: at + RESULT_DELAY_MS,
+    score: scoreLook(state.outfit, ev, seedOf(`${key}:${at}`)),
+  };
+  commit({ ...state, tickets: state.tickets - ev.cost, entries: [...state.entries, entry] });
+  return null;
+}
+
+/** Pay crystals to see a result now. */
+export function rushEntry(key: string): boolean {
+  const e = entryFor(key);
+  if (!e || e.claimed || e.resultAt <= Date.now() || state.gems < RUSH_GEMS) return false;
+  commit({
+    ...state, gems: state.gems - RUSH_GEMS,
+    entries: state.entries.map((x) => (x.key === key ? { ...x, resultAt: Date.now() } : x)),
+  });
+  return true;
+}
+
+export interface Claim { reward: Reward; /** The prize was already owned and paid out in coins instead. */ dupCoins: number; levelUp: LevelUp | null }
+
+export function claimEntry(key: string): Claim | null {
+  const e = entryFor(key);
+  const ev = eventByKey(key);
+  if (!e || !ev || e.claimed || e.resultAt > Date.now()) return null;
+  const reward = rewardFor(ev, e.score.stars);
+  const prize = reward.item && ITEM_BY_ID[reward.item];
+  const dup = !!prize && state.owned.includes(prize.id);
+  const dupCoins = dup ? prize.price : 0;
+  const now = Date.now();
+  let next: Save = {
+    ...state,
+    coins: state.coins + reward.coins + dupCoins,
+    gems: state.gems + reward.gems,
+    tickets: state.tickets + reward.tickets,
+    energy: state.energy + reward.energy,
+    owned: prize && !dup ? [...state.owned, prize.id] : state.owned,
+    discovered: prize && !state.discovered.includes(prize.id) ? [...state.discovered, prize.id] : state.discovered,
+    // forget claimed entries a day after their event closed
+    entries: state.entries
+      .map((x) => (x.key === key ? { ...x, claimed: true } : x))
+      .filter((x) => !x.claimed || (eventByKey(x.key)?.end ?? 0) > now - 24 * 3600 * 1000),
+  };
+  let levelUp: LevelUp | null;
+  [next, levelUp] = withXp(next, reward.xp);
+  commit(next);
+  return { reward, dupCoins, levelUp };
+}
+
+export interface VoteResult { majority: boolean; ticket: boolean; levelUp: LevelUp | null }
+
+/** One vote in a pair. Every VOTES_PER_TICKET votes give a ticket and 5 XP. */
+export function castVote(majority: boolean): VoteResult {
+  const votes = state.votes + 1;
+  const ticket = votes % VOTES_PER_TICKET === 0;
+  let next: Save = {
+    ...state, votes,
+    coins: state.coins + (majority ? MAJORITY_COINS : 0),
+    tickets: state.tickets + (ticket ? 1 : 0),
+  };
+  let levelUp: LevelUp | null = null;
+  if (ticket) [next, levelUp] = withXp(next, 5);
+  commit(next);
+  return { majority, ticket, levelUp };
+}
+
+export function buyTicket(): boolean {
+  if (state.gems < TICKET_GEMS) return false;
+  commit({ ...state, gems: state.gems - TICKET_GEMS, tickets: state.tickets + 1 });
+  return true;
 }
 
 /** Dev helper: wipe progress. */

@@ -1,336 +1,446 @@
 {
- "hair-bun-back": {
-  "x": 440,
-  "y": 180,
-  "w": 60,
-  "h": 82
- },
- "feet": {
-  "x": 389,
-  "y": 1300,
-  "w": 242,
-  "h": 188,
-  "skin": true
- },
  "body": {
-  "x": 294,
-  "y": 51,
-  "w": 434,
-  "h": 1255,
+  "x": 286,
+  "y": 50,
+  "w": 451,
+  "h": 1441,
   "skin": true
  },
- "acc-bag": {
-  "x": 301,
-  "y": 291,
-  "w": 130,
-  "h": 474
+ "underwear-top": {
+  "x": 409,
+  "y": 366,
+  "w": 205,
+  "h": 95
  },
- "acc-belt-bag": {
-  "x": 431,
-  "y": 290,
-  "w": 171,
-  "h": 269,
-  "skin": true
+ "underwear-bottom": {
+  "x": 394,
+  "y": 617,
+  "w": 236,
+  "h": 105
  },
- "acc-chain": {
-  "x": 464,
-  "y": 277,
-  "w": 95,
-  "h": 81,
-  "skin": true
+ "dress-black-front": {
+  "x": 368,
+  "y": 355,
+  "w": 288,
+  "h": 485
  },
- "acc-hoops": {
-  "x": 431,
-  "y": 183,
-  "w": 158,
-  "h": 61,
-  "skin": true
- },
- "acc-pearls": {
-  "x": 461,
-  "y": 270,
-  "w": 98,
-  "h": 47
- },
- "acc-tote": {
-  "x": 231,
-  "y": 291,
-  "w": 209,
-  "h": 459,
-  "skin": true
- },
- "bottom-jeans": {
-  "x": 324,
-  "y": 548,
-  "w": 364,
-  "h": 843
- },
- "bottom-leggings": {
-  "x": 375,
-  "y": 535,
-  "w": 272,
-  "h": 819,
-  "skin": true
- },
- "bottom-midi": {
-  "x": 355,
-  "y": 533,
-  "w": 307,
-  "h": 705
- },
- "bottom-shorts": {
-  "x": 366,
-  "y": 531,
-  "w": 290,
-  "h": 226,
-  "skin": true
- },
- "bottom-skirt": {
-  "x": 345,
-  "y": 514,
-  "w": 333,
-  "h": 288
- },
- "bottom-trousers": {
-  "x": 345,
-  "y": 526,
-  "w": 332,
-  "h": 862
- },
- "dress-black": {
-  "x": 375,
-  "y": 365,
-  "w": 272,
-  "h": 477,
-  "skin": true
- },
- "dress-gown": {
-  "x": 321,
-  "y": 294,
-  "w": 374,
-  "h": 1172,
-  "skin": true
- },
- "dress-red": {
-  "x": 375,
-  "y": 293,
-  "w": 270,
-  "h": 852,
-  "skin": true
- },
- "dress-sundress": {
-  "x": 342,
+ "dress-gown-front": {
+  "x": 233,
   "y": 292,
-  "w": 336,
-  "h": 592
+  "w": 558,
+  "h": 1195
+ },
+ "dress-gown-back": {
+  "x": 234,
+  "y": 605,
+  "w": 556,
+  "h": 883
+ },
+ "dress-red-front": {
+  "x": 365,
+  "y": 293,
+  "w": 287,
+  "h": 880
+ },
+ "dress-red-back": {
+  "x": 366,
+  "y": 389,
+  "w": 285,
+  "h": 859
+ },
+ "dress-sundress-front": {
+  "x": 312,
+  "y": 290,
+  "w": 399,
+  "h": 617
+ },
+ "dress-sundress-back": {
+  "x": 315,
+  "y": 877,
+  "w": 392,
+  "h": 51
+ },
+ "hair-bob-front": {
+  "x": 410,
+  "y": 47,
+  "w": 200,
+  "h": 224
  },
  "hair-bob-back": {
-  "x": 416,
-  "y": 46,
-  "w": 185,
-  "h": 201
+  "x": 406,
+  "y": 48,
+  "w": 208,
+  "h": 224
  },
- "hair-bob": {
-  "x": 436,
-  "y": 51,
-  "w": 150,
-  "h": 192
+ "hair-braids-front": {
+  "x": 415,
+  "y": 49,
+  "w": 193,
+  "h": 414
  },
- "hair-braids-back": {
-  "x": 427,
-  "y": 100,
-  "w": 169,
-  "h": 383
- },
- "hair-braids": {
-  "x": 426,
-  "y": 54,
+ "hair-bun-front": {
+  "x": 425,
+  "y": 49,
   "w": 171,
-  "h": 440,
-  "skin": true
+  "h": 124
+ },
+ "hair-bun-back": {
+  "x": 450,
+  "y": 243,
+  "w": 122,
+  "h": 63
+ },
+ "hair-curly-front": {
+  "x": 345,
+  "y": 34,
+  "w": 333,
+  "h": 286
  },
  "hair-curly-back": {
-  "x": 363,
-  "y": 45,
-  "w": 294,
-  "h": 255
+  "x": 336,
+  "y": 32,
+  "w": 351,
+  "h": 310
  },
- "hair-curly": {
-  "x": 428,
-  "y": 51,
-  "w": 159,
-  "h": 261,
-  "skin": true
+ "hair-long-front": {
+  "x": 331,
+  "y": 47,
+  "w": 300,
+  "h": 482
  },
  "hair-long-back": {
-  "x": 319,
-  "y": 47,
-  "w": 381,
-  "h": 490
+  "x": 347,
+  "y": 55,
+  "w": 352,
+  "h": 553
  },
- "hair-long": {
-  "x": 436,
-  "y": 51,
-  "w": 151,
-  "h": 200,
-  "skin": true
- },
- "hair-pixie-back": {
+ "hair-pixie-front": {
   "x": 425,
-  "y": 43,
-  "w": 167,
-  "h": 118
+  "y": 46,
+  "w": 177,
+  "h": 134
  },
- "hair-pixie": {
-  "x": 436,
-  "y": 51,
-  "w": 150,
-  "h": 116,
-  "skin": true
+ "hair-pony-front": {
+  "x": 425,
+  "y": 50,
+  "w": 169,
+  "h": 240
  },
  "hair-pony-back": {
-  "x": 390,
-  "y": 27,
-  "w": 198,
-  "h": 276
+  "x": 287,
+  "y": 58,
+  "w": 240,
+  "h": 573
  },
- "hair-pony": {
-  "x": 389,
-  "y": 51,
-  "w": 197,
-  "h": 353,
-  "skin": true
+ "top-blazer-front": {
+  "x": 294,
+  "y": 262,
+  "w": 431,
+  "h": 475,
+  "hem": true
  },
- "makeup-bright": {
-  "x": 457,
-  "y": 135,
+ "top-blazer-back": {
+  "x": 461,
+  "y": 281,
+  "w": 103,
+  "h": 32
+ },
+ "top-blouse-front": {
+  "x": 299,
+  "y": 258,
+  "w": 424,
+  "h": 465,
+  "hem": true
+ },
+ "top-blouse-back": {
+  "x": 458,
+  "y": 281,
   "w": 108,
-  "h": 95,
-  "skin": true
+  "h": 37
  },
- "makeup-evening": {
-  "x": 452,
-  "y": 140,
-  "w": 124,
-  "h": 90,
-  "skin": true
+ "top-crochet-front": {
+  "x": 270,
+  "y": 302,
+  "w": 484,
+  "h": 497,
+  "hem": true
  },
- "makeup-glam": {
-  "x": 472,
-  "y": 145,
+ "top-crochet-back": {
+  "x": 408,
+  "y": 309,
+  "w": 208,
+  "h": 27
+ },
+ "top-crop-front": {
+  "x": 341,
+  "y": 287,
+  "w": 341,
+  "h": 219,
+  "hem": true
+ },
+ "top-crop-back": {
+  "x": 424,
+  "y": 284,
+  "w": 176,
+  "h": 41
+ },
+ "top-hoodie-front": {
+  "x": 267,
+  "y": 258,
+  "w": 488,
+  "h": 474,
+  "hem": true
+ },
+ "top-hoodie-back": {
+  "x": 374,
+  "y": 239,
+  "w": 274,
+  "h": 98
+ },
+ "top-sweater-front": {
+  "x": 295,
+  "y": 277,
+  "w": 432,
+  "h": 458,
+  "hem": true
+ },
+ "top-sweater-back": {
+  "x": 463,
+  "y": 283,
   "w": 99,
-  "h": 84,
-  "skin": true
+  "h": 35
+ },
+ "top-tee-front": {
+  "x": 355,
+  "y": 283,
+  "w": 314,
+  "h": 404,
+  "hem": true
+ },
+ "top-tee-back": {
+  "x": 460,
+  "y": 288,
+  "w": 104,
+  "h": 25
+ },
+ "acc-bag": {
+  "x": 204,
+  "y": 811,
+  "w": 231,
+  "h": 294
+ },
+ "acc-belt-bag": {
+  "x": 205,
+  "y": 811,
+  "w": 228,
+  "h": 309
+ },
+ "acc-chain": {
+  "x": 449,
+  "y": 273,
+  "w": 125,
+  "h": 192
+ },
+ "acc-glasses": {
+  "x": 432,
+  "y": 89,
+  "w": 146,
+  "h": 108
+ },
+ "acc-hoops": {
+  "x": 436,
+  "y": 188,
+  "w": 150,
+  "h": 59
+ },
+ "acc-pearls": {
+  "x": 453,
+  "y": 273,
+  "w": 117,
+  "h": 101
+ },
+ "acc-sunglasses": {
+  "x": 446,
+  "y": 89,
+  "w": 145,
+  "h": 172
+ },
+ "acc-tote": {
+  "x": 169,
+  "y": 811,
+  "w": 297,
+  "h": 375
+ },
+ "bottom-baggy": {
+  "x": 328,
+  "y": 572,
+  "w": 365,
+  "h": 805
+ },
+ "bottom-jeans": {
+  "x": 299,
+  "y": 557,
+  "w": 425,
+  "h": 901
+ },
+ "bottom-leggings": {
+  "x": 364,
+  "y": 584,
+  "w": 296,
+  "h": 824
+ },
+ "bottom-midi": {
+  "x": 331,
+  "y": 588,
+  "w": 360,
+  "h": 767
+ },
+ "bottom-shorts": {
+  "x": 345,
+  "y": 559,
+  "w": 332,
+  "h": 281
+ },
+ "bottom-skirt": {
+  "x": 327,
+  "y": 554,
+  "w": 368,
+  "h": 338
+ },
+ "bottom-trousers": {
+  "x": 318,
+  "y": 549,
+  "w": 387,
+  "h": 919
  },
  "shoes-boots": {
-  "x": 385,
-  "y": 1034,
-  "w": 250,
-  "h": 452
+  "x": 382,
+  "y": 999,
+  "w": 254,
+  "h": 500
+ },
+ "shoes-heels-foot": {
+  "x": 403,
+  "y": 1333,
+  "w": 216,
+  "h": 125,
+  "skin": true
  },
  "shoes-heels": {
-  "x": 400,
-  "y": 1300,
-  "w": 222,
-  "h": 197,
+  "x": 397,
+  "y": 1333,
+  "w": 229,
+  "h": 165,
+  "cut": 1342
+ },
+ "shoes-loafers-foot": {
+  "x": 408,
+  "y": 1382,
+  "w": 205,
+  "h": 30,
   "skin": true
  },
  "shoes-loafers": {
-  "x": 393,
-  "y": 1300,
-  "w": 235,
-  "h": 189,
-  "skin": true
+  "x": 391,
+  "y": 1382,
+  "w": 239,
+  "h": 109,
+  "cut": 1391
  },
  "shoes-sandals": {
-  "x": 388,
-  "y": 1300,
-  "w": 242,
-  "h": 191,
+  "x": 386,
+  "y": 1303,
+  "w": 249,
+  "h": 191
+ },
+ "shoes-sneakers-foot": {
+  "x": 408,
+  "y": 1291,
+  "w": 206,
+  "h": 58,
   "skin": true
  },
  "shoes-sneakers": {
-  "x": 375,
-  "y": 1300,
-  "w": 269,
-  "h": 184,
+  "x": 380,
+  "y": 1291,
+  "w": 263,
+  "h": 199,
+  "cut": 1300
+ },
+ "makeup-bright": {
+  "x": 437,
+  "y": 135,
+  "w": 148,
+  "h": 97,
   "skin": true
  },
- "top-blazer": {
-  "x": 302,
-  "y": 252,
-  "w": 415,
-  "h": 479,
+ "makeup-evening": {
+  "x": 437,
+  "y": 133,
+  "w": 147,
+  "h": 97,
   "skin": true
  },
- "top-blouse": {
-  "x": 304,
-  "y": 257,
-  "w": 412,
-  "h": 473,
+ "makeup-glam": {
+  "x": 436,
+  "y": 140,
+  "w": 144,
+  "h": 92,
   "skin": true
- },
- "top-crop": {
-  "x": 344,
-  "y": 292,
-  "w": 330,
-  "h": 240,
-  "skin": true
- },
- "top-hoodie": {
-  "x": 270,
-  "y": 250,
-  "w": 471,
-  "h": 479
- },
- "top-sweater": {
-  "x": 304,
-  "y": 232,
-  "w": 412,
-  "h": 504,
-  "skin": true
- },
- "top-tee": {
-  "x": 360,
-  "y": 279,
-  "w": 306,
-  "h": 357
  },
  "product-acc-bag": {
-  "x": 193,
-  "y": 43,
-  "w": 614,
-  "h": 942
+  "x": 83,
+  "y": 16,
+  "w": 852,
+  "h": 992
  },
  "product-acc-belt-bag": {
-  "x": 263,
-  "y": 13,
-  "w": 479,
-  "h": 1002
+  "x": 162,
+  "y": 42,
+  "w": 696,
+  "h": 936
  },
  "product-acc-chain": {
-  "x": 147,
+  "x": 146,
   "y": 54,
-  "w": 728,
+  "w": 730,
   "h": 915
+ },
+ "product-acc-glasses": {
+  "x": 49,
+  "y": 352,
+  "w": 926,
+  "h": 356
  },
  "product-acc-hoops": {
   "x": 74,
-  "y": 253,
-  "w": 872,
-  "h": 524
+  "y": 252,
+  "w": 873,
+  "h": 526
  },
  "product-acc-pearls": {
   "x": 62,
-  "y": 136,
+  "y": 135,
   "w": 897,
-  "h": 751
+  "h": 752
+ },
+ "product-acc-sunglasses": {
+  "x": 63,
+  "y": 405,
+  "w": 899,
+  "h": 233
  },
  "product-acc-tote": {
-  "x": 147,
-  "y": 30,
-  "w": 729,
-  "h": 963
+  "x": 143,
+  "y": 39,
+  "w": 739,
+  "h": 944
+ },
+ "product-bottom-baggy": {
+  "x": 256,
+  "y": 28,
+  "w": 515,
+  "h": 979
  },
  "product-bottom-jeans": {
   "x": 277,
@@ -340,9 +450,9 @@
  },
  "product-bottom-leggings": {
   "x": 332,
-  "y": 32,
+  "y": 31,
   "w": 360,
-  "h": 966
+  "h": 968
  },
  "product-bottom-midi": {
   "x": 283,
@@ -352,9 +462,9 @@
  },
  "product-bottom-shorts": {
   "x": 18,
-  "y": 140,
+  "y": 139,
   "w": 989,
-  "h": 746
+  "h": 748
  },
  "product-bottom-skirt": {
   "x": 24,
@@ -366,12 +476,12 @@
   "x": 302,
   "y": 18,
   "w": 420,
-  "h": 989
+  "h": 990
  },
  "product-dress-black": {
-  "x": 267,
+  "x": 265,
   "y": 102,
-  "w": 487,
+  "w": 489,
   "h": 854
  },
  "product-dress-gown": {
@@ -393,39 +503,39 @@
   "h": 976
  },
  "product-shoes-boots": {
-  "x": 266,
-  "y": 39,
-  "w": 492,
-  "h": 948
+  "x": 276,
+  "y": 42,
+  "w": 472,
+  "h": 945
  },
  "product-shoes-heels": {
   "x": 132,
-  "y": 70,
+  "y": 69,
   "w": 760,
-  "h": 885
+  "h": 886
  },
  "product-shoes-loafers": {
-  "x": 63,
-  "y": 66,
-  "w": 896,
-  "h": 895
+  "x": 55,
+  "y": 56,
+  "w": 913,
+  "h": 911
  },
  "product-shoes-sandals": {
   "x": 108,
-  "y": 75,
-  "w": 807,
-  "h": 879
+  "y": 74,
+  "w": 808,
+  "h": 881
  },
  "product-shoes-sneakers": {
-  "x": 52,
-  "y": 134,
-  "w": 920,
-  "h": 754
+  "x": 55,
+  "y": 90,
+  "w": 914,
+  "h": 830
  },
  "product-top-blazer": {
-  "x": 136,
+  "x": 135,
   "y": 51,
-  "w": 752,
+  "w": 753,
   "h": 931
  },
  "product-top-blouse": {
@@ -434,17 +544,23 @@
   "w": 765,
   "h": 937
  },
+ "product-top-crochet": {
+  "x": 16,
+  "y": 78,
+  "w": 987,
+  "h": 899
+ },
  "product-top-crop": {
-  "x": 30,
+  "x": 29,
   "y": 135,
-  "w": 964,
+  "w": 966,
   "h": 781
  },
  "product-top-hoodie": {
   "x": 55,
-  "y": 76,
+  "y": 75,
   "w": 914,
-  "h": 916
+  "h": 917
  },
  "product-top-sweater": {
   "x": 107,
@@ -454,148 +570,8 @@
  },
  "product-top-tee": {
   "x": 136,
-  "y": 70,
+  "y": 69,
   "w": 752,
-  "h": 899
- },
- "acc-belt-bag-skin": {
-  "x": 431,
-  "y": 290,
-  "w": 171,
-  "h": 269,
-  "skin": true
- },
- "acc-chain-skin": {
-  "x": 464,
-  "y": 277,
-  "w": 95,
-  "h": 81,
-  "skin": true
- },
- "acc-hoops-skin": {
-  "x": 431,
-  "y": 183,
-  "w": 158,
-  "h": 61,
-  "skin": true
- },
- "acc-tote-skin": {
-  "x": 231,
-  "y": 291,
-  "w": 209,
-  "h": 459,
-  "skin": true
- },
- "bottom-leggings-skin": {
-  "x": 375,
-  "y": 535,
-  "w": 272,
-  "h": 819,
-  "skin": true
- },
- "bottom-shorts-skin": {
-  "x": 366,
-  "y": 531,
-  "w": 290,
-  "h": 226,
-  "skin": true
- },
- "dress-black-skin": {
-  "x": 375,
-  "y": 365,
-  "w": 272,
-  "h": 477,
-  "skin": true
- },
- "dress-gown-skin": {
-  "x": 321,
-  "y": 294,
-  "w": 374,
-  "h": 1172,
-  "skin": true
- },
- "dress-red-skin": {
-  "x": 375,
-  "y": 293,
-  "w": 270,
-  "h": 852,
-  "skin": true
- },
- "makeup-bright-skin": {
-  "x": 457,
-  "y": 135,
-  "w": 108,
-  "h": 95,
-  "skin": true
- },
- "makeup-evening-skin": {
-  "x": 452,
-  "y": 140,
-  "w": 124,
-  "h": 90,
-  "skin": true
- },
- "makeup-glam-skin": {
-  "x": 472,
-  "y": 145,
-  "w": 99,
-  "h": 84,
-  "skin": true
- },
- "shoes-heels-skin": {
-  "x": 400,
-  "y": 1300,
-  "w": 222,
-  "h": 197,
-  "skin": true
- },
- "shoes-loafers-skin": {
-  "x": 393,
-  "y": 1300,
-  "w": 235,
-  "h": 189,
-  "skin": true
- },
- "shoes-sandals-skin": {
-  "x": 388,
-  "y": 1300,
-  "w": 242,
-  "h": 191,
-  "skin": true
- },
- "shoes-sneakers-skin": {
-  "x": 375,
-  "y": 1300,
-  "w": 269,
-  "h": 184,
-  "skin": true
- },
- "top-blazer-skin": {
-  "x": 302,
-  "y": 252,
-  "w": 415,
-  "h": 479,
-  "skin": true
- },
- "top-blouse-skin": {
-  "x": 304,
-  "y": 257,
-  "w": 412,
-  "h": 473,
-  "skin": true
- },
- "top-crop-skin": {
-  "x": 344,
-  "y": 292,
-  "w": 330,
-  "h": 240,
-  "skin": true
- },
- "top-sweater-skin": {
-  "x": 304,
-  "y": 232,
-  "w": 412,
-  "h": 504,
-  "skin": true
+  "h": 901
  }
 }

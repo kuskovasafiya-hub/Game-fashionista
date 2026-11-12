@@ -13,5 +13,5 @@ shoes-sandals	gold strappy high-heel sandals on both feet; legs unchanged
 shoes-loafers	brown leather loafers with a gold buckle on both feet; legs unchanged
 acc-chain	a layered gold chain necklace with a small coin pendant around her neck; nothing else changes
 acc-pearls	a classic single-strand white pearl necklace around her neck; nothing else changes
-acc-tote	a large black leather tote bag hanging from her right shoulder on short handles, the bag resting against her hip on the viewer's left side outside the arm
-acc-belt-bag	a small pink quilted belt bag worn across the chest diagonally with a thin strap
+acc-tote	a medium black leather tote bag with two short rounded handles held together.  (made with art-src/gen_bag.sh, in the hand of acc-belt-bag)
+acc-belt-bag	a small pink quilted leather mini bag with a short chain-and-leather top handle and a silver clasp. She holds it in her right hand (on the viewer's left), arm hanging down exactly as it is now: the bag's short handle hangs over her relaxed fingers, and the handle is drawn IN FRONT of her fingers. The bag hangs straight down below her hand, beside her thigh. Do NOT change the pose of her hand, fingers or arm. IMPORTANT for the cut-out: every part of the bag and its handle is fully visible and lies IN FRONT of her hand and body; nothing of the bag passes behind the hand, the arm or the legs; no shoulder strap, no long strap.

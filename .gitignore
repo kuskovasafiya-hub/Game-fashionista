@@ -4,3 +4,11 @@ dist
 art-src/.venv
 art-src/raw/**/*.log
 art-src/cut
+# v2 art: generated output (rebuilt by art-src/v2/build.py), rejected drafts, Codex logs
+art-src/v2/out
+art-src/v2/raw/rejected
+art-src/v2/raw/try*
+art-src/v2/raw/single
+art-src/v2/raw/old
+art-src/v2/**/*.log
+art-src/raw-alt

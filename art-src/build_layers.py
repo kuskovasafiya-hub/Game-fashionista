@@ -10,7 +10,7 @@ import sys
 from PIL import Image
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from extract import cmd_body, cmd_layer, cmd_product, cmd_shoes, load, save_mask, split_hair  # noqa: E402
+from extract import cmd_bag, cmd_body, cmd_layer, cmd_product, cmd_shoes, load, save_mask, split_hair  # noqa: E402
 import skin  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -29,7 +29,11 @@ ZONES = {
     'dress': (280, 1536),
     'shoes': (1250, 1536),
     'acc-hoops': (120, 360),
-    'acc-bag': (250, 1000),
+    # bags are carried in the hand (her hand hangs at y 760-850): the hand and the bag
+    # below it, beside the thigh
+    'acc-bag': (740, 1300),     # from the wrist down (extract.HAND_BOX)
+    'acc-tote': (740, 1300),
+    'acc-belt-bag': (740, 1300),
     'acc-chain': (200, 560),
     'acc-pearls': (200, 560),
     'acc': (120, 1100),
@@ -38,8 +42,12 @@ ZONES = {
     'top-blazer': [(230, 669), (669, 760, 0, 380), (669, 760, 645, 1024)],
 }
 THRESHOLDS = {'makeup': 14, 'acc-hoops': 12, 'top-blazer': 10, 'top-sweater': 10, 'bottom-midi': 10}
+# Items that lie on bare skin entirely: no skin-fringe cleanup (gold reads as skin).
+ON_SKIN = {'acc-chain', 'acc-pearls'}
 # Items close to skin colour: never drop "skin-looking" pixels from them.
-SKIN_COLOURED = {'top-blazer', 'top-sweater', 'bottom-midi', 'acc-bag'}
+SKIN_COLOURED = {'top-blazer', 'top-sweater', 'bottom-midi'}
+# Bags are carried in the hand and bring the hand along (extract.cmd_bag).
+BAGS = {'acc-bag', 'acc-tote', 'acc-belt-bag'}
 
 
 def zone_for(name):
@@ -61,11 +69,14 @@ def main():
     base = RAW / 'base.png'
     # the pixie cut shows the jaw and neck the bun hides: the bun becomes a hairstyle
     info = cmd_body(str(base), str(TMP / 'body.png'), str(TMP / 'feet.png'),
-                    nobun_path=str(RAW / 'hair-pixie.png'), bun_out=str(TMP / 'hair-bun-back.png'))
+                    nobun_path=str(RAW / 'hair-pixie.png'), bun_out=str(TMP / 'hair-bun-back.png'),
+                    hand_out=str(TMP / 'hand.png'))
     to_webp(TMP / 'body.png', 'body')
     to_webp(TMP / 'feet.png', 'feet')
     to_webp(TMP / 'hair-bun-back.png', 'hair-bun-back')
     layers['hair-bun-back'] = info.pop('bun')
+    to_webp(TMP / 'hand.png', 'hand')
+    layers['hand'] = info.pop('hand')
     layers['feet'] = info.pop('feet')
     layers['body'] = info
     for img in sorted(RAW.glob('*.png')):
@@ -83,12 +94,15 @@ def main():
             info = save_mask(dressed, front, str(cut))
         elif name.startswith('shoes'):
             info = cmd_shoes(str(base), str(img), str(cut))
+        elif name in BAGS:
+            info = cmd_bag(str(base), str(img), str(cut), zone=zone_for(name))
         else:
             kind = name.split('-')[0]
             info = cmd_layer(str(base), str(img), str(cut), zone=zone_for(name),
                              thr=THRESHOLDS.get(name, THRESHOLDS.get(kind, 30.0)),
                              strict=kind in ('acc', 'makeup'), near_skin=name.startswith(('acc-hoops', 'acc-ear')),
-                             skin_coloured=name in SKIN_COLOURED)
+                             skin_coloured=name in SKIN_COLOURED,
+                             clean=kind != 'makeup' and name not in ON_SKIN)
         to_webp(cut, name)
         layers[name] = {k: info[k] for k in ('x', 'y', 'w', 'h')}
         print(name, info)
@@ -111,8 +125,10 @@ def skin_variants(layers):
     for name, box in list(layers.items()):
         if name.startswith('product-') or name.endswith('-back'):
             continue
-        if name in ('body', 'feet'):
+        if name in ('body', 'feet', 'hand'):
             mode = 'whole'
+        elif name in BAGS:
+            mode = 'hand'          # only the hand holding the bag is skin
         elif name.startswith('hair'):
             mode = 'hair'          # skin is what is not one of the hairstyle's own colours
         elif name in SKIN_COLOURED:
@@ -121,7 +137,7 @@ def skin_variants(layers):
             mode = 'colour'        # skin-coloured pixels: necklines, toes in sandals, blush on the face
         tol = 80 if name.startswith('shoes') else 40
         palette = skin.hair_palette(TMP / f'{name}-back.png') if mode == 'hair' else None
-        overlay = mode in ('item', 'colour')       # items can be recoloured with a CSS filter
+        overlay = mode in ('item', 'colour', 'hand')       # items can be recoloured with a CSS filter
         if skin.make_variants(name, TMP / f'{name}.png', box, base, under, mean, OUT, mode=mode, tol=tol,
                               palette=palette, overlay=overlay):
             box['skin'] = True

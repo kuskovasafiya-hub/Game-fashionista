@@ -9,6 +9,8 @@ const TABS: [Tab, string][] = [
   ['skin', 'Кожа'], ['makeup', 'Макияж'], ['hair', 'Причёска'],
   ['clothes', 'Одежда'], ['shoes', 'Обувь'], ['acc', 'Аксессуары'],
 ];
+/** The clothes tab in groups: a dress replaces a top and a bottom, and back. */
+const CLOTHES: [string, Slot][] = [['Верх', 'top'], ['Низ', 'bottom'], ['Платья', 'dress']];
 const HEAD_VIEW: [number, number, number, number] = [312, 20, 400, 440];
 /** Close-up of the face for makeup cards. */
 const FACE_VIEW: [number, number, number, number] = [420, 90, 180, 198];
@@ -83,13 +85,16 @@ export function CreateScreen() {
               ))}
             </div>
           )}
-          {tab === 'clothes' && (
-            <div class="grid">
-              {items(['dress', 'top', 'bottom']).map((i) => (
-                <ItemCard item={i} selected={outfit[i.slot] === i.id} onClick={() => toggle(i.slot, i.id, true)} />
-              ))}
-            </div>
-          )}
+          {tab === 'clothes' && CLOTHES.map(([label, slot]) => (
+            <section class="group">
+              <h3 class="group-title">{label}</h3>
+              <div class="grid">
+                {items([slot]).map((i) => (
+                  <ItemCard item={i} selected={outfit[i.slot] === i.id} onClick={() => toggle(i.slot, i.id, true)} />
+                ))}
+              </div>
+            </section>
+          ))}
           {tab === 'shoes' && (
             <div class="grid">
               {items(['shoes']).map((i) => (
@@ -99,7 +104,7 @@ export function CreateScreen() {
           )}
           {tab === 'acc' && (
             <div class="grid">
-              {items(['necklace', 'earrings', 'bag']).map((i) => (
+              {items(['necklace', 'earrings', 'glasses', 'bag']).map((i) => (
                 <ItemCard item={i} selected={outfit[i.slot] === i.id} onClick={() => toggle(i.slot, i.id)} />
               ))}
             </div>

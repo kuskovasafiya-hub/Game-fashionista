@@ -1,6 +1,7 @@
-export type Slot = 'top' | 'bottom' | 'dress' | 'shoes' | 'necklace' | 'earrings' | 'bag';
+export type Slot = 'top' | 'bottom' | 'dress' | 'shoes' | 'necklace' | 'earrings' | 'glasses' | 'bag';
 export type Rarity = 'common' | 'rare' | 'epic';
 export type Dept = 'clothes' | 'shoes' | 'accessories';
+export type Tag = 'casual' | 'office' | 'party' | 'evening' | 'sport' | 'beach' | 'winter';
 
 export interface Item {
   id: string;
@@ -13,7 +14,7 @@ export interface Item {
   rarity: Rarity;
   price: number;
   shop: string;
-  tags: string[];
+  tags: Tag[];
 }
 
 export interface Shop {
@@ -36,11 +37,11 @@ export const RARITY: Record<Rarity, { name: string; color: string; chance: numbe
 export const DEPT_SLOTS: Record<Dept, Slot[]> = {
   clothes: ['top', 'bottom', 'dress'],
   shoes: ['shoes'],
-  accessories: ['necklace', 'earrings', 'bag'],
+  accessories: ['necklace', 'earrings', 'glasses', 'bag'],
 };
 export const DEPT_NAMES: Record<Dept, string> = { clothes: 'Одежда', shoes: 'Обувь', accessories: 'Аксессуары' };
 export const SLOT_NAMES: Record<Slot, string> = {
-  top: 'Верх', bottom: 'Низ', dress: 'Платья', shoes: 'Обувь', necklace: 'Колье', earrings: 'Серьги', bag: 'Сумки',
+  top: 'Верх', bottom: 'Низ', dress: 'Платья', shoes: 'Обувь', necklace: 'Колье', earrings: 'Серьги', glasses: 'Очки', bag: 'Сумки',
 };
 
 export const SHOPS: Shop[] = [
@@ -65,11 +66,36 @@ const ART_SLOT: Record<string, Slot> = {
   'dress-gown': 'dress', 'dress-sundress': 'dress',
   'shoes-boots': 'shoes', 'shoes-sandals': 'shoes', 'shoes-loafers': 'shoes',
   'acc-chain': 'necklace', 'acc-pearls': 'necklace', 'acc-tote': 'bag', 'acc-belt-bag': 'bag',
+  'top-crochet': 'top', 'bottom-baggy': 'bottom', 'acc-sunglasses': 'glasses', 'acc-glasses': 'glasses',
 };
 
-const SHOP_TAGS: Record<string, string[]> = {
-  starter: ['casual'], city: ['casual'], step: ['casual'], glam: ['party'], evening: ['evening', 'party'],
-  office: ['office'], sport: ['sport', 'casual'],
+/** Style tags of each piece of art: what dress codes it fits. */
+const ART_TAGS: Record<string, Tag[]> = {
+  'top-tee': ['casual', 'sport'], 'top-crop': ['casual', 'party', 'beach'],
+  'top-sweater': ['casual', 'winter'], 'top-hoodie': ['sport', 'casual', 'winter'],
+  'top-blouse': ['office', 'evening'], 'top-blazer': ['office'],
+  'bottom-jeans': ['casual'], 'bottom-skirt': ['casual', 'party'],
+  'bottom-shorts': ['casual', 'beach', 'sport'], 'bottom-leggings': ['sport'],
+  'bottom-trousers': ['office'], 'bottom-midi': ['office', 'evening'],
+  'dress-black': ['evening', 'party'], 'dress-red': ['evening', 'party'],
+  'dress-gown': ['evening'], 'dress-sundress': ['beach', 'casual'],
+  'shoes-sneakers': ['casual', 'sport'], 'shoes-heels': ['party', 'evening', 'office'],
+  'shoes-boots': ['winter', 'casual'], 'shoes-sandals': ['beach', 'party'], 'shoes-loafers': ['office', 'casual'],
+  'acc-hoops': ['casual', 'party'], 'acc-chain': ['casual', 'party'], 'acc-pearls': ['evening', 'office'],
+  'acc-bag': ['casual', 'office'], 'acc-tote': ['office', 'casual'], 'acc-belt-bag': ['sport', 'casual'],
+  'top-crochet': ['casual', 'party'], 'bottom-baggy': ['casual', 'party'],
+  'acc-sunglasses': ['casual', 'beach', 'party'], 'acc-glasses': ['office', 'casual'],
+};
+/** A shop adds its own style to everything it sells. */
+const SHOP_TAGS: Record<string, Tag[]> = { glam: ['party'], evening: ['evening'], office: ['office'], sport: ['sport'] };
+
+export const TAG_ICONS: Record<Tag, string> = {
+  casual: '☕', office: '💼', party: '🎉', evening: '🥂', sport: '🏃‍♀️', beach: '🌴', winter: '❄️',
+};
+
+export const TAG_NAMES: Record<Tag, string> = {
+  casual: 'Повседневный', office: 'Деловой', party: 'Вечеринка', evening: 'Вечерний',
+  sport: 'Спорт', beach: 'Пляж', winter: 'Зима',
 };
 
 /* Colour variants made with CSS filters on one piece of art. */
@@ -102,7 +128,7 @@ function add(shop: string, specs: Spec[]) {
     const id = `${shop}-${art}-${ITEMS.filter((i) => i.shop === shop && i.art === art).length + 1}`;
     const [lo, hi] = RARITY[rarity].price;
     const price = shop === 'starter' ? 0 : Math.round((lo + (hi - lo) * hash(id)) / 10) * 10;
-    const item: Item = { id, name, art, filter, slot: ART_SLOT[art], rarity, price, shop, tags: SHOP_TAGS[shop] ?? [] };
+    const item: Item = { id, name, art, filter, slot: ART_SLOT[art], rarity, price, shop, tags: [...new Set([...(ART_TAGS[art] ?? []), ...(SHOP_TAGS[shop] ?? [])])] };
     ITEMS.push(item);
     ITEM_BY_ID[id] = item;
   });
@@ -139,6 +165,12 @@ add('city', [
   ['bottom-shorts', 'Шорты «Деним»'],
   ['dress-sundress', 'Сарафан «Лимон»', 'rare'],
   ['dress-sundress', 'Сарафан «Небо»', 'rare', 'hue-rotate(170deg)'],
+  ['top-crochet', 'Кофта «Ажур-бордо»', 'rare'],
+  ['top-crochet', 'Кофта «Ажур-графит»', 'rare', 'grayscale(1) brightness(1.1)'],
+  ['bottom-baggy', 'Джинсы «Бэгги с галстуком»', 'rare'],
+  ['bottom-baggy', 'Джинсы «Бэгги-индиго»', 'epic', 'saturate(1.6) brightness(0.75)'],
+  ['acc-sunglasses', 'Очки «Нуар»'],
+  ['acc-glasses', 'Очки «Черепаха»'],
 ]);
 
 add('step', [
@@ -206,9 +238,9 @@ add('sport', [
   ['bottom-leggings', 'Леггинсы «Графит»', 'common', 'brightness(2.2)'],
   ['bottom-shorts', 'Шорты «Светлый деним»', 'common', TINT.lightWash],
   ['bottom-shorts', 'Шорты «Белые»', 'rare', 'grayscale(1) brightness(1.55)'],
-  ['acc-belt-bag', 'Поясная сумка «Розовая»'],
-  ['acc-belt-bag', 'Поясная сумка «Мята»', 'common', 'hue-rotate(150deg)'],
-  ['acc-belt-bag', 'Поясная сумка «Нуар»', 'rare', TINT.noir],
+  ['acc-belt-bag', 'Мини-сумка «Розовая»'],
+  ['acc-belt-bag', 'Мини-сумка «Мята»', 'common', 'hue-rotate(150deg)'],
+  ['acc-belt-bag', 'Мини-сумка «Нуар»', 'rare', TINT.noir],
 ]);
 
 export const STARTER = ITEMS.filter((i) => i.shop === 'starter');

@@ -1,0 +1,4 @@
+{
+ "_note": "Pairs whose layers were reviewed by eye and accepted although they differ from the reference more than the default limit (30000 px). Value: the limit for that pair. Open-work like crochet never matches the reference hole for hole.",
+ "top-crochet": 60000
+}

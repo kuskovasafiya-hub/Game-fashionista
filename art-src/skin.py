@@ -159,6 +159,13 @@ def make_variants(name, png, box, base, under, mean_lab, out_dir, mode='item', t
         w = skin_weight(rgba[..., :3], strict=False)
     elif mode == 'colour':
         w = grown_weight(rgba[..., :3])
+    elif mode == 'hand':
+        # a bag with the hand that holds it: skin is only the hand, which grows down
+        # from the wrist at the layer's top edge (a beige bag's shadows look like skin)
+        w = grown_weight(rgba[..., :3])
+        labels, n = ndi.label(w > 0.3)
+        top = np.unique(labels[:3][labels[:3] > 0])
+        w = w * ndi.binary_dilation(np.isin(labels, top), iterations=1)
     elif mode == 'hair':
         # ears, temples, forehead redrawn into the front hair layer; not the strands
         q = (rgba[..., :3] // 12).astype(int)

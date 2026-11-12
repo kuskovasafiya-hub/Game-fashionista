@@ -1,7 +1,7 @@
 import { useState } from 'preact/hooks';
 import { ITEMS, SHOPS } from '../game/catalog';
 import {
-  ENERGY_MAX, PITY_EPIC, PITY_RARE, debugExport, debugImport, debugPatch, debugXp, resetGame,
+  ENERGY_MAX, PITY_EPIC, PITY_RARE, VOTES_PER_TICKET, debugExport, debugImport, debugPatch, debugXp, resetGame,
   useGame, xpLeft, xpToNext, type LevelUp,
 } from '../game/store';
 import { fmt } from './common';
@@ -121,6 +121,19 @@ export function DebugPanel({ onClose, onLevelUp }: { onClose: () => void; onLeve
             <Btn onClick={() => debugPatch((s) => ({ discovered: [...new Set([...s.discovered, ...ITEMS.map((i) => i.id)])] }))}>Открыть каталог</Btn>
             <Btn onClick={() => debugPatch({ owned: [], outfit: {}, wish: [] })}>Забрать все вещи</Btn>
             <Btn onClick={() => debugPatch((s) => ({ discovered: [...s.owned] }))}>Скрыть ненайденные</Btn>
+          </div>
+        </section>
+
+        <section>
+          <h3>🎉 Ивенты <small>🎟 {g.tickets}, голосов {g.votes}, образов {g.entries.length}</small></h3>
+          <div class="dbg-btns">
+            <Btn onClick={() => debugPatch((s) => ({ tickets: s.tickets + 5 }))}>+5 🎟</Btn>
+            <Btn onClick={() => debugPatch({ tickets: 0 })}>0 🎟</Btn>
+            <Btn onClick={() => { debugPatch((s) => ({ entries: s.entries.map((e) => (e.claimed ? e : { ...e, resultAt: Date.now() })) })); flash('Результаты готовы'); }}>
+              Результаты готовы сейчас
+            </Btn>
+            <Btn onClick={() => debugPatch((s) => ({ votes: s.votes - (s.votes % VOTES_PER_TICKET) + VOTES_PER_TICKET - 1 }))}>Билетик за 1 голос</Btn>
+            <Btn onClick={() => { debugPatch({ entries: [] }); flash('Участие сброшено'); }}>Сбросить участие</Btn>
           </div>
         </section>
 

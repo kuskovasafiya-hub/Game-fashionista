@@ -6,7 +6,8 @@ set -u
 cd "$(dirname "$0")/.."
 NAME="$1"
 WHAT="$2"
-CODEX=/Applications/ChatGPT.app/Contents/Resources/codex
+# the ChatGPT app moved its bundled Codex CLI between versions
+CODEX=$(ls /Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex /Applications/ChatGPT.app/Contents/Resources/codex 2>/dev/null | head -1)
 
 PROMPT="Use your image generation tool to EDIT the first attached image (art-src/raw/base.png), then save the result as PNG to: art-src/raw/${NAME}.png (relative to the current working directory). Do not modify any other files.
 

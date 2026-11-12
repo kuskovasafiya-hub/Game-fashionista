@@ -1,12 +1,18 @@
-import type { JSX } from 'preact';
+import type { ComponentChildren, JSX } from 'preact';
 import layers from './layers.json';
 import { ITEM_BY_ID, type Item, type Slot } from '../game/catalog';
 
 /** All art is cut from a 1024x1536 canvas; layers are positioned in % of it. */
 const W = 1024;
 const H = 1536;
-/** `skin`: the layer shows some skin and has a recoloured file per tone, `<name>~<tone>`. */
-type Box = { x: number; y: number; w: number; h: number; skin?: boolean };
+/**
+ * A layer's box on the canvas (art-src/v2/build.py).
+ * skin: has a recoloured copy per tone, `<name>~<tone>`.
+ * hem:  (tops) `<name>-hem` masks the bottom worn under it to below the top's hem.
+ * cut:  (closed shoes) the doll's own feet are hidden below this row: the shoe layer
+ *       brings her foot inside it, drawn in place by editing the doll.
+ */
+type Box = { x: number; y: number; w: number; h: number; skin?: boolean; hem?: boolean; cut?: number };
 const LAYERS = layers as Record<string, Box>;
 
 export interface HairStyle { name: string; art: string }
@@ -44,11 +50,22 @@ export interface Look { hair: number; skin?: number; makeup?: number }
 export const DEFAULT_LOOK: Look = { hair: 1, skin: BASE_SKIN, makeup: 0 };
 export type Outfit = Partial<Record<Slot, string>>;
 
-const UNDER_HAIR: Slot[] = ['shoes', 'bottom', 'dress', 'top', 'necklace', 'bag'];
+/**
+ * Crop to the figure: the box around every layer the doll can wear (a bag in her
+ * hand, a gown's hem and shoes reach furthest), so nothing is ever cut off.
+ */
+export const FIGURE_VIEW: [number, number, number, number] = (() => {
+  const boxes = Object.entries(LAYERS).filter(([n]) => !n.startsWith('product-')).map(([, b]) => b);
+  const x0 = Math.max(0, Math.min(...boxes.map((b) => b.x)) - 8);
+  const x1 = Math.min(W, Math.max(...boxes.map((b) => b.x + b.w)) + 8);
+  const y0 = Math.max(0, Math.min(...boxes.map((b) => b.y)) - 8);
+  const y1 = Math.min(H, Math.max(...boxes.map((b) => b.y + b.h)) + 2);
+  return [x0, y0, x1 - x0, y1 - y0];
+})();
 
 export const artUrl = (name: string) => `${import.meta.env.BASE_URL}art/${name}.webp`;
 
-function Layer({ name, filter, tone }: { name: string; filter?: string; tone: string }) {
+function Layer({ name, filter, tone, clipBelow }: { name: string; filter?: string; tone: string; clipBelow?: number }) {
   const l = LAYERS[name];
   if (!l) return null;
   const file = l.skin && tone !== SKIN_TONES[BASE_SKIN].id ? `${name}~${tone}` : name;
@@ -58,12 +75,30 @@ function Layer({ name, filter, tone }: { name: string; filter?: string; tone: st
     width: `${(l.w / W) * 100}%`,
     filter,
   };
+  if (clipBelow !== undefined && clipBelow < l.y + l.h) {
+    style.clipPath = `inset(0 0 ${((l.y + l.h - clipBelow) / l.h) * 100}% 0)`;
+  }
   return <img class="layer" src={artUrl(file)} style={style} alt="" draggable={false} />;
+}
+
+/** Layers on the whole canvas, masked by an image of the canvas (a top's hem). */
+function Masked({ mask, children }: { mask?: string; children: ComponentChildren }) {
+  if (!mask) return <>{children}</>;
+  const m = `url(${artUrl(mask)})`;
+  return (
+    <div class="layer-mask" style={{ maskImage: m, WebkitMaskImage: m }}>
+      {children}
+    </div>
+  );
 }
 
 /**
  * The paper doll. `view` crops to a region of the canvas, e.g. the head:
  * [x, y, w, h] in canvas pixels.
+ *
+ * Drawing order (back to front): hair and garment backs, body, makeup, underwear
+ * (where nothing covers it), shoes over her own feet, bottom (masked to below the top's hem), dress,
+ * top, necklace, bag, glasses, hair front, earrings.
  */
 export function Doll({ look, outfit, class: cls, view }: {
   look: Look; outfit: Outfit; class?: string; view?: [number, number, number, number];
@@ -76,18 +111,17 @@ export function Doll({ look, outfit, class: cls, view }: {
   const hair = (HAIRSTYLES[look.hair] ?? HAIRSTYLES[0]).art;
   const tone = (SKIN_TONES[look.skin ?? BASE_SKIN] ?? SKIN_TONES[BASE_SKIN]).id;
   const makeup = MAKEUPS[look.makeup ?? 0]?.art;
-  const layer = (s: Slot) => {
-    const it = items[s];
+  const { top, bottom, dress, shoes } = items;
+
+  /** An item: a back/front pair or a single layer, with the item's colour filter. */
+  const part = (it: Item | undefined, side: 'back' | 'front') => {
     if (!it) return null;
-    // a colour filter would tint the skin the item shows (leg in a slit, ankle in a
-    // shoe): put that skin back on top, unfiltered
-    return (
-      <>
-        <Layer name={it.art} filter={it.filter} tone={tone} />
-        {it.filter && <Layer name={`${it.art}-skin`} tone={tone} />}
-      </>
-    );
+    const pair = LAYERS[`${it.art}-front`];
+    if (pair) return <Layer name={`${it.art}-${side}`} filter={it.filter} tone={tone} />;
+    return side === 'front' ? <Layer name={it.art} filter={it.filter} tone={tone} /> : null;
   };
+  const hem = top && LAYERS[`${top.art}-front`]?.hem ? `${top.art}-hem` : undefined;
+
   return (
     <div class={'doll ' + (cls ?? '')} style={{ aspectRatio: `${vw} / ${vh}` }}>
       <div
@@ -96,13 +130,25 @@ export function Doll({ look, outfit, class: cls, view }: {
       >
         <div class="doll-shadow" />
         <Layer name={`${hair}-back`} tone={tone} />
-        <Layer name="body" tone={tone} />
+        {part(dress, 'back')}
+        {part(top, 'back')}
+        <Layer name="body" tone={tone} clipBelow={shoes ? LAYERS[shoes.art]?.cut : undefined} />
         {makeup && <Layer name={makeup} tone={tone} />}
-        {/* shoes are drawn with the whole foot, so bare feet would poke out from under them */}
-        {!items.shoes && <Layer name="feet" tone={tone} />}
-        {UNDER_HAIR.map(layer)}
-        <Layer name={hair} tone={tone} />
-        {layer('earrings')}
+        {!bottom && !dress && <Layer name="underwear-bottom" tone={tone} />}
+        {!top && !dress && <Layer name="underwear-top" tone={tone} />}
+        {/* shoes go over her own feet; a closed shoe brings the top of the foot it wraps,
+            scaled to hers, unfiltered so a colour filter never tints skin */}
+        {shoes && <Layer name={`${shoes.art}-foot`} tone={tone} />}
+        {part(shoes, 'front')}
+        <Masked mask={hem}>{part(bottom, 'front')}</Masked>
+        {part(dress, 'front')}
+        {part(top, 'front')}
+        {part(items.necklace, 'front')}
+        {part(items.bag, 'front')}
+        {/* glasses sit on the face, under the strands that frame it */}
+        {part(items.glasses, 'front')}
+        <Layer name={`${hair}-front`} tone={tone} />
+        {part(items.earrings, 'front')}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { ENERGY_MAX, adsLeft, tickEnergy, useGame, watchAd, xpToNext, type LevelUp } from '../game/store';
-import { RARITY, type Item } from '../game/catalog';
+import { RARITY, TAG_ICONS, TAG_NAMES, type Item, type Tag } from '../game/catalog';
 import { ItemThumb } from '../art/Doll';
 
 export const fmt = (n: number) => n.toLocaleString('ru-RU');
@@ -29,7 +29,7 @@ export function useEnergyTimer() {
   return left;
 }
 
-export function Hud({ onEnergy }: { onEnergy: () => void }) {
+export function Hud({ onEnergy, onTickets }: { onEnergy: () => void; onTickets: () => void }) {
   const g = useGame();
   const left = useEnergyTimer();
   const need = xpToNext(g.level);
@@ -46,6 +46,7 @@ export function Hud({ onEnergy }: { onEnergy: () => void }) {
       </button>
       <span class="pill">🪙 {fmt(g.coins)}</span>
       <span class="pill">💎 {g.gems}</span>
+      <button class="pill" onClick={onTickets}>🎟 {g.tickets}</button>
     </header>
   );
 }
@@ -98,8 +99,11 @@ export function RarityTag({ item }: { item: Item }) {
   return <span class="rarity" style={{ background: r.color }}>{r.name}</span>;
 }
 
-export function ItemCard({ item, selected, badge, dim, onClick }: {
-  item: Item; selected?: boolean; badge?: ComponentChildren; dim?: boolean; onClick?: () => void;
+/**
+ * `dressCode`: in the fitting room, the item's tags outside the event's dress code are faded.
+ */
+export function ItemCard({ item, selected, badge, dim, onClick, dressCode }: {
+  item: Item; selected?: boolean; badge?: ComponentChildren; dim?: boolean; onClick?: () => void; dressCode?: Tag[];
 }) {
   return (
     <button
@@ -110,6 +114,26 @@ export function ItemCard({ item, selected, badge, dim, onClick }: {
     >
       <ItemThumb item={item} silhouette={dim} />
       {badge && <span class="badge">{badge}</span>}
+      {!dim && (
+        <span class="item-tags">
+          {(dressCode ? [...item.tags].sort((a, b) => Number(dressCode.includes(b)) - Number(dressCode.includes(a))) : item.tags)
+            .map((t) => <TagIcon tag={t} off={!!dressCode && !dressCode.includes(t)} />)}
+        </span>
+      )}
     </button>
+  );
+}
+
+export function TagIcon({ tag, off }: { tag: Tag; off?: boolean }) {
+  return <span class={'tag-icon tag-' + tag + (off ? ' off' : '')} title={TAG_NAMES[tag]}>{TAG_ICONS[tag]}</span>;
+}
+
+/** The tags an event accepts: an item fits if it has any of them. */
+export function DressCode({ tags, label }: { tags: Tag[]; label?: boolean }) {
+  return (
+    <span class="chips">
+      {label && <span class="chips-label">Подходят:</span>}
+      {tags.map((t) => <span class={'chip tag-' + t}><TagIcon tag={t} />{TAG_NAMES[t]}</span>)}
+    </span>
   );
 }
