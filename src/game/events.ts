@@ -1,5 +1,5 @@
 import { HAIRSTYLES, MAKEUPS, SKIN_TONES, type Look, type Outfit } from '../art/Doll';
-import { ITEMS, ITEM_BY_ID, STARTER, type Item, type Rarity, type Slot, type Tag } from './catalog';
+import { ITEMS, ITEM_BY_ID, type Item, type Rarity, type Slot, type Tag } from './catalog';
 
 /* ---------- seeded randomness ---------- */
 
@@ -295,46 +295,6 @@ export function showcaseLook(ev: GameEvent): { look: Look; outfit: Outfit } {
     outfit[s] = choose(s);
   }
   if (prize) outfit[prize.slot] = prize.id;
-  const look: Look = {
-    hair: Math.floor(r() * HAIRSTYLES.length),
-    skin: Math.floor(r() * SKIN_TONES.length),
-    makeup: 1 + Math.floor(r() * (MAKEUPS.length - 1)),
-  };
-  return { look, outfit };
-}
-
-/**
- * A model dressed in a shop's own pieces for its card: rare ones first, starter basics
- * where the shop sells no clothes or shoes. The premium boutique, not open yet, teases
- * with the most precious evening pieces.
- */
-export function shopLook(shopId: string): { look: Look; outfit: Outfit } {
-  const r = rng(seedOf('shop:' + shopId));
-  const pool = shopId === 'premium'
-    ? ITEMS.filter((i) => i.rarity === 'epic' && (i.shop === 'evening' || i.shop === 'glam'))
-    : ITEMS.filter((i) => i.shop === shopId);
-  const basic = (art: string) => STARTER.find((i) => i.art === art)!.id;
-  const choose = (slot: Slot) => {
-    const all = pool.filter((i) => i.slot === slot);
-    const fancy = all.filter((i) => i.rarity !== 'common');
-    const from = fancy.length ? fancy : all;
-    return from.length ? pick(from, r).id : undefined;
-  };
-  const outfit: Outfit = {};
-  const dress = choose('dress');
-  const top = choose('top');
-  const bottom = choose('bottom');
-  if (dress && (!top || !bottom || r() < 0.5)) outfit.dress = dress;
-  else if (top || bottom) { outfit.top = top ?? basic('top-tee'); outfit.bottom = bottom ?? basic('bottom-jeans'); }
-  // a shop of accessories shows them on the little black dress; a shoe shop on tee and jeans
-  else if (pool.some((i) => i.slot === 'shoes')) { outfit.top = basic('top-tee'); outfit.bottom = basic('bottom-jeans'); }
-  else outfit.dress = basic('dress-black');
-  outfit.shoes = choose('shoes') ?? basic(outfit.dress ? 'shoes-heels' : 'shoes-sneakers');
-  const acc = (['necklace', 'earrings', 'bag'] as Slot[]).filter((s) => pool.some((i) => i.slot === s));
-  for (let n = 0; n < 2 && acc.length; n++) {
-    const s = acc.splice(Math.floor(r() * acc.length), 1)[0];
-    outfit[s] = choose(s);
-  }
   const look: Look = {
     hair: Math.floor(r() * HAIRSTYLES.length),
     skin: Math.floor(r() * SKIN_TONES.length),

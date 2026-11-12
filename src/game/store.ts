@@ -218,12 +218,18 @@ function weightedPick(pool: Item[], s: Save): Item {
 
 export const searchCost = (shopId: string) => (shopId === 'premium' ? 2 : 1);
 
+/** Every piece of the shop (or one of its departments) is in the wardrobe: nothing left to find. */
+export const allBought = (shopId: string, dept?: Dept, s: Save = state) => {
+  const items = shopItems(shopId, dept);
+  return items.length > 0 && items.every((i) => s.owned.includes(i.id));
+};
+
 export function search(shopId: string, dept: Dept): SearchResult | null {
   tickEnergy();
   const cost = searchCost(shopId);
   if (state.energy < cost) return null;
   const pool = shopItems(shopId, dept);
-  if (!pool.length) return null;
+  if (!pool.length || allBought(shopId, dept)) return null;
 
   let { rarity, pity } = rollRarity(state);
   const order: Rarity[] = ['epic', 'rare', 'common'];

@@ -13,7 +13,7 @@ import { HomeScreen } from './HomeScreen';
 import { NavBar, type Tab } from './NavBar';
 
 type Route =
-  | { name: 'home' } | { name: 'shops' } | { name: 'shop'; id: string } | { name: 'wardrobe' }
+  | { name: 'home' } | { name: 'shops'; from?: string } | { name: 'shop'; id: string } | { name: 'wardrobe' }
   | { name: 'events' } | { name: 'event'; key: string } | { name: 'vote' } | { name: 'voting'; key: string }
   | { name: 'story' } | { name: 'scene'; id: string };
 
@@ -38,7 +38,7 @@ export function App() {
   if (!g.created) return <div class="app"><CreateScreen />{debug}</div>;
 
   const back = () => setRoute(
-    route.name === 'shop' ? { name: 'shops' }
+    route.name === 'shop' ? { name: 'shops', from: route.id }
       : route.name === 'voting' ? { name: 'vote' }
       : route.name === 'scene' ? { name: 'story' }
       : route.name === 'story' || route.name === 'wardrobe' ? { name: 'home' }
@@ -72,7 +72,7 @@ export function App() {
               openEvent={(key) => setRoute({ name: 'event', key })}
             />
           )}
-          {route.name === 'shops' && <ShopsScreen open={(id) => setRoute({ name: 'shop', id })} />}
+          {route.name === 'shops' && <ShopsScreen open={(id) => setRoute({ name: 'shop', id })} focus={route.from} />}
           {route.name === 'shop' && (
             <ShopScreen shopId={route.id} onNoEnergy={() => setEnergyOpen(true)} onLevelUp={setLevelUp} />
           )}
