@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { ItemThumb } from '../art/Doll';
-import { DEPT_NAMES, RARITY, SHOPS, shopItems, type Dept, type Item, type Shop, type Slot } from '../game/catalog';
-import { PITY_RARE, allBought, buy, search, searchCost, toggleWish, useGame, type LevelUp, type SearchResult } from '../game/store';
+import { RARITY, SHOPS, shopFixtures, shopItems, type Fixture, type Item, type Shop, type Slot } from '../game/catalog';
+import {
+  PITY_RARE, SHELF_RUSH_GEMS, allBought, buy, rushShelf, search, searchCost, shelfLeft, shelfReadyAt, toggleWish, useGame,
+  type LevelUp, type SearchResult,
+} from '../game/store';
+import { useNow } from './EventsScreen';
+import { rng, seedOf } from '../game/events';
 import { ItemCard, Modal, RarityTag, fmt, plural } from './common';
 
 /** Shop window order: the big pieces first, then shoes and accessories. */
@@ -131,29 +136,268 @@ function Lot({ shop, index, found, level, open }: {
   );
 }
 
+/** Where fixtures stand in the room, in order: the top wall, the side walls, the middle, by the door. */
+const SPOTS: { left?: string; right?: string; top: string; width: string }[] = [
+  { left: '3%', top: '3%', width: '45%' },
+  { right: '3%', top: '3%', width: '45%' },
+  { left: '2%', top: '33%', width: '30%' },
+  { right: '2%', top: '33%', width: '30%' },
+  { left: '35%', top: '36%', width: '30%' },
+  { left: '2%', top: '62%', width: '30%' },
+  { right: '2%', top: '62%', width: '30%' },
+];
+
+/** Soft fabric colours for the goods on display; a piece's colour says nothing about what it is. */
+const SWATCHES = ['#e8a0b8', '#a9c7ef', '#f2d07a', '#9fd3b8', '#c6a8f0', '#f0b48a', '#7d7b8c', '#efe4d4', '#d98484', '#7393c4', '#b5d98c', '#f5c6d8'];
+
+/* ---------- goods on display: shapes that say "shoes" or "a dress", never which one ---------- */
+
+type Rand = () => number;
+const pickOf = <T,>(arr: T[], r: Rand) => arr[Math.floor(r() * arr.length)];
+const between = (lo: number, hi: number, r: Rand) => lo + r() * (hi - lo);
+
+/** A garment's cut seen side-on on the rail: outline, width in px, length in % of the rail. */
+const CUTS: Record<string, { clip: string; w: [number, number]; h: [number, number] }> = {
+  tee: { clip: 'polygon(22% 0, 78% 0, 100% 24%, 86% 30%, 88% 100%, 12% 100%, 14% 30%, 0 24%)', w: [10, 13], h: [40, 50] },
+  crop: { clip: 'polygon(22% 0, 78% 0, 100% 30%, 86% 38%, 88% 100%, 12% 100%, 14% 38%, 0 30%)', w: [10, 12], h: [28, 34] },
+  sweater: { clip: 'polygon(18% 0, 82% 0, 100% 20%, 100% 100%, 0 100%, 0 20%)', w: [14, 17], h: [44, 54] },
+  hoodie: { clip: 'polygon(30% 0, 70% 0, 82% 8%, 100% 22%, 100% 100%, 0 100%, 0 22%, 18% 8%)', w: [15, 18], h: [46, 56] },
+  blouse: { clip: 'polygon(25% 0, 75% 0, 100% 26%, 90% 100%, 10% 100%, 0 26%)', w: [10, 13], h: [42, 52] },
+  blazer: { clip: 'polygon(20% 0, 80% 0, 100% 18%, 100% 100%, 0 100%, 0 18%)', w: [13, 15], h: [50, 58] },
+  trousers: { clip: 'polygon(4% 0, 96% 0, 96% 100%, 56% 100%, 50% 38%, 44% 100%, 4% 100%)', w: [10, 13], h: [66, 80] },
+  shorts: { clip: 'polygon(4% 0, 96% 0, 100% 100%, 56% 100%, 50% 55%, 44% 100%, 0 100%)', w: [12, 14], h: [26, 32] },
+  skirt: { clip: 'polygon(18% 0, 82% 0, 100% 100%, 0 100%)', w: [12, 16], h: [32, 42] },
+  midi: { clip: 'polygon(20% 0, 80% 0, 100% 100%, 0 100%)', w: [13, 16], h: [54, 64] },
+  dress: { clip: 'polygon(28% 0, 72% 0, 80% 34%, 100% 100%, 0 100%, 20% 34%)', w: [13, 17], h: [70, 84] },
+  gown: { clip: 'polygon(30% 0, 70% 0, 76% 30%, 100% 100%, 0 100%, 24% 30%)', w: [15, 19], h: [86, 96] },
+};
+const ART_CUT: Record<string, string> = {
+  'top-tee': 'tee', 'top-crop': 'crop', 'top-sweater': 'sweater', 'top-crochet': 'sweater', 'top-hoodie': 'hoodie',
+  'top-blouse': 'blouse', 'top-blazer': 'blazer',
+  'bottom-jeans': 'trousers', 'bottom-trousers': 'trousers', 'bottom-leggings': 'trousers', 'bottom-baggy': 'trousers',
+  'bottom-shorts': 'shorts', 'bottom-skirt': 'skirt', 'bottom-midi': 'midi',
+  'dress-black': 'dress', 'dress-red': 'dress', 'dress-sundress': 'dress', 'dress-gown': 'gown',
+};
+/** Prints over the fabric colour. */
+const PRINTS = [
+  'none', 'none', 'none',
+  'repeating-linear-gradient(0deg, rgba(255,255,255,0.4) 0 2px, transparent 2px 6px)',
+  'radial-gradient(rgba(255,255,255,0.6) 1px, transparent 1.6px) 0 0 / 5px 5px',
+  'repeating-linear-gradient(90deg, rgba(0,0,0,0.1) 0 2px, transparent 2px 5px)',
+  'linear-gradient(180deg, transparent 62%, rgba(255,255,255,0.45) 62% 70%, transparent 70%)',
+];
+
+/**
+ * Shoes in profile, toe to the right, standing on y=56 (viewBox 100×60): the shape, a lighter
+ * lining where the foot goes, and stitches or straps. A pair: the far shoe a step behind.
+ */
+const SHOES: Record<string, { body: string; sole?: string; lining?: string; straps?: string; stitch?: string }> = {
+  sneakers: {
+    body: 'M8 48 L10 26 Q12 22 18 24 L28 28 Q34 18 42 18 L48 20 Q62 28 74 32 Q90 36 92 48 Z',
+    sole: 'M4 48 L92 48 Q96 48 96 52 Q96 57 90 57 L8 57 Q4 57 4 52 Z',
+    stitch: 'M46 24 L52 21 M52 27.5 L58 24.5 M58 31 L64 28',
+  },
+  heels: {
+    body: 'M12 20 Q9 30 14 36 L17 56 L20.5 56 L24 39 Q37 45 56 53 L90 55 Q97 55 96 50 Q94 44 80 42 Q62 40 52 38 Q32 33 24 24 Q18 19 12 20 Z',
+    lining: 'M15 25 Q30 34 50 37.5',
+  },
+  boots: {
+    body: 'M20 4 L44 4 L45 28 Q52 34 70 38 Q92 41 96 49 Q97 55 90 55 L58 54 Q44 50 31 48 L30 56 L19 56 L18 44 Q16 30 20 4 Z',
+    stitch: 'M20.5 10 L44.5 10 M24 14 L24 42',
+  },
+  sandals: {
+    body: 'M10 37 Q30 41 58 49 L94 50 Q98 51 96 54 L58 54 Q40 50 25 45 L24 56 L15 56 L14 43 Q9 41 10 37 Z',
+    straps: 'M66 50 Q78 34 90 50 M12 37 Q11 24 21 22 Q30 21 31 33 M31 33 L46 46',
+  },
+  loafers: {
+    body: 'M9 29 Q28 33 46 29 L56 30 Q80 33 90 40 Q97 45 96 51 Q95 55 88 55 L8 55 Q7 42 9 29 Z',
+    lining: 'M11 31 Q28 35 45 31',
+    stitch: 'M52 31 Q72 31 87 41 M48 34 Q58 41 70 36 M8 51 L95.5 51',
+  },
+};
+/** Leather and suede tones: shoes in pale fabric colours wash out on the shelf. */
+const LEATHER = ['#d35d7a', '#4f6fae', '#3a3448', '#c9a24a', '#8a563f', '#5aa58a', '#9a6fd0', '#e08a4c', '#b23a48', '#6d6a7c'];
+
+const ART_SHOE: Record<string, string> = {
+  'shoes-sneakers': 'sneakers', 'shoes-heels': 'heels', 'shoes-boots': 'boots', 'shoes-sandals': 'sandals', 'shoes-loafers': 'loafers',
+};
+
+function Shoe({ kind, colour }: { kind: string; colour: string }) {
+  const sh = SHOES[kind] ?? SHOES.sneakers;
+  const one = (back: boolean) => (
+    <g transform={back ? 'translate(-9 -5)' : undefined} opacity={back ? 0.6 : 1}>
+      <path d={sh.body} fill={colour} />
+      <path d={sh.body} fill="url(#shine)" />
+      {sh.sole && <path d={sh.sole} fill="#fbf8ff" stroke="rgba(0,0,0,0.14)" stroke-width="1" />}
+      {sh.lining && <path d={sh.lining} fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="3" stroke-linecap="round" />}
+      {sh.straps && <path d={sh.straps} fill="none" stroke={colour} stroke-width="4.5" stroke-linecap="round" />}
+      {sh.stitch && (
+        <path
+          d={sh.stitch} fill="none" stroke-linecap="round"
+          stroke={kind === 'sneakers' ? '#fff' : 'rgba(0,0,0,0.22)'} stroke-width={kind === 'sneakers' ? 2.2 : 1.4}
+        />
+      )}
+    </g>
+  );
+  return <svg class="shoe" viewBox="-10 -6 112 66" aria-hidden="true">{one(true)}{one(false)}</svg>;
+}
+
+/** Glasses front-on, folded on the stand: round, square or cat-eye frames; sunglasses get dark lenses. */
+function Specs({ sun, shape, colour }: { sun: boolean; shape: number; colour: string }) {
+  const lens = shape === 2
+    ? 'M3 5 Q10 1 17 4 Q17 12 10 13 Q3 12 3 5 Z'
+    : `M3 ${shape ? 4 : 5} Q3 3 5 3 L15 3 Q17 3 17 ${shape ? 4 : 5} L17 ${shape ? 10 : 9} Q17 13 10 13 Q3 13 3 ${shape ? 10 : 9} Z`;
+  const fill = sun ? 'rgba(40, 30, 60, 0.82)' : 'rgba(210, 230, 255, 0.35)';
+  return (
+    <svg class="specs" viewBox="0 0 40 16" aria-hidden="true">
+      <g fill={fill} stroke={colour} stroke-width="2">
+        <path d={lens} />
+        <path d={lens} transform="translate(20 0)" />
+      </g>
+      <path d="M17 6 Q20 4 23 6" fill="none" stroke={colour} stroke-width="2" />
+    </svg>
+  );
+}
+
+/**
+ * What stands on a fixture, drawn so it does not give away the pieces: clothes hang
+ * side-on on the rail, shoes stand in pairs, bags are closed, glasses fold on the stand,
+ * jewellery hides on velvet trays. Colours are made up, so they tell nothing either.
+ */
+function FixtureGoods({ fx, shopId }: { fx: Fixture; shopId: string }) {
+  const r = rng(seedOf(`${shopId}:${fx.id}`));
+  const colour = () => pickOf(SWATCHES, r);
+  // which item each drawn piece stands for: every kind sold shows up, in a mixed order
+  const pieces = (count: number) => {
+    const list = Array.from({ length: count }, (_, i) => fx.items[i % fx.items.length]);
+    for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
+    return list;
+  };
+  if (fx.look === 'rack') {
+    return (
+      <span class="fx-goods hanging">
+        {pieces(Math.min(10, Math.max(7, fx.items.length + 3))).map((it) => {
+          const cut = CUTS[ART_CUT[it.art] ?? 'tee'];
+          return (
+            <i style={{ width: `${between(cut.w[0], cut.w[1], r) * 1.8}px`, height: `${between(cut.h[0], cut.h[1], r)}%`, '--tilt': `${between(-4, 4, r)}deg` }}>
+              <b style={{ '--c': colour(), '--print': pickOf(PRINTS, r), clipPath: cut.clip }} />
+            </i>
+          );
+        })}
+      </span>
+    );
+  }
+  if (fx.look === 'shelf' && fx.kind !== 'bags') {
+    const row = () => pieces(2).map((it) => <Shoe kind={ART_SHOE[it.art] ?? 'sneakers'} colour={pickOf(LEATHER, r)} />);
+    return (
+      <span class="fx-goods packed shoes">
+        <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
+          <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff" stop-opacity="0.35" /><stop offset="0.5" stop-color="#fff" stop-opacity="0" />
+            <stop offset="1" stop-color="#000" stop-opacity="0.12" />
+          </linearGradient>
+        </svg>
+        <span class="row">{row()}</span>
+        <span class="row">{row()}</span>
+      </span>
+    );
+  }
+  if (fx.look === 'shelf') {
+    const row = () => Array.from({ length: 3 }, () => <i style={{ '--c': colour() }} />);
+    return (
+      <span class="fx-goods packed bags">
+        <span class="row">{row()}</span>
+        <span class="row">{row()}</span>
+      </span>
+    );
+  }
+  if (fx.look === 'stand') {
+    return (
+      <span class="fx-goods folded">
+        {pieces(6).map((it) => <Specs sun={it.art === 'acc-sunglasses'} shape={Math.floor(r() * 3)} colour={pickOf(FRAMES, r)} />)}
+      </span>
+    );
+  }
+  return (
+    <span class="fx-goods trays">
+      {pieces(2).map((it) => <Jewel art={it.art} metal={pickOf(METALS, r)} velvet={pickOf(VELVETS, r)} />)}
+    </span>
+  );
+}
+
+/** Jewellery metals and the velvet of the displays. */
+const METALS = ['#d6a93c', '#c9ccd6', '#e3a08c'];
+const VELVETS = ['#3b3557', '#6b2d3f', '#2f4a5c', '#4a3b6b'];
+
+/**
+ * A piece of jewellery on its display (viewBox 40×50): necklaces on a velvet bust (a chain
+ * with a pendant, or a string of pearls), earrings hanging in a pair from a little stand.
+ */
+function Jewel({ art, metal, velvet }: { art: string; metal: string; velvet: string }) {
+  if (art === 'acc-hoops') {
+    return (
+      <svg class="jewel" viewBox="3 6 34 43" aria-hidden="true">
+        <path d="M20 9 L20 46 M11 47 L29 47" stroke={velvet} stroke-width="3" stroke-linecap="round" />
+        <path d="M5 9 L35 9" stroke={velvet} stroke-width="3.5" stroke-linecap="round" />
+        <path d="M11 9 L11 14 M29 9 L29 14" stroke={metal} stroke-width="1.2" />
+        <circle cx="11" cy="20" r="6" fill="none" stroke={metal} stroke-width="2.2" />
+        <circle cx="29" cy="20" r="6" fill="none" stroke={metal} stroke-width="2.2" />
+      </svg>
+    );
+  }
+  const pearls = art === 'acc-pearls';
+  return (
+    <svg class="jewel" viewBox="5 4 30 47" aria-hidden="true">
+      <path d="M7 50 L7 35 Q7 27 14 25 L16 11 Q16 6 20 6 Q24 6 24 11 L26 25 Q33 27 33 35 L33 50 Z" fill={velvet} />
+      <path d="M16 11 Q16 6 20 6 Q24 6 24 11 L25 22" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1.5" />
+      {pearls
+        ? <path d="M12.5 26 Q20 40 27.5 26" fill="none" stroke={metal === '#d6a93c' ? '#f6efe2' : '#fbf4f6'} stroke-width="3" stroke-linecap="round" stroke-dasharray="0 3.3" />
+        : <>
+            <path d="M13 25 Q20 38 27 25" fill="none" stroke={metal} stroke-width="1.3" />
+            <path d="M20 31.5 L22.5 34.5 L20 38 L17.5 34.5 Z" fill={metal} />
+          </>}
+    </svg>
+  );
+}
+
+/** Frame colours: tortoiseshell, black, gold, pink, clear blue. */
+const FRAMES = ['#5a3b2e', '#2f2a3a', '#c9a24a', '#d77a9a', '#7393c4', '#8a6a4f'];
+
+const mmss = (ms: number) => {
+  const sec = Math.max(0, Math.ceil(ms / 1000));
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+};
+
+/**
+ * Inside a shop, seen from above: racks, shelves and cases along the walls and in the
+ * middle, one for each kind of thing sold. Each can be searched once an hour; a ready one
+ * glows, a resting one shows its timer.
+ */
 export function ShopScreen({ shopId, onNoEnergy, onLevelUp }: {
   shopId: string; onNoEnergy: () => void; onLevelUp: (lu: LevelUp) => void;
 }) {
   const g = useGame();
+  const now = useNow(1000);
   const shop = SHOPS.find((s) => s.id === shopId)!;
-  const [dept, setDept] = useState<Dept>(shop.depts[0]);
+  const fixtures = useMemo(() => shopFixtures(shopId), [shopId]);
   const [result, setResult] = useState<SearchResult | null>(null);
-  const [shake, setShake] = useState(false);
+  const [shaking, setShaking] = useState<string | null>(null);
+  const [resting, setResting] = useState<Fixture | null>(null);
+  const [collection, setCollection] = useState(false);
   const cost = searchCost(shopId);
-  const items = shopItems(shopId, dept);
   const all = shopItems(shopId);
   const found = all.filter((i) => g.discovered.includes(i.id)).length;
-  const bought = all.filter((i) => g.owned.includes(i.id)).length;
-  const deptDone = allBought(shopId, dept, g);
   const shopDone = allBought(shopId, undefined, g);
 
-  const doSearch = () => {
-    if (deptDone) return;
+  const tap = (fx: Fixture) => {
+    if (shaking) return;
+    if (!shelfLeft(shopId, fx.id, g).length) return;
+    if (shelfReadyAt(shopId, fx.id, g) > Date.now()) return setResting(fx);
     if (g.energy < cost) return onNoEnergy();
-    setShake(true);
+    setShaking(fx.id);
     setTimeout(() => {
-      setShake(false);
-      const r = search(shopId, dept);
+      setShaking(null);
+      const r = search(shopId, fx.id);
       if (r) setResult(r);
     }, 450);
   };
@@ -163,63 +407,85 @@ export function ShopScreen({ shopId, onNoEnergy, onLevelUp }: {
   };
 
   return (
-    <div class="screen shop" style={{ '--sc': shop.color }}>
-      <div class="shop-head">
-        <span class="shop-icon big">{shop.emoji}</span>
-        <div>
-          <h1 class="title">{shop.name}</h1>
-          <p class="muted">{shop.about}</p>
-        </div>
+    <div class="screen shop-floor" style={{ '--sc': shop.color }}>
+      <div class="shop-bar">
+        <span class="shop-icon">{shop.emoji}</span>
+        <span class="shop-bar-info">
+          <b>{shop.name}</b>
+          <small>
+            {shopDone ? '🏆 Коллекция собрана — искать больше нечего'
+              : <>Выбери полку · 🔍 ☕ {cost} · редкая не позже чем через {PITY_RARE - g.pityRare}</>}
+          </small>
+        </span>
+        <button class="btn mini" onClick={() => setCollection(true)}>📒 {found}/{all.length}</button>
       </div>
-      {shop.depts.length > 1 && (
-        <nav class="tabs">
-          {shop.depts.map((d) => (
-            <button class={'tab' + (dept === d ? ' active' : '')} onClick={() => setDept(d)}>
-              {DEPT_NAMES[d]}{allBought(shopId, d, g) && ' ✓'}
-            </button>
-          ))}
-        </nav>
-      )}
-      {deptDone ? (
-        <div class="sold-out">
-          <span class="sold-out-icon">{shopDone ? '🏆' : '✓'}</span>
-          <span>
-            <b>{shopDone ? 'Коллекция собрана!' : `Всё из раздела «${DEPT_NAMES[dept]}» уже твоё`}</b>
-            <small>
-              {shopDone
-                ? 'Ты купила все вещи этого магазина — искать здесь больше нечего.'
-                : 'Искать здесь больше нечего — загляни в другие разделы.'}
-            </small>
-          </span>
-        </div>
-      ) : (
-        <>
-          <button class={'btn search' + (shake ? ' shaking' : '')} onClick={doSearch} disabled={shake}>
-            🔍 Искать вещь <span class="cost">☕ {cost}</span>
-          </button>
-          <p class="muted small center">
-            Редкая вещь гарантирована не позже чем через {PITY_RARE - g.pityRare}{' '}
-            {plural(PITY_RARE - g.pityRare, 'поиск', 'поиска', 'поисков')}
-          </p>
-        </>
-      )}
-      <h3 class="section">Коллекция магазина: найдено {found}/{all.length}, куплено {bought}</h3>
-      <div class="grid">
-        {items.map((i) => {
-          const owned = g.owned.includes(i.id);
-          const seen = g.discovered.includes(i.id);
-          const wished = g.wish.includes(i.id);
+      <div class="room">
+        <span class="room-plant" />
+        <span class="room-door" />
+        {fixtures.map((fx, i) => {
+          const left = shelfLeft(shopId, fx.id, g);
+          const readyAt = shelfReadyAt(shopId, fx.id, g);
+          const state = !left.length ? 'done' : readyAt > now ? 'wait' : 'ready';
+          const spot = SPOTS[i];
           return (
-            <ItemCard
-              item={i}
-              dim={!seen}
-              badge={owned ? '✓' : wished ? '♥' : seen ? '♡' : '?'}
-              onClick={() => { if (seen && !owned) toggleWish(i.id); }}
-            />
+            <button
+              class={`fixture ${fx.look} ${state}` + (shaking === fx.id ? ' shaking' : '')}
+              style={{ left: spot.left, right: spot.right, top: spot.top, width: spot.width }}
+              disabled={state === 'done'} aria-label={fx.name} onClick={() => tap(fx)}
+            >
+              <span class="fx-art"><FixtureGoods fx={fx} shopId={shopId} /></span>
+              {state === 'ready' && <span class="fx-sparkles"><i>✦</i><i>✦</i><i>✧</i></span>}
+              {state === 'wait' && <span class="fx-timer">⏱ {mmss(readyAt - now)}</span>}
+              {state === 'done' && <span class="fx-done">✓ Всё найдено</span>}
+            </button>
           );
         })}
       </div>
-      <p class="muted small center">♡ — нажми, чтобы добавить в список желаний: такие вещи выпадают в 3 раза чаще.</p>
+
+      {resting && (
+        <Modal onClose={() => setResting(null)}>
+          <div class="burst">⏳</div>
+          <h2>{resting.name}</h2>
+          <p>Полка обновится через <b>{mmss(shelfReadyAt(shopId, resting.id, g) - now)}</b></p>
+          <p class="muted small">
+            Здесь ещё {shelfLeft(shopId, resting.id, g).length} {plural(shelfLeft(shopId, resting.id, g).length, 'вещь', 'вещи', 'вещей')}, которых у тебя нет.
+            На каждой полке можно искать раз в час.
+          </p>
+          <button
+            class="btn primary" disabled={g.gems < SHELF_RUSH_GEMS}
+            onClick={() => { if (rushShelf(shopId, resting.id)) setResting(null); }}
+          >
+            Обновить сейчас за 💎 {SHELF_RUSH_GEMS}
+          </button>
+          <button class="btn" onClick={() => setResting(null)}>Подождать</button>
+        </Modal>
+      )}
+      {collection && (
+        <Modal onClose={() => setCollection(false)}>
+          <h2>Коллекция: {found}/{all.length}</h2>
+          <p class="muted small">♡ — нажми, чтобы добавить в список желаний: такие вещи выпадают в 3 раза чаще.</p>
+          {fixtures.map((fx) => (
+            <>
+              <h3 class="section">{fx.name}</h3>
+              <div class="grid">
+                {fx.items.map((i) => {
+                  const owned = g.owned.includes(i.id);
+                  const seen = g.discovered.includes(i.id);
+                  const wished = g.wish.includes(i.id);
+                  return (
+                    <ItemCard
+                      item={i} dim={!seen}
+                      badge={owned ? '✓' : wished ? '♥' : seen ? '♡' : '?'}
+                      onClick={() => { if (seen && !owned) toggleWish(i.id); }}
+                    />
+                  );
+                })}
+              </div>
+            </>
+          ))}
+          <button class="btn" onClick={() => setCollection(false)}>Закрыть</button>
+        </Modal>
+      )}
       {result && <ResultModal r={result} onClose={close} />}
     </div>
   );

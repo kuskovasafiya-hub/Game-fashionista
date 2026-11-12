@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { DEFAULT_LOOK, type Look, type Outfit } from '../art/Doll';
-import { DEPT_SLOTS, ITEM_BY_ID, RARITY, SHOPS, shopItems, type Dept, type Item, type Rarity, type Slot } from './catalog';
+import { DEPT_SLOTS, ITEM_BY_ID, RARITY, SHOPS, shopFixtures, shopItems, type Dept, type Item, type Rarity, type Slot } from './catalog';
 import { RESULT_DELAY_MS, activeEvents, dressCodeMatch, eventByKey, hasClothes, rewardFor, scoreLook, seedOf, type Reward, type Score } from './events';
 import { STORY_STEPS, chapterOf, stepById, storyReward, storyStars, type StoryReward } from './story';
 
@@ -9,6 +9,10 @@ export const ENERGY_REGEN_MS = 6 * 60 * 1000;
 export const AD_ENERGY = 5;
 export const ADS_PER_DAY = 6;
 export const PITY_RARE = 15;
+/** A fixture in a shop can be searched once in this time. */
+export const SHELF_COOLDOWN_MS = 60 * 60 * 1000;
+/** Crystals to restock a fixture right away. */
+export const SHELF_RUSH_GEMS = 1;
 export const PITY_EPIC = 60;
 const SELL_SHARE = 0.4;
 export const START_TICKETS = 3;
@@ -46,6 +50,8 @@ export interface Save {
   voteUnlocked: boolean;
   /** Best stars per story scene (story.ts step id); a scene is passed with 1+. */
   story: Record<string, number>;
+  /** When each shop fixture (`<shop>:<fixture>`) can be searched again. */
+  shelfAt: Record<string, number>;
 }
 
 /** A look sent to an event. The score is rolled on submission and revealed at resultAt. */
@@ -70,7 +76,7 @@ function fresh(): Save {
     outfit: {}, owned: [], discovered: [], wish: [],
     coins: 1500, gems: 10, energy: ENERGY_MAX, energyTs: Date.now(),
     level: 1, xp: 0, pityRare: 0, pityEpic: 0, adsDay: '', adsCount: 0,
-    tickets: START_TICKETS, votes: 0, entries: [], voteUnlocked: false, story: {},
+    tickets: START_TICKETS, votes: 0, entries: [], voteUnlocked: false, story: {}, shelfAt: {},
   };
 }
 
@@ -224,21 +230,34 @@ export const allBought = (shopId: string, dept?: Dept, s: Save = state) => {
   return items.length > 0 && items.every((i) => s.owned.includes(i.id));
 };
 
-export function search(shopId: string, dept: Dept): SearchResult | null {
+export const shelfKey = (shopId: string, fixtureId: string) => `${shopId}:${fixtureId}`;
+/** When a fixture can be searched again (0 or past: now). */
+export const shelfReadyAt = (shopId: string, fixtureId: string, s: Save = state) => s.shelfAt?.[shelfKey(shopId, fixtureId)] ?? 0;
+/** Pieces on a fixture the player does not have yet. */
+export const shelfLeft = (shopId: string, fixtureId: string, s: Save = state) =>
+  (shopFixtures(shopId).find((f) => f.id === fixtureId)?.items ?? []).filter((i) => !s.owned.includes(i.id));
+
+/**
+ * Search one fixture of a shop: only pieces the player does not own yet can turn up,
+ * and the fixture then rests for SHELF_COOLDOWN_MS.
+ */
+export function search(shopId: string, fixtureId: string): SearchResult | null {
   tickEnergy();
   const cost = searchCost(shopId);
   if (state.energy < cost) return null;
-  const pool = shopItems(shopId, dept);
-  if (!pool.length || allBought(shopId, dept)) return null;
+  if (shelfReadyAt(shopId, fixtureId) > Date.now()) return null;
+  const pool = shelfLeft(shopId, fixtureId);
+  if (!pool.length) return null;
 
   let { rarity, pity } = rollRarity(state);
+  // A fixture may lack the rolled rarity: take the nearest one down, else up.
   const order: Rarity[] = ['epic', 'rare', 'common'];
-  // A department may lack some rarity — fall back to the next one down.
-  let candidates = pool.filter((i) => i.rarity === rarity);
-  for (let k = order.indexOf(rarity); !candidates.length && k < order.length; k++) {
-    rarity = order[k];
-    candidates = pool.filter((i) => i.rarity === rarity);
-    pity = false;
+  const from = order.indexOf(rarity);
+  const tries = [...order.slice(from), ...order.slice(0, from).reverse()];
+  let candidates: Item[] = [];
+  for (const r of tries) {
+    candidates = pool.filter((i) => i.rarity === r);
+    if (candidates.length) { if (r !== rarity) pity = false; rarity = r; break; }
   }
   const item = weightedPick(candidates, state);
 
@@ -250,11 +269,19 @@ export function search(shopId: string, dept: Dept): SearchResult | null {
     pityRare: item.rarity === 'common' ? state.pityRare + 1 : 0,
     pityEpic: item.rarity === 'epic' ? 0 : state.pityEpic + 1,
     discovered: state.discovered.includes(item.id) ? state.discovered : [...state.discovered, item.id],
+    shelfAt: { ...state.shelfAt, [shelfKey(shopId, fixtureId)]: Date.now() + SHELF_COOLDOWN_MS },
   };
   let levelUp: LevelUp | null;
   [next, levelUp] = withXp(next, 2);
   commit(next);
   return { item, pity, levelUp };
+}
+
+/** Pay crystals to restock a resting fixture now. */
+export function rushShelf(shopId: string, fixtureId: string): boolean {
+  if (state.gems < SHELF_RUSH_GEMS || shelfReadyAt(shopId, fixtureId) <= Date.now()) return false;
+  commit({ ...state, gems: state.gems - SHELF_RUSH_GEMS, shelfAt: { ...state.shelfAt, [shelfKey(shopId, fixtureId)]: 0 } });
+  return true;
 }
 
 export function buy(itemId: string): { ok: boolean; levelUp: LevelUp | null } {

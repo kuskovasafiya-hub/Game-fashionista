@@ -246,3 +246,52 @@ add('sport', [
 export const STARTER = ITEMS.filter((i) => i.shop === 'starter');
 export const shopItems = (shop: string, dept?: Dept) =>
   ITEMS.filter((i) => i.shop === shop && (!dept || DEPT_SLOTS[dept].includes(i.slot)));
+
+/* ---------- shop fixtures: the shelves, racks and cases inside a shop ---------- */
+
+export type FixtureKind = 'tops' | 'bottoms' | 'dresses' | 'shoes' | 'jewelry' | 'bags' | 'glasses';
+/** How a fixture is drawn: a clothes rail, a wall shelf, a glass case or a tall stand. */
+export type FixtureLook = 'rack' | 'shelf' | 'case' | 'stand';
+
+const KINDS: { kind: FixtureKind; name: string; slots: Slot[]; look: FixtureLook }[] = [
+  { kind: 'dresses', name: 'Платья', slots: ['dress'], look: 'rack' },
+  { kind: 'tops', name: 'Верх', slots: ['top'], look: 'rack' },
+  { kind: 'bottoms', name: 'Низ', slots: ['bottom'], look: 'rack' },
+  { kind: 'shoes', name: 'Обувь', slots: ['shoes'], look: 'shelf' },
+  { kind: 'bags', name: 'Сумки', slots: ['bag'], look: 'shelf' },
+  { kind: 'jewelry', name: 'Украшения', slots: ['necklace', 'earrings'], look: 'case' },
+  { kind: 'glasses', name: 'Очки', slots: ['glasses'], look: 'stand' },
+];
+
+/** Names of single kinds of pieces, for shops that split a fixture by them. */
+const ART_NAMES: Record<string, string> = {
+  'top-crop': 'Кроп-топы', 'top-tee': 'Футболки', 'top-sweater': 'Свитеры', 'top-hoodie': 'Худи',
+  'top-blouse': 'Блузки', 'top-blazer': 'Жакеты', 'top-crochet': 'Ажурные кофты',
+  'bottom-jeans': 'Джинсы', 'bottom-skirt': 'Юбки', 'bottom-shorts': 'Шорты', 'bottom-leggings': 'Леггинсы',
+  'bottom-trousers': 'Брюки', 'bottom-midi': 'Юбки-миди', 'bottom-baggy': 'Бэгги',
+  'dress-black': 'Коктейльные', 'dress-red': 'Платья-комбинации', 'dress-gown': 'Вечерние платья', 'dress-sundress': 'Сарафаны',
+  'shoes-sneakers': 'Кроссовки', 'shoes-heels': 'Туфли', 'shoes-boots': 'Сапоги', 'shoes-sandals': 'Босоножки', 'shoes-loafers': 'Лоферы',
+  'acc-hoops': 'Серьги', 'acc-chain': 'Цепочки', 'acc-pearls': 'Жемчуг', 'acc-bag': 'Сумки', 'acc-tote': 'Тоуты',
+  'acc-belt-bag': 'Мини-сумки', 'acc-sunglasses': 'Солнечные очки', 'acc-glasses': 'Очки',
+};
+
+export interface Fixture { id: string; name: string; kind: FixtureKind; look: FixtureLook; items: Item[] }
+
+/**
+ * The fixtures of a shop, one per kind of thing it sells. A shop with few kinds (only
+ * shoes, only jewellery) splits them by model, so it never stands half empty.
+ */
+export function shopFixtures(shopId: string): Fixture[] {
+  const items = shopItems(shopId);
+  let list: Fixture[] = KINDS
+    .map((k) => ({ id: k.kind, name: k.name, kind: k.kind, look: k.look, items: items.filter((i) => k.slots.includes(i.slot)) }))
+    .filter((f) => f.items.length);
+  if (list.length < 4) {
+    list = list.flatMap((f) => {
+      const arts = [...new Set(f.items.map((i) => i.art))];
+      if (arts.length < 2) return [f];
+      return arts.map((a) => ({ ...f, id: a, name: ART_NAMES[a] ?? f.name, items: f.items.filter((i) => i.art === a) }));
+    });
+  }
+  return list.slice(0, 7);
+}
