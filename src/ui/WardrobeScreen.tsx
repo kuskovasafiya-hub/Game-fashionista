@@ -2,7 +2,7 @@ import type { ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import { Doll, FIGURE_VIEW, artUrl } from '../art/Doll';
 import { ITEM_BY_ID, type Slot } from '../game/catalog';
-import { dressCodeMatch, fits, type GameEvent } from '../game/events';
+import { dressCodeMatch, fits, type Theme } from '../game/events';
 import { equip, ownedInSlot, sell, sellPrice, useGame } from '../game/store';
 import { DressCode, ItemCard, Modal, RarityTag, fmt } from './common';
 
@@ -20,7 +20,7 @@ const ownedIn = (slots: Slot[]) => slots.flatMap((s) => ownedInSlot(s));
  * The model on the left, clothes on the right. With `event` it becomes the fitting room:
  * dress code and live match on top, matching pieces first, a submit button in `footer`.
  */
-export function WardrobeScreen({ event, footer }: { event?: GameEvent; footer?: ComponentChildren }) {
+export function WardrobeScreen({ event, footer }: { event?: Theme; footer?: ComponentChildren }) {
   const g = useGame();
   const [tab, setTab] = useState(0);
   const [selling, setSelling] = useState<string | null>(null);
@@ -82,7 +82,7 @@ export function WardrobeScreen({ event, footer }: { event?: GameEvent; footer?: 
 }
 
 /** Event name, accepted tags and the live dress code match, with what is still missing. */
-function FitHead({ event }: { event: GameEvent }) {
+function FitHead({ event }: { event: Theme }) {
   const g = useGame();
   const m = dressCodeMatch(g.outfit, event.tags);
   const pct = Math.round(m.total * 100);

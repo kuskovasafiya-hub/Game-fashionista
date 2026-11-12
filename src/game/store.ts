@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'preact/hooks';
 import { DEFAULT_LOOK, type Look, type Outfit } from '../art/Doll';
 import { DEPT_SLOTS, ITEM_BY_ID, RARITY, SHOPS, shopItems, type Dept, type Item, type Rarity, type Slot } from './catalog';
-import { RESULT_DELAY_MS, activeEvents, eventByKey, hasClothes, rewardFor, scoreLook, seedOf, type Reward, type Score } from './events';
+import { RESULT_DELAY_MS, activeEvents, dressCodeMatch, eventByKey, hasClothes, rewardFor, scoreLook, seedOf, type Reward, type Score } from './events';
+import { STORY_STEPS, chapterOf, stepById, storyReward, storyStars, type StoryReward } from './story';
 
 export const ENERGY_MAX = 20;
 export const ENERGY_REGEN_MS = 6 * 60 * 1000;
@@ -41,6 +42,10 @@ export interface Save {
   /** All votes ever cast; every VOTES_PER_TICKET-th gives a ticket. */
   votes: number;
   entries: Entry[];
+  /** Has sent a look to an event at least once: voting opens after that. */
+  voteUnlocked: boolean;
+  /** Best stars per story scene (story.ts step id); a scene is passed with 1+. */
+  story: Record<string, number>;
 }
 
 /** A look sent to an event. The score is rolled on submission and revealed at resultAt. */
@@ -65,7 +70,7 @@ function fresh(): Save {
     outfit: {}, owned: [], discovered: [], wish: [],
     coins: 1500, gems: 10, energy: ENERGY_MAX, energyTs: Date.now(),
     level: 1, xp: 0, pityRare: 0, pityEpic: 0, adsDay: '', adsCount: 0,
-    tickets: START_TICKETS, votes: 0, entries: [],
+    tickets: START_TICKETS, votes: 0, entries: [], voteUnlocked: false, story: {},
   };
 }
 
@@ -269,9 +274,49 @@ export function deptOf(slot: Slot): Dept {
   return (Object.keys(DEPT_SLOTS) as Dept[]).find((d) => DEPT_SLOTS[d].includes(slot))!;
 }
 
+/* ---------- story ---------- */
+
+/** The first scene not passed yet (null once the whole story is done). */
+export const storyNext = (s: Save = state) => STORY_STEPS.find((st) => !(s.story[st.id] > 0)) ?? null;
+/** A scene can be played once the one before it is passed and the chapter's level is reached. */
+export function storyOpen(stepId: string, s: Save = state): boolean {
+  const i = STORY_STEPS.findIndex((st) => st.id === stepId);
+  if (i < 0 || s.level < chapterOf(stepId).level) return false;
+  return i === 0 || s.story[STORY_STEPS[i - 1].id] > 0;
+}
+
+export type StoryError = 'locked' | 'clothes';
+export interface StoryResult { stars: number; match: number; best: number; reward: StoryReward; levelUp: LevelUp | null }
+
+/** Show the current look in a story scene: judged at once by its dress code match. */
+export function playStory(stepId: string): StoryResult | StoryError {
+  const step = stepById(stepId);
+  if (!step || !storyOpen(stepId)) return 'locked';
+  if (!hasClothes(state.outfit)) return 'clothes';
+  const match = dressCodeMatch(state.outfit, step.tags).total;
+  const stars = storyStars(step, match);
+  const before = state.story[stepId] ?? 0;
+  const best = Math.max(before, stars);
+  const reward = storyReward(step, before === 0 && stars > 0, before < 3 && stars === 3);
+  let next: Save = {
+    ...state,
+    story: { ...state.story, [stepId]: best },
+    coins: state.coins + reward.coins,
+    gems: state.gems + reward.gems,
+    energy: state.energy + reward.energy,
+  };
+  let levelUp: LevelUp | null = null;
+  if (reward.xp) [next, levelUp] = withXp(next, reward.xp);
+  commit(next);
+  return { stars, match, best, reward, levelUp };
+}
+
 /* ---------- events ---------- */
 
 export const entryFor = (key: string) => state.entries.find((e) => e.key === key);
+/** Voting opens once the player has shown a look anywhere: an event or a story scene (old saves: any entry counts). */
+export const canVote = (s: Save = state) =>
+  s.voteUnlocked || s.entries.length > 0 || Object.values(s.story).some((n) => n > 0);
 export const resultsReady = (now = Date.now()) => state.entries.filter((e) => !e.claimed && e.resultAt <= now);
 
 export type EnterError = 'closed' | 'entered' | 'level' | 'tickets' | 'clothes';
@@ -289,7 +334,7 @@ export function enterEvent(key: string): EnterError | null {
     resultAt: at + RESULT_DELAY_MS,
     score: scoreLook(state.outfit, ev, seedOf(`${key}:${at}`)),
   };
-  commit({ ...state, tickets: state.tickets - ev.cost, entries: [...state.entries, entry] });
+  commit({ ...state, tickets: state.tickets - ev.cost, entries: [...state.entries, entry], voteUnlocked: true });
   return null;
 }
 

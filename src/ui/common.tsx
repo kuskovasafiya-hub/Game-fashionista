@@ -35,18 +35,18 @@ export function Hud({ onEnergy, onTickets }: { onEnergy: () => void; onTickets: 
   const need = xpToNext(g.level);
   return (
     <header class="hud">
-      <div class="hud-level" title={`Опыт ${g.xp}/${need}`}>
+      <span class="hud-level" title={`Уровень ${g.level} · опыт ${g.xp}/${need}`} style={{ '--xp': `${(g.xp / need) * 100}%` }}>
         <span class="lvl">{g.level}</span>
-        <span class="xpbar"><i style={{ width: `${(g.xp / need) * 100}%` }} /></span>
+      </span>
+      <div class="wallet">
+        <button class="cur" onClick={onEnergy}>
+          <i>☕<b>+</b></i>{g.energy}/{ENERGY_MAX}
+          {left > 0 && <small>{mmss(left)}</small>}
+        </button>
+        <span class="cur"><i>🪙</i>{fmt(g.coins)}</span>
+        <span class="cur"><i>💎</i>{g.gems}</span>
+        <button class="cur" onClick={onTickets}><i>🎟<b>+</b></i>{g.tickets}</button>
       </div>
-      <button class="pill energy" onClick={onEnergy}>
-        ☕ {g.energy}/{ENERGY_MAX}
-        {left > 0 && <small>{mmss(left)}</small>}
-        <b>+</b>
-      </button>
-      <span class="pill">🪙 {fmt(g.coins)}</span>
-      <span class="pill">💎 {g.gems}</span>
-      <button class="pill" onClick={onTickets}>🎟 {g.tickets}</button>
     </header>
   );
 }

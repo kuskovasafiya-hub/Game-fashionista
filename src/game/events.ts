@@ -1,5 +1,5 @@
 import { HAIRSTYLES, MAKEUPS, SKIN_TONES, type Look, type Outfit } from '../art/Doll';
-import { ITEMS, ITEM_BY_ID, type Item, type Rarity, type Slot, type Tag } from './catalog';
+import { ITEMS, ITEM_BY_ID, STARTER, type Item, type Rarity, type Slot, type Tag } from './catalog';
 
 /* ---------- seeded randomness ---------- */
 
@@ -26,6 +26,9 @@ const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
 
 /* ---------- templates ---------- */
 
+/** What a fitting room needs to know about a scene: its name, look and dress code. */
+export interface Theme { id: string; name: string; emoji: string; color: string; tags: Tag[] }
+
 export interface EventTemplate {
   id: string;
   name: string;
@@ -47,14 +50,14 @@ export interface EventTemplate {
  */
 export const TRACKS: EventTemplate[][] = [
   [
-    { id: 'park', name: 'Прогулка в парке', about: 'Солнечный день, кофе навынос и много шагов', emoji: '🌳', color: '#7BC67E', tags: ['casual'], cost: 1, hours: 8, level: 1 },
-    { id: 'winter', name: 'Зимняя ярмарка', about: 'Глинтвейн, гирлянды и тёплые вещи', emoji: '❄️', color: '#7FB7F0', tags: ['winter'], cost: 1, hours: 6, level: 1 },
-    { id: 'date', name: 'Свидание в кафе', about: 'Мило, но не слишком официально', emoji: '💕', color: '#FF8FB1', tags: ['casual', 'party'], cost: 2, hours: 8, level: 1 },
+    { id: 'park', name: 'Прогулка в парке', about: 'Солнечный день, кофе навынос и много шагов', emoji: '🌳', color: '#7BC67E', tags: ['casual'], cost: 1, hours: 8, level: 2 },
+    { id: 'winter', name: 'Зимняя ярмарка', about: 'Глинтвейн, гирлянды и тёплые вещи', emoji: '❄️', color: '#7FB7F0', tags: ['winter'], cost: 1, hours: 6, level: 2 },
+    { id: 'date', name: 'Свидание в кафе', about: 'Мило, но не слишком официально', emoji: '💕', color: '#FF8FB1', tags: ['casual', 'party'], cost: 2, hours: 8, level: 2 },
   ],
   [
-    { id: 'beach', name: 'День на пляже', about: 'Песок, солнце и лёгкие ткани', emoji: '🏖️', color: '#FFC15E', tags: ['beach'], cost: 1, hours: 6, level: 1 },
-    { id: 'party', name: 'Вечеринка у подруги', about: 'Музыка, танцы и блеск', emoji: '🎉', color: '#C77DFF', tags: ['party'], cost: 1, hours: 8, level: 1 },
-    { id: 'resort', name: 'Курортный вечер', about: 'Ужин у моря после заката', emoji: '🌴', color: '#00BBA7', tags: ['beach', 'evening'], cost: 2, hours: 6, level: 1 },
+    { id: 'beach', name: 'День на пляже', about: 'Песок, солнце и лёгкие ткани', emoji: '🏖️', color: '#FFC15E', tags: ['beach'], cost: 1, hours: 6, level: 2 },
+    { id: 'party', name: 'Вечеринка у подруги', about: 'Музыка, танцы и блеск', emoji: '🎉', color: '#C77DFF', tags: ['party'], cost: 1, hours: 8, level: 2 },
+    { id: 'resort', name: 'Курортный вечер', about: 'Ужин у моря после заката', emoji: '🌴', color: '#00BBA7', tags: ['beach', 'evening'], cost: 2, hours: 6, level: 2 },
   ],
   [
     { id: 'interview', name: 'Собеседование', about: 'Первое впечатление решает всё', emoji: '💼', color: '#8E9AAF', tags: ['office'], cost: 1, hours: 8, level: 3 },
@@ -65,6 +68,8 @@ export const TRACKS: EventTemplate[][] = [
   ],
 ];
 export const EVENT_TEMPLATES = TRACKS.flat();
+/** Events open from this level; before that the player goes through the story. */
+export const EVENTS_LEVEL = Math.min(...EVENT_TEMPLATES.map((t) => t.level));
 
 /* ---------- schedule ---------- */
 
@@ -240,13 +245,100 @@ export function botLook(tags: Tag[], r: () => number): BotLook {
   return { name: pick(BOT_NAMES, r), look, outfit, appeal: appeal(outfit, tags) };
 }
 
-export interface VotePair { event: GameEvent; a: BotLook; b: BotLook; /** % of voters for a */ shareA: number }
+/* ---------- which event is on vote ---------- */
 
-export function votePair(events: GameEvent[], r: () => number = Math.random): VotePair {
+/** Events the player can vote in: the running ones she sent a look to. */
+export function voteEvents(enteredKeys: string[], now = Date.now()): GameEvent[] {
+  return activeEvents(now).filter((e) => enteredKeys.includes(e.key)).sort((a, b) => a.key.localeCompare(b.key));
+}
+
+export interface VotePair<T extends Theme = GameEvent> { event: T; a: BotLook; b: BotLook; /** % of voters for a */ shareA: number }
+
+export function votePair<T extends Theme>(events: T[], r: () => number = Math.random): VotePair<T> {
   const event = pick(events, r);
   const a = botLook(event.tags, r);
   let b = botLook(event.tags, r);
   while (b.name === a.name) b = { ...b, name: pick(BOT_NAMES, r) };
   const shareA = Math.round(100 * Math.min(0.88, Math.max(0.12, sigmoid((a.appeal - b.appeal) / 0.15) + (r() - 0.5) * 0.12)));
   return { event, a, b, shareA };
+}
+
+/* ---------- showcase model on an event's card ---------- */
+
+/**
+ * A pretty model dressed fully to the dress code, the same for every player: every piece
+ * fits, rare ones preferred, and she wears the event's main prize.
+ */
+export function showcaseLook(ev: GameEvent): { look: Look; outfit: Outfit } {
+  const r = rng(seedOf('showcase:' + ev.key));
+  const prize = ITEM_BY_ID[ev.prize];
+  const good = (slot: Slot) => ITEMS.filter((i) => i.slot === slot && fits(i, ev.tags));
+  const choose = (slot: Slot, any = false) => {
+    const g = good(slot);
+    const fancy = g.filter((i) => i.rarity !== 'common');
+    const pool = fancy.length ? fancy : g.length ? g : any ? ITEMS.filter((i) => i.slot === slot) : [];
+    return pool.length ? pick(pool, r).id : undefined;
+  };
+  const separates = good('top').length > 0 && good('bottom').length > 0;
+  const dress = prize?.slot === 'dress'
+    || (prize?.slot !== 'top' && prize?.slot !== 'bottom' && good('dress').length > 0 && (!separates || r() < 0.5));
+  const outfit: Outfit = {};
+  if (dress) outfit.dress = choose('dress', true);
+  else { outfit.top = choose('top', true); outfit.bottom = choose('bottom', true); }
+  outfit.shoes = choose('shoes', true);
+  // two accessories at most, so she does not look overloaded
+  // sunglasses hide her face: only when there is nothing else to wear
+  const acc = (['necklace', 'earrings', 'bag'] as Slot[]).filter((s) => good(s).length);
+  if (acc.length < 2 && good('glasses').length) acc.push('glasses');
+  for (let n = 0; n < 2 && acc.length; n++) {
+    const s = acc.splice(Math.floor(r() * acc.length), 1)[0];
+    outfit[s] = choose(s);
+  }
+  if (prize) outfit[prize.slot] = prize.id;
+  const look: Look = {
+    hair: Math.floor(r() * HAIRSTYLES.length),
+    skin: Math.floor(r() * SKIN_TONES.length),
+    makeup: 1 + Math.floor(r() * (MAKEUPS.length - 1)),
+  };
+  return { look, outfit };
+}
+
+/**
+ * A model dressed in a shop's own pieces for its card: rare ones first, starter basics
+ * where the shop sells no clothes or shoes. The premium boutique, not open yet, teases
+ * with the most precious evening pieces.
+ */
+export function shopLook(shopId: string): { look: Look; outfit: Outfit } {
+  const r = rng(seedOf('shop:' + shopId));
+  const pool = shopId === 'premium'
+    ? ITEMS.filter((i) => i.rarity === 'epic' && (i.shop === 'evening' || i.shop === 'glam'))
+    : ITEMS.filter((i) => i.shop === shopId);
+  const basic = (art: string) => STARTER.find((i) => i.art === art)!.id;
+  const choose = (slot: Slot) => {
+    const all = pool.filter((i) => i.slot === slot);
+    const fancy = all.filter((i) => i.rarity !== 'common');
+    const from = fancy.length ? fancy : all;
+    return from.length ? pick(from, r).id : undefined;
+  };
+  const outfit: Outfit = {};
+  const dress = choose('dress');
+  const top = choose('top');
+  const bottom = choose('bottom');
+  if (dress && (!top || !bottom || r() < 0.5)) outfit.dress = dress;
+  else if (top || bottom) { outfit.top = top ?? basic('top-tee'); outfit.bottom = bottom ?? basic('bottom-jeans'); }
+  // a shop of accessories shows them on the little black dress; a shoe shop on tee and jeans
+  else if (pool.some((i) => i.slot === 'shoes')) { outfit.top = basic('top-tee'); outfit.bottom = basic('bottom-jeans'); }
+  else outfit.dress = basic('dress-black');
+  outfit.shoes = choose('shoes') ?? basic(outfit.dress ? 'shoes-heels' : 'shoes-sneakers');
+  const acc = (['necklace', 'earrings', 'bag'] as Slot[]).filter((s) => pool.some((i) => i.slot === s));
+  for (let n = 0; n < 2 && acc.length; n++) {
+    const s = acc.splice(Math.floor(r() * acc.length), 1)[0];
+    outfit[s] = choose(s);
+  }
+  const look: Look = {
+    hair: Math.floor(r() * HAIRSTYLES.length),
+    skin: Math.floor(r() * SKIN_TONES.length),
+    makeup: 1 + Math.floor(r() * (MAKEUPS.length - 1)),
+  };
+  return { look, outfit };
 }

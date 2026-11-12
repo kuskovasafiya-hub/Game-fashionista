@@ -1,6 +1,7 @@
-import { useState } from 'preact/hooks';
-import { ItemThumb } from '../art/Doll';
-import { DEPT_NAMES, RARITY, SHOPS, shopItems, type Dept } from '../game/catalog';
+import { useMemo, useState } from 'preact/hooks';
+import { Doll, FIGURE_VIEW, ItemThumb } from '../art/Doll';
+import { DEPT_NAMES, RARITY, SHOPS, shopItems, type Dept, type Shop } from '../game/catalog';
+import { shopLook } from '../game/events';
 import { PITY_RARE, buy, search, searchCost, toggleWish, useGame, type LevelUp, type SearchResult } from '../game/store';
 import { ItemCard, Modal, RarityTag, fmt, plural } from './common';
 
@@ -9,24 +10,34 @@ export function ShopsScreen({ open }: { open: (shopId: string) => void }) {
   return (
     <div class="screen list">
       <h1 class="title">Магазины</h1>
-      {SHOPS.map((s) => {
-        const locked = g.level < s.level || s.soon;
-        const all = shopItems(s.id);
-        const found = all.filter((i) => g.discovered.includes(i.id)).length;
-        return (
-          <button class={'shop-row' + (locked ? ' locked' : '')} style={{ '--sc': s.color }} disabled={locked} onClick={() => open(s.id)}>
-            <span class="shop-icon">{s.emoji}</span>
-            <span class="shop-info">
-              <b>{s.name}</b>
-              <small>{s.about}</small>
-            </span>
-            <span class="shop-meta">
-              {s.soon ? 'Скоро' : locked ? `🔒 ур. ${s.level}` : `${found}/${all.length}`}
-            </span>
-          </button>
-        );
-      })}
+      <div class="shop-cards">
+        {SHOPS.map((s) => <ShopCard shop={s} owned={g.discovered} level={g.level} open={() => open(s.id)} />)}
+      </div>
     </div>
+  );
+}
+
+/** A shop as a small card, two in a row: a model in the shop's own pieces, the collection found so far. */
+function ShopCard({ shop, owned, level, open }: { shop: Shop; owned: string[]; level: number; open: () => void }) {
+  const locked = level < shop.level || !!shop.soon;
+  const all = shopItems(shop.id);
+  const found = all.filter((i) => owned.includes(i.id)).length;
+  const model = useMemo(() => shopLook(shop.id), [shop.id]);
+  return (
+    <button class={'shop-card' + (locked ? ' locked' : '')} style={{ '--sc': shop.color }} disabled={locked} onClick={open}>
+      <span class="shop-scene">
+        <span class="shop-tile">{shop.emoji}</span>
+        {!shop.soon && <span class="shop-found">{found}/{all.length}</span>}
+        <Doll class="shop-model" look={model.look} outfit={model.outfit} view={FIGURE_VIEW} />
+      </span>
+      <span class="shop-body">
+        <b class="shop-name">{shop.name}</b>
+        <small class="shop-about">{shop.about}</small>
+        <span class={'btn mini' + (locked ? '' : ' primary')}>
+          {shop.soon ? 'Скоро' : locked ? `🔒 С ${shop.level} уровня` : 'Войти'}
+        </span>
+      </span>
+    </button>
   );
 }
 
