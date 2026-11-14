@@ -187,6 +187,16 @@ export function equip(itemId: string) {
   commit({ ...state, outfit });
 }
 
+/** Hair, hair colour, makeup, skin: free to change at any time. Looks already sent keep their own copy. */
+export function setLook(look: Look) {
+  commit({ ...state, look: { ...look } });
+}
+
+/** Take everything off: she is left in her underwear. */
+export function undressAll() {
+  if (Object.keys(state.outfit).length) commit({ ...state, outfit: {} });
+}
+
 export function sellPrice(item: Item) { return Math.round((item.price * SELL_SHARE) / 10) * 10; }
 
 export function sell(itemId: string) {

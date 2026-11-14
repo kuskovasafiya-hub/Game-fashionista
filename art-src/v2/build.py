@@ -26,6 +26,7 @@ V2 = pathlib.Path(__file__).resolve().parent
 ROOT = V2.parent.parent
 sys.path.insert(0, str(V2.parent))
 import skin  # noqa: E402
+import hair  # noqa: E402
 
 OUT = V2 / 'out'
 ART = ROOT / 'public' / 'art'
@@ -105,6 +106,7 @@ def main():
         if (OUT / f'{name}-hem.png').exists():
             Image.fromarray(hem_small(OUT / f'{name}-hem.png')).save(ART / f'{name}-hem.webp', 'WEBP', lossless=True)
             layers[f'{name}-front']['hem'] = True
+    hair.write(layers)                   # <hair layer>~<colour> for every hair colour
 
     singles = [p for p in sorted(OUT.glob('*.png'))
                if p.stem.split('-')[0] in ('bottom', 'shoes', 'acc') and not p.stem.endswith(('-err', '-hem'))]
@@ -116,9 +118,13 @@ def main():
             # her foot is the skin that grows down from the ankle at the layer's top;
             # skin-coloured bits inside the shoe (a gold buckle, a highlight) are not
             ys = np.nonzero(img[..., 3].max(axis=1) > 128)[0]
-            lab, _ = ndi.label(w > 0.4)
+            # (straps cross the instep and cut the foot into pieces: every skin piece of
+            # a real size counts, tiny skin-coloured specks on the shoe do not)
+            lab, n = ndi.label(w > 0.4)
+            sizes = ndi.sum(w > 0.4, lab, range(1, n + 1)) if n else []
             top = np.unique(lab[ys.min():ys.min() + 15][lab[ys.min():ys.min() + 15] > 0])
-            w = ndi.gaussian_filter(w * ndi.binary_dilation(np.isin(lab, top), iterations=1), 0.7)
+            keep = set(top) | {i + 1 for i, sz in enumerate(sizes) if sz >= 120}
+            w = ndi.gaussian_filter(w * ndi.binary_dilation(np.isin(lab, list(keep)), iterations=1), 0.7)
             if (w > 0.5).sum() > 300:
                 # a closed shoe brings the foot it wraps (scaled to her foot): that skin
                 # is its own layer, toned and drawn unfiltered under the shoe

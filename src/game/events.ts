@@ -1,4 +1,4 @@
-import { HAIRSTYLES, MAKEUPS, SKIN_TONES, type Look, type Outfit } from '../art/Doll';
+import { HAIRSTYLES, HAIR_COLOURS, MAKEUPS, SKIN_TONES, type Look, type Outfit } from '../art/Doll';
 import { ITEMS, ITEM_BY_ID, type Item, type Rarity, type Slot, type Tag } from './catalog';
 
 /* ---------- seeded randomness ---------- */
@@ -142,7 +142,7 @@ export function dressCodeMatch(outfit: Outfit, tags: Tag[]): Match {
     ? (fits(it('dress'), tags) ? 1 : 0)
     : (fits(it('top'), tags) ? 0.5 : 0) + (fits(it('bottom'), tags) ? 0.5 : 0);
   const shoes = fits(it('shoes'), tags) ? 1 : 0;
-  const accFit = (['necklace', 'earrings', 'glasses', 'bag'] as Slot[]).filter((s) => fits(it(s), tags)).length;
+  const accFit = (['necklace', 'earrings', 'glasses', 'bracelet', 'bag'] as Slot[]).filter((s) => fits(it(s), tags)).length;
   const acc = Math.min(accFit, 2) / 2;
   return { total: 0.6 * clothes + 0.25 * shoes + 0.15 * acc, clothes, shoes, acc };
 }
@@ -236,13 +236,20 @@ export function botLook(tags: Tag[], r: () => number): BotLook {
   if (r() < 0.4) outfit.necklace = piece('necklace');
   if (r() < 0.45) outfit.earrings = piece('earrings');
   if (r() < 0.25) outfit.glasses = piece('glasses');
+  if (r() < 0.3) outfit.bracelet = piece('bracelet');
   if (r() < 0.5) outfit.bag = piece('bag');
   const look: Look = {
     hair: Math.floor(r() * HAIRSTYLES.length),
     skin: Math.floor(r() * SKIN_TONES.length),
     makeup: Math.floor(r() * MAKEUPS.length),
+    hairColour: hairColour(r),
   };
   return { name: pick(BOT_NAMES, r), look, outfit, appeal: appeal(outfit, tags) };
+}
+
+/** Half the models keep the hairstyle's own colour, the rest dye it. */
+function hairColour(r: () => number) {
+  return r() < 0.5 ? 0 : 1 + Math.floor(r() * (HAIR_COLOURS.length - 1));
 }
 
 /* ---------- which event is on vote ---------- */
@@ -288,7 +295,7 @@ export function showcaseLook(ev: GameEvent): { look: Look; outfit: Outfit } {
   outfit.shoes = choose('shoes', true);
   // two accessories at most, so she does not look overloaded
   // sunglasses hide her face: only when there is nothing else to wear
-  const acc = (['necklace', 'earrings', 'bag'] as Slot[]).filter((s) => good(s).length);
+  const acc = (['necklace', 'earrings', 'bracelet', 'bag'] as Slot[]).filter((s) => good(s).length);
   if (acc.length < 2 && good('glasses').length) acc.push('glasses');
   for (let n = 0; n < 2 && acc.length; n++) {
     const s = acc.splice(Math.floor(r() * acc.length), 1)[0];
@@ -299,6 +306,7 @@ export function showcaseLook(ev: GameEvent): { look: Look; outfit: Outfit } {
     hair: Math.floor(r() * HAIRSTYLES.length),
     skin: Math.floor(r() * SKIN_TONES.length),
     makeup: 1 + Math.floor(r() * (MAKEUPS.length - 1)),
+    hairColour: hairColour(r),
   };
   return { look, outfit };
 }

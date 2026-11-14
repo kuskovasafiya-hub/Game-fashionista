@@ -10,7 +10,7 @@ import { rng, seedOf } from '../game/events';
 import { ItemCard, Modal, RarityTag, fmt, plural } from './common';
 
 /** Shop window order: the big pieces first, then shoes and accessories. */
-const WINDOW_ORDER: Slot[] = ['dress', 'top', 'bottom', 'shoes', 'bag', 'necklace', 'earrings', 'glasses'];
+const WINDOW_ORDER: Slot[] = ['dress', 'top', 'bottom', 'shoes', 'bag', 'necklace', 'earrings', 'bracelet', 'glasses'];
 
 /** One piece of each kind the shop sells, for its window. */
 function windowItems(shopId: string): Item[] {

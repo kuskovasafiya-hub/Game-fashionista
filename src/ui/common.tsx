@@ -94,6 +94,15 @@ export function LevelUpModal({ lu, onClose }: { lu: LevelUp; onClose: () => void
   );
 }
 
+/** «Снять всё»: a small button in the corner of the model's frame. */
+export function UndressButton({ onClick, disabled }: { onClick: () => void; disabled?: boolean }) {
+  return (
+    <button class="undress" onClick={onClick} disabled={disabled} title="Снять всё">
+      👙 Снять всё
+    </button>
+  );
+}
+
 export function RarityTag({ item }: { item: Item }) {
   const r = RARITY[item.rarity];
   return <span class="rarity" style={{ background: r.color }}>{r.name}</span>;

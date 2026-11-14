@@ -324,8 +324,9 @@ def earlobes(body_a):
     return lobes
 
 
-def fit_earrings(im, body_a):
-    """Hang each earring by its top (the small loop) from the earlobe."""
+def fit_earrings(im, body_a, stud=False):
+    """Hang each earring by its top (the small loop) from the earlobe; a stud sits
+    with its middle on the lobe."""
     a = im[..., 3] > 128
     lab, n = ndi.label(ndi.binary_dilation(a, iterations=2))
     comps = sorted(ndi.find_objects(lab), key=lambda sl: sl[1].start)[:2]
@@ -339,7 +340,11 @@ def fit_earrings(im, body_a):
         ys, xs = np.nonzero(cm)
         top = ys.min()
         ax = xs[ys <= top + 3].mean()
-        dx, dy = int(round(lobe[0] - ax)), int(lobe[1] - 4 - top)    # loop overlaps the lobe
+        if stud:
+            ax = xs.mean()
+            dx, dy = int(round(lobe[0] - ax)), int(round(lobe[1] - 6 - ys.mean()))
+        else:
+            dx, dy = int(round(lobe[0] - ax)), int(lobe[1] - 4 - top)    # loop overlaps the lobe
         part = np.where(ndi.binary_dilation(cm, iterations=2)[..., None], im, 0)
         part = np.roll(part, (dy, dx), axis=(0, 1))
         out = np.where(part[..., 3:] > out[..., 3:], part, out)
@@ -600,8 +605,125 @@ ONBODY = {p.stem for d in ('onbody', 'onface', 'wear') if (ROOT / 'raw' / d).exi
           for p in (ROOT / 'raw' / d).glob('*.png')}
 
 
+def fit_choker(im, body_a):
+    """A choker sits round the neck itself, not on the chest: the whole drawing is
+    scaled to the neck's width (plus a little for the chain standing off the skin)
+    and placed in the middle of the neck."""
+    a = im[..., 3] > 128
+    ys, xs = np.nonzero(a)
+    nx0, nx1, ny = neck(body_a)
+    m = body_a > 128
+    widths = [sg[1] - sg[0] for y in range(ny - 30, ny) for sg in segments(m[y]) if sg[0] <= 512 <= sg[1]]
+    narrow = min(widths)
+    sc = (narrow + 8) / max(xs.max() - xs.min(), 1)
+    cx = (xs.min() + xs.max()) / 2
+    out = scale_part(im, sc, (cx, ys.min()), ((nx0 + nx1) / 2, ny - 26))
+    return out, [round(float(sc), 2)]
+
+
+def shrink_earrings(im, max_w=22):
+    """Earrings drawn too big are scaled down about their top (the part on the lobe)."""
+    a = im[..., 3] > 128
+    lab, n = ndi.label(ndi.binary_dilation(a, iterations=2))
+    out = np.zeros_like(im)
+    for i in range(1, n + 1):
+        cm = (lab == i) & a
+        if cm.sum() < 30:
+            continue
+        ys, xs = np.nonzero(cm)
+        w = xs.max() - xs.min() + 1
+        part = np.where(ndi.binary_dilation(cm, iterations=2)[..., None], im, 0)
+        if w > max_w:
+            ax = (xs.min() + xs.max()) / 2
+            part = scale_part(part, max_w / w, (ax, ys.min()), (ax, ys.min()))
+        out = np.where(part[..., 3:] > out[..., 3:], part, out)
+    return out
+
+
+LENS_ALPHA = 0.5
+
+
+def nose_x(base):
+    """Column of the middle of her nose: the darkest shading below the eyes."""
+    v = base[185:215, 480:545, :3].max(axis=-1)
+    ys, xs = np.nonzero(v < np.percentile(v, 8))
+    return float(xs.mean() + 480)
+
+
+def fit_glasses(im, body_a, base_rgba):
+    """Glasses drawn as their own layer: level them, put the lens on her eyes, and
+    make a tinted lens see-through.
+    - level: the tilt of the line through the two lens halves' centres is rotated out;
+    - place: the lens's centre goes to the centre of her eyes, its width to 1.3x the
+      span of her eyes (uniform scale, so the shape stays as drawn);
+    - lens: the pixels inside the frame that are not ink and not glare become one flat
+      tint at LENS_ALPHA (her own eyes show through); the rim and temples stay opaque."""
+    sys.path.insert(0, str(ROOT))
+    from faceacc import eyes
+    a = im[..., 3] > 128
+    v = im[..., :3].max(axis=-1)
+    sat = (v - im[..., :3].min(axis=-1)) / np.maximum(v, 1)
+    ink = a & (v < 120)
+    glare = a & (v > 225) & (sat < 0.12)
+    lens = a & ~ink & ~glare
+    lens = ndi.binary_opening(lens, iterations=2)
+    lab, n = ndi.label(lens)
+    if not n:
+        return im, []
+    sizes = ndi.sum(lens, lab, range(1, n + 1))
+    lens = np.isin(lab, [i + 1 for i, s in enumerate(sizes) if s > sizes.max() * 0.25])
+    lens = ndi.binary_fill_holes(lens) & a & ~ink
+    ys, xs = np.nonzero(lens)
+    mid = (xs.min() + xs.max()) / 2
+    L = (xs < mid)
+    angle = np.degrees(np.arctan2(ys[~L].mean() - ys[L].mean(), xs[~L].mean() - xs[L].mean()))
+    # see-through lens
+    tint = np.median(im[lens][:, :3][sat[lens] >= np.percentile(sat[lens], 60)], axis=0)
+    out = im.copy()
+    out[lens, :3] = tint
+    out[lens, 3] = 255 * LENS_ALPHA
+    gl = glare & ndi.binary_dilation(lens, iterations=2)
+    out[gl, 3] = 255 * 0.75
+    # level and place. Across: the bridge (the notch in the lens's lower edge, where
+    # it rests on the nose) on the middle of her face. Size: the lens 0.8 of her head's
+    # width at eye level. Down: the lens's middle on her eyes.
+    _, cy, _ = eyes(base_rgba)
+    row = np.nonzero(body_a[cy] > 128)[0]
+    face_cx, head_w = (row.min() + row.max()) / 2, row.max() - row.min()
+    bottom = np.full(lens.shape[1], -1)
+    cols = np.nonzero(lens.any(axis=0))[0]
+    bottom[cols] = [np.nonzero(lens[:, c])[0].max() for c in cols]
+    span = (xs.max() - xs.min())
+    mid_cols = cols[(cols > xs.min() + 0.35 * span) & (cols < xs.min() + 0.65 * span)]
+    bridge_x = mid_cols[np.argmin(bottom[mid_cols])] if len(mid_cols) else xs.mean()
+    # (Codex draws the glasses a little lopsided: the bridge and the middle of the
+    # lens's width are averaged, and that point goes over the nose)
+    lcx, lcy = (float(bridge_x) + (xs.min() + xs.max()) / 2) / 2, (ys.min() + ys.max()) / 2
+    cx = nose_x(base_rgba)
+    sc = head_w * 0.8 / (span + 1)
+    img = Image.fromarray(out.clip(0, 255).astype(np.uint8))
+    img = img.rotate(angle, resample=Image.BICUBIC, center=(lcx, lcy))
+    img = img.transform(img.size, Image.AFFINE, (1 / sc, 0, lcx - cx / sc, 0, 1 / sc, lcy - (cy + 2) / sc),
+                        resample=Image.BICUBIC)
+    res = np.asarray(img, dtype=np.float32).copy()
+    head = ndi.binary_dilation(body_a > 128, iterations=3)
+    res[..., 3] *= head          # temples end at her ears
+    return res, [round(float(angle), 1), round(float(sc), 2)]
+
+
 def fit(name, im, body_a):
+    if name.startswith(('acc-shield', 'acc-glasses-drawn')):
+        return fit_glasses(im, body_a, rgba(ROOT / 'base.png'))
+    if 'choker' in name:
+        return fit_choker(im, body_a)
+    if 'studs' in name:
+        return fit_earrings(shrink_earrings(im), body_a, stud=True)
     if name in ONBODY:
+        if name.startswith('bottom'):
+            # drawn on her, so already her size: only close the 1-2 px slivers of leg
+            # an edge can leave
+            im, legs = fit_legs(im, body_a)
+            return im, [0, legs]
         return im, [[0, 1.0], [0, 1.0]]
     if name.startswith(('acc-hoops', 'acc-ear')):
         return fit_earrings(im, body_a)
@@ -688,7 +810,7 @@ def main():
     report = {}
     for p in sorted(RAW.glob('*.png')):
         name = p.stem
-        if name.startswith(('base', 'body', 'makeup')) or name.endswith(('-ref', '-back', '-front')):
+        if name.startswith(('base', 'body', 'makeup', 'underwear')) or name.endswith(('-ref', '-back', '-front')):
             continue
         im = rgba(p)
         if im.shape[:2] != body_a.shape:

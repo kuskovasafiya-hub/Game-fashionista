@@ -62,6 +62,13 @@ def split_underwear(base):
         layer[..., 3] = 255 * a
         save(layer, part)
     save(smooth, 'body')
+    # the bottom part is fitted shorts drawn on her (gen_wear.sh underwear-bottom ->
+    # wear.py -> raw/underwear-bottom.png), not the briefs of the base
+    shorts = RAW / 'underwear-bottom.png'
+    if shorts.exists():
+        save(rgba(shorts), 'underwear-bottom')
+        print('underwear-bottom: fitted shorts')
+        return
     # sanity: body + underwear must give the base back
     comp = over(over(smooth, rgba(OUT / 'underwear-top.png')), rgba(OUT / 'underwear-bottom.png'))
     err = np.abs(comp[..., :3] - base[..., :3]).max(axis=-1) * (base[..., 3] > 128)

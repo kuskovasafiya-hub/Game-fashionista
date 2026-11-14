@@ -26,6 +26,23 @@ export const HAIRSTYLES: HairStyle[] = [
   { name: 'Пикси', art: 'hair-pixie' },
 ];
 
+/**
+ * Hair colours: 0 is each style's own drawn colour; the others are recolours of every
+ * hair layer, `<layer>~<id>`, made by art-src/v2/hair.py (same ids and order).
+ */
+export interface HairColour { id: string | null; name: string; color: string }
+export const HAIR_COLOURS: HairColour[] = [
+  { id: null, name: 'Родной', color: 'conic-gradient(#3a2418 0 25%, #c88d4f 0 50%, #2a1a14 0 75%, #b8521f 0)' },
+  { id: 'black', name: 'Чёрный', color: '#2b2430' },
+  { id: 'chocolate', name: 'Шоколад', color: '#6a3c26' },
+  { id: 'ginger', name: 'Рыжий', color: '#c45a22' },
+  { id: 'honey', name: 'Медовый', color: '#c99050' },
+  { id: 'platinum', name: 'Платина', color: '#e4d9c6' },
+  { id: 'pink', name: 'Розовый', color: '#e27aab' },
+  { id: 'lavender', name: 'Лавандовый', color: '#9b7ed4' },
+  { id: 'blue', name: 'Голубой', color: '#4f8ad0' },
+];
+
 /** The base doll is 'tan'; the others are recolours made by art-src/skin.py. */
 export interface SkinTone { id: string; name: string; color: string }
 export const SKIN_TONES: SkinTone[] = [
@@ -45,9 +62,9 @@ export const MAKEUPS: Makeup[] = [
   { name: 'Гламур', art: 'makeup-glam' },
 ];
 
-/** Indices into HAIRSTYLES, SKIN_TONES, MAKEUPS (old saves have only `hair`). */
-export interface Look { hair: number; skin?: number; makeup?: number }
-export const DEFAULT_LOOK: Look = { hair: 1, skin: BASE_SKIN, makeup: 0 };
+/** Indices into HAIRSTYLES, HAIR_COLOURS, SKIN_TONES, MAKEUPS (old saves have only `hair`). */
+export interface Look { hair: number; hairColour?: number; skin?: number; makeup?: number }
+export const DEFAULT_LOOK: Look = { hair: 1, hairColour: 0, skin: BASE_SKIN, makeup: 0 };
 export type Outfit = Partial<Record<Slot, string>>;
 
 /**
@@ -65,10 +82,14 @@ export const FIGURE_VIEW: [number, number, number, number] = (() => {
 
 export const artUrl = (name: string) => `${import.meta.env.BASE_URL}art/${name}.webp`;
 
-function Layer({ name, filter, tone, clipBelow }: { name: string; filter?: string; tone: string; clipBelow?: number }) {
+/** `recolour`: a hair colour id, for hair layers (they have no skin). */
+function Layer({ name, filter, tone, clipBelow, recolour }: {
+  name: string; filter?: string; tone: string; clipBelow?: number; recolour?: string | null;
+}) {
   const l = LAYERS[name];
   if (!l) return null;
-  const file = l.skin && tone !== SKIN_TONES[BASE_SKIN].id ? `${name}~${tone}` : name;
+  const file = recolour ? `${name}~${recolour}`
+    : l.skin && tone !== SKIN_TONES[BASE_SKIN].id ? `${name}~${tone}` : name;
   const style: JSX.CSSProperties = {
     left: `${(l.x / W) * 100}%`,
     top: `${(l.y / H) * 100}%`,
@@ -98,7 +119,7 @@ function Masked({ mask, children }: { mask?: string; children: ComponentChildren
  *
  * Drawing order (back to front): hair and garment backs, body, makeup, underwear
  * (where nothing covers it), shoes over her own feet, bottom (masked to below the top's hem), dress,
- * top, necklace, bag, glasses, hair front, earrings.
+ * top, necklace, bracelet, bag, glasses, hair front, earrings.
  */
 export function Doll({ look, outfit, class: cls, view }: {
   look: Look; outfit: Outfit; class?: string; view?: [number, number, number, number];
@@ -109,6 +130,7 @@ export function Doll({ look, outfit, class: cls, view }: {
     if (id && ITEM_BY_ID[id]) items[slot] = ITEM_BY_ID[id];
   }
   const hair = (HAIRSTYLES[look.hair] ?? HAIRSTYLES[0]).art;
+  const hairColour = HAIR_COLOURS[look.hairColour ?? 0]?.id;
   const tone = (SKIN_TONES[look.skin ?? BASE_SKIN] ?? SKIN_TONES[BASE_SKIN]).id;
   const makeup = MAKEUPS[look.makeup ?? 0]?.art;
   const { top, bottom, dress, shoes } = items;
@@ -129,7 +151,7 @@ export function Doll({ look, outfit, class: cls, view }: {
         style={{ width: `${(W / vw) * 100}%`, left: `${(-vx / vw) * 100}%`, top: `${(-vy / vh) * 100}%` }}
       >
         <div class="doll-shadow" />
-        <Layer name={`${hair}-back`} tone={tone} />
+        <Layer name={`${hair}-back`} tone={tone} recolour={hairColour} />
         {part(dress, 'back')}
         {part(top, 'back')}
         <Layer name="body" tone={tone} clipBelow={shoes ? LAYERS[shoes.art]?.cut : undefined} />
@@ -144,10 +166,12 @@ export function Doll({ look, outfit, class: cls, view }: {
         {part(dress, 'front')}
         {part(top, 'front')}
         {part(items.necklace, 'front')}
+        {/* on her left wrist (viewer's right): the bag hangs from the other hand */}
+        {part(items.bracelet, 'front')}
         {part(items.bag, 'front')}
         {/* glasses sit on the face, under the strands that frame it */}
         {part(items.glasses, 'front')}
-        <Layer name={`${hair}-front`} tone={tone} />
+        <Layer name={`${hair}-front`} tone={tone} recolour={hairColour} />
         {part(items.earrings, 'front')}
       </div>
     </div>

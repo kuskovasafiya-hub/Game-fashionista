@@ -1,19 +1,26 @@
 import type { ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
-import { Doll, FIGURE_VIEW, artUrl } from '../art/Doll';
+import { Doll, FIGURE_VIEW } from '../art/Doll';
 import { ITEM_BY_ID, type Slot } from '../game/catalog';
 import { dressCodeMatch, fits, type Theme } from '../game/events';
-import { equip, ownedInSlot, sell, sellPrice, useGame } from '../game/store';
-import { DressCode, ItemCard, Modal, RarityTag, fmt } from './common';
+import { equip, ownedInSlot, sell, sellPrice, setLook, undressAll, useGame } from '../game/store';
+import { DressCode, ItemCard, Modal, RarityTag, UndressButton, fmt } from './common';
+import { Icon, type IconName } from './icons';
+import { LookEditor, type LookPart } from './LookEditor';
 
-/** Wardrobe tabs; accessories of every kind share one tab. */
-const TABS: [string, Slot[]][] = [
-  ['Верх', ['top']],
-  ['Низ', ['bottom']],
-  ['Платья', ['dress']],
-  ['Обувь', ['shoes']],
-  ['Аксессуары', ['necklace', 'earrings', 'glasses', 'bag']],
+/** Wardrobe tabs, as round icons: her look first, then clothes; every kind of jewellery shares the ring. */
+interface WTab { icon: IconName; label: string; slots?: Slot[]; look?: LookPart[] }
+const TABS: WTab[] = [
+  { icon: 'hair', label: 'Причёска и цвет волос', look: ['hair', 'colour'] },
+  { icon: 'eye', label: 'Макияж и кожа', look: ['makeup', 'skin'] },
+  { icon: 'top', label: 'Верх', slots: ['top'] },
+  { icon: 'bottom', label: 'Низ', slots: ['bottom'] },
+  { icon: 'dress', label: 'Платья', slots: ['dress'] },
+  { icon: 'shoes', label: 'Обувь', slots: ['shoes'] },
+  { icon: 'bag', label: 'Сумки', slots: ['bag'] },
+  { icon: 'ring', label: 'Украшения и очки', slots: ['necklace', 'earrings', 'bracelet', 'glasses'] },
 ];
+const FIRST_CLOTHES = 2;
 const ownedIn = (slots: Slot[]) => slots.flatMap((s) => ownedInSlot(s));
 
 /**
@@ -22,31 +29,33 @@ const ownedIn = (slots: Slot[]) => slots.flatMap((s) => ownedInSlot(s));
  */
 export function WardrobeScreen({ event, footer }: { event?: Theme; footer?: ComponentChildren }) {
   const g = useGame();
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState(FIRST_CLOTHES);
   const [selling, setSelling] = useState<string | null>(null);
-  const items = ownedIn(TABS[tab][1]);
+  const { look, slots } = TABS[tab];
+  const items = slots ? ownedIn(slots) : [];
   const sellItem = selling ? ITEM_BY_ID[selling] : null;
   const shown = event ? [...items].sort((a, b) => Number(fits(b, event.tags)) - Number(fits(a, event.tags))) : items;
 
   return (
     <div class={'screen wardrobe' + (event ? ' fitting' : '')}>
       {event && <FitHead event={event} />}
-      <nav class="tabs">
-        {TABS.map(([label, slots], t) => (
-          <button class={'tab' + (tab === t ? ' active' : '')} onClick={() => setTab(t)}>
-            {label} <small>{ownedIn(slots).length}</small>
+      <nav class="icon-tabs">
+        {TABS.map((t, i) => (
+          <button class={'icon-tab' + (tab === i ? ' active' : '')} onClick={() => setTab(i)} title={t.label} aria-label={t.label}>
+            <Icon name={t.icon} />
           </button>
         ))}
       </nav>
       <div class="split">
-        <div
-          class="split-doll"
-          style={{ '--fig-ratio': FIGURE_VIEW[2] / FIGURE_VIEW[3], ...(event && { '--bg': `url(${artUrl('bg-' + event.id)})` }) }}
-        >
-          <Doll class="doll" look={g.look} outfit={g.outfit} view={FIGURE_VIEW} />
+        <div class="split-left">
+          <div class="split-doll" style={{ '--fig-ratio': FIGURE_VIEW[2] / FIGURE_VIEW[3] }}>
+            <Doll class="doll" look={g.look} outfit={g.outfit} view={FIGURE_VIEW} />
+          </div>
+          <UndressButton onClick={undressAll} disabled={!Object.keys(g.outfit).length} />
         </div>
         <div class="split-items">
-          {items.length === 0 && <p class="muted center small">Пока пусто. Загляни в магазины!</p>}
+          {look && <LookEditor key={tab} look={g.look} onChange={setLook} parts={look} />}
+          {slots && items.length === 0 && <p class="muted center small">Пока пусто. Загляни в магазины!</p>}
           <div class="grid two">
             {shown.map((i) => (
               <div class="card-wrap">
@@ -58,11 +67,11 @@ export function WardrobeScreen({ event, footer }: { event?: Theme; footer?: Comp
               </div>
             ))}
           </div>
-          <p class="muted small center">
+          {slots && <p class="muted small center">
             {event
               ? 'Подходит вещь хотя бы с одной иконкой ивента — такие стоят первыми.'
               : 'Нажми на вещь, чтобы надеть или снять. 🪙 — продать за 40% цены.'}
-          </p>
+          </p>}
         </div>
       </div>
       {footer}

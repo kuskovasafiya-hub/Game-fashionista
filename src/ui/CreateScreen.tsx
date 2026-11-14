@@ -1,19 +1,17 @@
 import { useState } from 'preact/hooks';
-import { DEFAULT_LOOK, Doll, HAIRSTYLES, MAKEUPS, SKIN_TONES, type Look, type Outfit } from '../art/Doll';
+import { DEFAULT_LOOK, Doll, type Look, type Outfit } from '../art/Doll';
 import { STARTER, type Slot } from '../game/catalog';
 import { createCharacter } from '../game/store';
-import { ItemCard } from './common';
+import { ItemCard, UndressButton } from './common';
+import { LookGrid } from './LookEditor';
 
-type Tab = 'skin' | 'makeup' | 'hair' | 'clothes' | 'shoes' | 'acc';
+type Tab = 'skin' | 'makeup' | 'hair' | 'colour' | 'clothes' | 'shoes' | 'acc';
 const TABS: [Tab, string][] = [
-  ['skin', 'Кожа'], ['makeup', 'Макияж'], ['hair', 'Причёска'],
+  ['skin', 'Кожа'], ['makeup', 'Макияж'], ['hair', 'Причёска'], ['colour', 'Цвет волос'],
   ['clothes', 'Одежда'], ['shoes', 'Обувь'], ['acc', 'Аксессуары'],
 ];
 /** The clothes tab in groups: a dress replaces a top and a bottom, and back. */
 const CLOTHES: [string, Slot][] = [['Верх', 'top'], ['Низ', 'bottom'], ['Платья', 'dress']];
-const HEAD_VIEW: [number, number, number, number] = [312, 20, 400, 440];
-/** Close-up of the face for makeup cards. */
-const FACE_VIEW: [number, number, number, number] = [420, 90, 180, 198];
 const DEFAULT_TOP = 'starter-top-tee-1';
 const DEFAULT_BOTTOM = 'starter-bottom-jeans-1';
 
@@ -47,6 +45,7 @@ export function CreateScreen() {
       <div class="stage">
         <Doll look={look} outfit={outfit} />
       </div>
+      <UndressButton onClick={() => setOutfit({})} disabled={!Object.keys(outfit).length} />
       <div class="panel">
         <h1 class="title">Создай свою модницу</h1>
         <nav class="tabs">
@@ -55,35 +54,8 @@ export function CreateScreen() {
           ))}
         </nav>
         <div class="options">
-          {tab === 'skin' && (
-            <div class="grid">
-              {SKIN_TONES.map((t, i) => (
-                <button class={'card face' + (look.skin === i ? ' selected' : '')} onClick={() => setLook({ ...look, skin: i })}>
-                  <Doll class="thumb" look={{ ...look, skin: i }} outfit={{}} view={HEAD_VIEW} />
-                  <span class="cap"><i class="tone-dot" style={{ background: t.color }} />{t.name}</span>
-                </button>
-              ))}
-            </div>
-          )}
-          {tab === 'makeup' && (
-            <div class="grid">
-              {MAKEUPS.map((m, i) => (
-                <button class={'card face' + (look.makeup === i ? ' selected' : '')} onClick={() => setLook({ ...look, makeup: i })}>
-                  <Doll class="thumb" look={{ ...look, makeup: i }} outfit={{}} view={FACE_VIEW} />
-                  <span class="cap">{m.name}</span>
-                </button>
-              ))}
-            </div>
-          )}
-          {tab === 'hair' && (
-            <div class="grid">
-              {HAIRSTYLES.map((h, i) => (
-                <button class={'card face' + (look.hair === i ? ' selected' : '')} onClick={() => setLook({ ...look, hair: i })}>
-                  <Doll class="thumb" look={{ ...look, hair: i }} outfit={{}} view={HEAD_VIEW} />
-                  <span class="cap">{h.name}</span>
-                </button>
-              ))}
-            </div>
+          {(tab === 'skin' || tab === 'makeup' || tab === 'hair' || tab === 'colour') && (
+            <LookGrid part={tab} look={look} onChange={setLook} />
           )}
           {tab === 'clothes' && CLOTHES.map(([label, slot]) => (
             <section class="group">
@@ -104,7 +76,7 @@ export function CreateScreen() {
           )}
           {tab === 'acc' && (
             <div class="grid">
-              {items(['necklace', 'earrings', 'glasses', 'bag']).map((i) => (
+              {items(['necklace', 'earrings', 'glasses', 'bracelet', 'bag']).map((i) => (
                 <ItemCard item={i} selected={outfit[i.slot] === i.id} onClick={() => toggle(i.slot, i.id)} />
               ))}
             </div>

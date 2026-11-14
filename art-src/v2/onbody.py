@@ -39,6 +39,20 @@ def shift_to(base, img):
     return np.roll(img, (dy, dx), axis=(0, 1)), (int(dx), int(dy))
 
 
+def drop_lines(m, keep_px=150, reach=3, rel=0.0, width=2):
+    """Remove thin lines: Codex redraws bits of the body's own outline (an arm, a calf)
+    while editing, which are not part of the item. Pieces without any thick part go;
+    within the item, only lines more than `reach` px from its thick parts go."""
+    # (width: half the width a part must have to be material, not an ink line)
+    thick = ndi.binary_opening(m, iterations=width)
+    lab, n = ndi.label(m, structure=np.ones((3, 3)))
+    if n:
+        t = ndi.sum(thick, lab, range(1, n + 1))
+        # (rel: pieces far smaller than the main one, like a redrawn hand, go too)
+        m = np.isin(lab, [i + 1 for i in range(n) if t[i] >= max(keep_px, rel * t.max())])
+    return m & ndi.binary_dilation(thick, iterations=reach + width - 2)
+
+
 def cover_toes(img, m, feet, open_toe=False):
     """A closed shoe must hide her toes: where they stick out at the sides of the
     shoe, widen that shoe sideways about its centre until they are covered."""
@@ -86,11 +100,12 @@ def main():
         diff = np.abs(img[..., :3] - base[..., :3]).max(axis=-1)
         diff = ndi.gaussian_filter(diff, 0.8)
         m = (ia & ~ba) | (ia & ba & (diff > 40))
-        m[:ANKLE] = False
+        top_limit = 900 if 'boots' in p.stem else ANKLE    # knee-high boots reach up the leg
+        m[:top_limit] = False
         # Codex sometimes fills the transparent background around the feet with a flat
         # colour: per row, what looks like the far left of that row is background
         rgb = img[..., :3]
-        for y in range(ANKLE, m.shape[0]):
+        for y in range(top_limit, m.shape[0]):
             far = ia[y, :260] & ~ba[y, :260]
             if far.sum() > 40:
                 bgc = np.median(rgb[y, :260][far], axis=0)
@@ -108,11 +123,19 @@ def main():
             sizes = ndi.sum(m, lab, range(1, n + 1))
             m = np.isin(lab, [i + 1 for i, s in enumerate(sizes) if s >= 300])
         m = ndi.binary_fill_holes(m) & ia
+        m = drop_lines(m)
         if 'sandal' not in p.stem and m.any():
             # A closed shoe: the edit's whole foot below the shoe's top, her foot in
             # its place and size as Codex drew it inside the shoe. The doll's own
             # feet are hidden there (layers.json 'cut'), so no toe can poke out.
+            # the shoe starts where its material does, not at a redrawn bit of leg
+            sys.path.insert(0, str(ROOT.parent))
+            from skin import skin_weight
+            mat = m & ~(skin_weight(img[..., :3], strict=False) > 0.5)
+            rows = np.nonzero(mat.sum(axis=1) >= 30)[0]
             top = np.nonzero(m.any(axis=1))[0].min()
+            if 'boots' in p.stem and len(rows):
+                top = rows.min()          # (low shoes keep their verified cut)
             whole = ia.copy()
             whole[:top] = False
             lab2, _ = ndi.label(whole)

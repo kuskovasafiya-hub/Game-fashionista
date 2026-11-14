@@ -1,4 +1,4 @@
-export type Slot = 'top' | 'bottom' | 'dress' | 'shoes' | 'necklace' | 'earrings' | 'glasses' | 'bag';
+export type Slot = 'top' | 'bottom' | 'dress' | 'shoes' | 'necklace' | 'earrings' | 'glasses' | 'bracelet' | 'bag';
 export type Rarity = 'common' | 'rare' | 'epic';
 export type Dept = 'clothes' | 'shoes' | 'accessories';
 export type Tag = 'casual' | 'office' | 'party' | 'evening' | 'sport' | 'beach' | 'winter';
@@ -37,16 +37,17 @@ export const RARITY: Record<Rarity, { name: string; color: string; chance: numbe
 export const DEPT_SLOTS: Record<Dept, Slot[]> = {
   clothes: ['top', 'bottom', 'dress'],
   shoes: ['shoes'],
-  accessories: ['necklace', 'earrings', 'glasses', 'bag'],
+  accessories: ['necklace', 'earrings', 'glasses', 'bracelet', 'bag'],
 };
 export const DEPT_NAMES: Record<Dept, string> = { clothes: 'Одежда', shoes: 'Обувь', accessories: 'Аксессуары' };
 export const SLOT_NAMES: Record<Slot, string> = {
-  top: 'Верх', bottom: 'Низ', dress: 'Платья', shoes: 'Обувь', necklace: 'Колье', earrings: 'Серьги', glasses: 'Очки', bag: 'Сумки',
+  top: 'Верх', bottom: 'Низ', dress: 'Платья', shoes: 'Обувь', necklace: 'Колье', earrings: 'Серьги', glasses: 'Очки', bracelet: 'Браслеты', bag: 'Сумки',
 };
 
 export const SHOPS: Shop[] = [
   { id: 'city', name: 'Городской', about: 'Повседневная мода на каждый день', level: 1, depts: ['clothes', 'shoes', 'accessories'], color: '#FF8FB1', emoji: '🛍️' },
   { id: 'step', name: 'Шаг', about: 'Только обувь: от кед до шпилек', level: 1, depts: ['shoes'], color: '#7FC8F8', emoji: '👠' },
+  { id: 'y2k', name: 'Y2K', about: 'Нулевые: блеск, розовый и бабочки', level: 2, depts: ['clothes', 'shoes', 'accessories'], color: '#FF7AD9', emoji: '🦋' },
   { id: 'office', name: 'Офис', about: 'Деловой стиль и строгие линии', level: 3, depts: ['clothes', 'shoes', 'accessories'], color: '#8E9AAF', emoji: '💼' },
   { id: 'glam', name: 'Блеск', about: 'Украшения, серьги и сумочки', level: 5, depts: ['accessories'], color: '#F7C548', emoji: '💎' },
   { id: 'evening', name: 'Вечерний', about: 'Платья для вечеринок и балов', level: 7, depts: ['clothes', 'shoes'], color: '#9B5DE5', emoji: '🥂' },
@@ -67,6 +68,11 @@ const ART_SLOT: Record<string, Slot> = {
   'shoes-boots': 'shoes', 'shoes-sandals': 'shoes', 'shoes-loafers': 'shoes',
   'acc-chain': 'necklace', 'acc-pearls': 'necklace', 'acc-tote': 'bag', 'acc-belt-bag': 'bag',
   'top-crochet': 'top', 'bottom-baggy': 'bottom', 'acc-sunglasses': 'glasses', 'acc-glasses': 'glasses',
+  'shoes-hightops': 'shoes', 'shoes-maryjanes': 'shoes',
+  'top-y2k': 'top', 'bottom-y2k': 'bottom', 'dress-y2k': 'dress',
+  'top-cardigan': 'top', 'bottom-plaid': 'bottom', 'bottom-velour': 'bottom',
+  'shoes-platform': 'shoes', 'shoes-whiteboots': 'shoes',
+  'acc-shield': 'glasses', 'acc-choker': 'necklace', 'acc-bracelet': 'bracelet', 'acc-studs': 'earrings',
 };
 
 /** Style tags of each piece of art: what dress codes it fits. */
@@ -85,9 +91,14 @@ const ART_TAGS: Record<string, Tag[]> = {
   'acc-bag': ['casual', 'office'], 'acc-tote': ['office', 'casual'], 'acc-belt-bag': ['sport', 'casual'],
   'top-crochet': ['casual', 'party'], 'bottom-baggy': ['casual', 'party'],
   'acc-sunglasses': ['casual', 'beach', 'party'], 'acc-glasses': ['office', 'casual'],
+  'shoes-hightops': ['casual', 'sport'], 'shoes-maryjanes': ['party', 'casual'],
+  'top-y2k': ['party', 'beach', 'casual'], 'bottom-y2k': ['party', 'casual'], 'dress-y2k': ['party', 'evening'],
+  'top-cardigan': ['casual', 'winter'], 'bottom-plaid': ['casual', 'party'], 'bottom-velour': ['casual', 'sport'],
+  'shoes-platform': ['party'], 'shoes-whiteboots': ['party', 'winter'],
+  'acc-shield': ['party', 'beach'], 'acc-choker': ['party', 'casual'], 'acc-bracelet': ['casual', 'party', 'beach'], 'acc-studs': ['casual', 'party'],
 };
 /** A shop adds its own style to everything it sells. */
-const SHOP_TAGS: Record<string, Tag[]> = { glam: ['party'], evening: ['evening'], office: ['office'], sport: ['sport'] };
+const SHOP_TAGS: Record<string, Tag[]> = { glam: ['party'], evening: ['evening'], office: ['office'], sport: ['sport'], y2k: ['party'] };
 
 export const TAG_ICONS: Record<Tag, string> = {
   casual: '☕', office: '💼', party: '🎉', evening: '🥂', sport: '🏃‍♀️', beach: '🌴', winter: '❄️',
@@ -122,10 +133,21 @@ export const ITEMS: Item[] = [];
 export const ITEM_BY_ID: Record<string, Item> = {};
 
 type Spec = [art: string, name: string, rarity?: Rarity, filter?: string];
+/** A colour no longer sold. It keeps its place in the list so that the ids of the
+ * items after it (`<shop>-<art>-<n>`, stored in saves) do not change. */
+type Retired = { retired: Spec };
+const gone = (spec: Spec): Retired => ({ retired: spec });
 
-function add(shop: string, specs: Spec[]) {
-  specs.forEach(([art, name, rarity = 'common', filter]) => {
-    const id = `${shop}-${art}-${ITEMS.filter((i) => i.shop === shop && i.art === art).length + 1}`;
+/** Every piece of art comes in at most this many colours across all shops. */
+export const MAX_COLOURS = 2;
+
+function add(shop: string, specs: (Spec | Retired)[]) {
+  const seen: Record<string, number> = {};
+  specs.forEach((entry) => {
+    const [art, name, rarity = 'common', filter] = 'retired' in entry ? entry.retired : entry;
+    seen[art] = (seen[art] ?? 0) + 1;
+    if ('retired' in entry) return;
+    const id = `${shop}-${art}-${seen[art]}`;
     const [lo, hi] = RARITY[rarity].price;
     const price = shop === 'starter' ? 0 : Math.round((lo + (hi - lo) * hash(id)) / 10) * 10;
     const item: Item = { id, name, art, filter, slot: ART_SLOT[art], rarity, price, shop, tags: [...new Set([...(ART_TAGS[art] ?? []), ...(SHOP_TAGS[shop] ?? [])])] };
@@ -148,18 +170,18 @@ add('starter', [
 
 add('city', [
   ['top-crop', 'Кроп-топ «Мята»', 'common', TINT.mint],
-  ['top-crop', 'Кроп-топ «Небо»', 'common', TINT.sky],
-  ['top-crop', 'Кроп-топ «Персик»', 'rare', TINT.peach],
+  gone(['top-crop', 'Кроп-топ «Небо»', 'common', TINT.sky]),
+  gone(['top-crop', 'Кроп-топ «Персик»', 'rare', TINT.peach]),
   ['top-tee', 'Футболка «Розовая»', 'common', TINT.tintPink],
-  ['top-tee', 'Футболка «Мятная»', 'common', TINT.tintMint],
-  ['top-tee', 'Футболка «Графит»', 'rare', TINT.noir],
-  ['bottom-jeans', 'Джинсы «Светлые»', 'common', TINT.lightWash],
+  gone(['top-tee', 'Футболка «Мятная»', 'common', TINT.tintMint]),
+  gone(['top-tee', 'Футболка «Графит»', 'rare', TINT.noir]),
+  gone(['bottom-jeans', 'Джинсы «Светлые»', 'common', TINT.lightWash]),
   ['bottom-jeans', 'Джинсы «Чёрные»', 'common', TINT.noir],
   ['bottom-skirt', 'Юбка «Плиссе-графит»', 'common', 'brightness(1.6)'],
-  ['dress-red', 'Платье «Изумруд»', 'epic', 'hue-rotate(150deg) brightness(0.85)'],
-  ['shoes-sneakers', 'Кроссовки «Мята»', 'common', TINT.mint],
+  gone(['dress-red', 'Платье «Изумруд»', 'epic', 'hue-rotate(150deg) brightness(0.85)']),
+  gone(['shoes-sneakers', 'Кроссовки «Мята»', 'common', TINT.mint]),
   ['acc-bag', 'Сумка «Беж»', 'common'],
-  ['acc-bag', 'Сумка «Какао»', 'rare', TINT.cocoa],
+  gone(['acc-bag', 'Сумка «Какао»', 'rare', TINT.cocoa]),
   ['top-sweater', 'Свитер «Сливки»'],
   ['top-sweater', 'Свитер «Пудра»', 'rare', TINT.tintPink],
   ['bottom-shorts', 'Шорты «Деним»'],
@@ -173,58 +195,88 @@ add('city', [
   ['acc-glasses', 'Очки «Черепаха»'],
 ]);
 
+add('y2k', [
+  ['top-y2k', 'Топ «Бабочка»', 'rare'],
+  ['top-y2k', 'Топ «Бабочка-лайм»', 'rare', 'hue-rotate(110deg) saturate(1.2)'],
+  ['top-cardigan', 'Кардиган «Облачко»'],
+  ['top-cardigan', 'Кардиган «Облачко-роза»', 'rare', 'hue-rotate(130deg)'],
+  ['bottom-y2k', 'Мини «Звёздный ремень»'],
+  ['bottom-y2k', 'Мини «Звёздный ремень-нуар»', 'rare', TINT.noir],
+  ['bottom-plaid', 'Мини «Клетка-роза»'],
+  ['bottom-plaid', 'Мини «Клетка-лаванда»', 'rare', 'hue-rotate(300deg)'],
+  ['bottom-velour', 'Брюки «Велюр-зефир»', 'rare'],
+  ['bottom-velour', 'Брюки «Велюр-небо»', 'rare', 'hue-rotate(200deg)'],
+  ['dress-y2k', 'Платье «Голограмма»', 'epic'],
+  ['dress-y2k', 'Платье «Голограмма-мята»', 'epic', 'hue-rotate(250deg)'],
+  ['shoes-platform', 'Туфли «Платформа-зефир»', 'rare'],
+  ['shoes-platform', 'Туфли «Платформа-лаванда»', 'rare', 'hue-rotate(300deg)'],
+  ['shoes-whiteboots', 'Сапоги «Снежок»', 'epic'],
+  ['shoes-whiteboots', 'Сапоги «Снежок-розовые»', 'epic', 'sepia(0.5) saturate(3) hue-rotate(290deg)'],
+  ['acc-shield', 'Очки «Футуризм»'],
+  ['acc-shield', 'Очки «Футуризм-голубые»', 'common', 'hue-rotate(200deg)'],
+  ['acc-choker', 'Чокер «Сердечко»'],
+  ['acc-choker', 'Чокер «Сердечко-золото»', 'rare', 'sepia(1) saturate(2.5) brightness(0.95)'],
+  ['acc-bracelet', 'Браслет «Бабочка»'],
+  ['acc-bracelet', 'Браслет «Бабочка-мята»', 'common', 'hue-rotate(150deg)'],
+  ['acc-studs', 'Серьги «Бабочки»'],
+  ['acc-studs', 'Серьги «Бабочки-золото»', 'rare', 'sepia(1) saturate(2.5) brightness(0.95)'],
+]);
+
 add('step', [
-  ['shoes-sneakers', 'Кроссовки «Небо»', 'common', TINT.sky],
-  ['shoes-sneakers', 'Кроссовки «Лаванда»', 'common', TINT.lilac],
+  gone(['shoes-sneakers', 'Кроссовки «Небо»', 'common', TINT.sky]),
+  gone(['shoes-sneakers', 'Кроссовки «Лаванда»', 'common', TINT.lilac]),
   ['shoes-sneakers', 'Кроссовки «Ночь»', 'rare', TINT.noir],
   ['shoes-heels', 'Туфли «Бордо»', 'common', 'sepia(1) saturate(4) hue-rotate(310deg) brightness(0.9)'],
-  ['shoes-heels', 'Туфли «Нюд»', 'rare', 'invert(0.75) sepia(0.6) saturate(1.5)'],
-  ['shoes-heels', 'Туфли «Серебро»', 'epic', 'invert(0.8) grayscale(1) brightness(1.1)'],
+  gone(['shoes-heels', 'Туфли «Нюд»', 'rare', 'invert(0.75) sepia(0.6) saturate(1.5)']),
+  gone(['shoes-heels', 'Туфли «Серебро»', 'epic', 'invert(0.8) grayscale(1) brightness(1.1)']),
   ['shoes-boots', 'Сапоги «Нуар»', 'rare'],
   ['shoes-sandals', 'Босоножки «Золото»', 'common'],
   ['shoes-loafers', 'Лоферы «Коньяк»', 'common'],
+  ['shoes-hightops', 'Кеды «Классика»'],
+  ['shoes-maryjanes', 'Туфли «Мэри Джейн»', 'rare'],
+  ['shoes-maryjanes', 'Туфли «Мэри Джейн нуар»', 'epic', 'grayscale(1) brightness(0.55) contrast(1.3)'],
 ]);
 
 add('glam', [
   ['acc-hoops', 'Серьги-кольца «Серебро»', 'common', TINT.silver],
-  ['acc-hoops', 'Серьги-кольца «Розовое золото»', 'rare', 'hue-rotate(320deg) saturate(1.2)'],
-  ['acc-bag', 'Сумка «Пудра»', 'common', TINT.tintPink],
-  ['acc-bag', 'Сумка «Мята»', 'rare', TINT.tintMint],
+  gone(['acc-hoops', 'Серьги-кольца «Розовое золото»', 'rare', 'hue-rotate(320deg) saturate(1.2)']),
+  gone(['acc-bag', 'Сумка «Пудра»', 'common', TINT.tintPink]),
+  gone(['acc-bag', 'Сумка «Мята»', 'rare', TINT.tintMint]),
   ['acc-bag', 'Сумка «Нуар»', 'epic', TINT.noir],
   ['acc-chain', 'Цепочка «Золото»'],
   ['acc-chain', 'Цепочка «Серебро»', 'common', TINT.silver],
-  ['acc-pearls', 'Жемчуг «Белый»', 'rare'],
+  gone(['acc-pearls', 'Жемчуг «Белый»', 'rare']),
   ['acc-pearls', 'Жемчуг «Розовый»', 'epic', TINT.tintPink],
 ]);
 
 add('evening', [
   ['dress-red', 'Платье «Алый шёлк»', 'rare'],
   ['dress-red', 'Платье «Сапфир»', 'rare', 'hue-rotate(220deg)'],
-  ['dress-red', 'Платье «Аметист»', 'epic', 'hue-rotate(270deg)'],
+  gone(['dress-red', 'Платье «Аметист»', 'epic', 'hue-rotate(270deg)']),
   ['dress-black', 'Платье «Полночь»', 'common', 'sepia(1) hue-rotate(190deg) saturate(3) brightness(1.4)'],
-  ['shoes-heels', 'Туфли «Классика»', 'common'],
+  gone(['shoes-heels', 'Туфли «Классика»', 'common']),
   ['dress-gown', 'Платье «Изумрудный блеск»', 'epic'],
   ['dress-gown', 'Платье «Сапфировый блеск»', 'epic', 'hue-rotate(100deg) saturate(1.3)'],
-  ['dress-gown', 'Платье «Рубиновый блеск»', 'rare', 'hue-rotate(200deg) saturate(1.8) brightness(1.25)'],
+  gone(['dress-gown', 'Платье «Рубиновый блеск»', 'rare', 'hue-rotate(200deg) saturate(1.8) brightness(1.25)']),
   ['bottom-midi', 'Юбка-миди «Шампань»'],
-  ['top-blouse', 'Блузка «Шёлк»'],
+  gone(['top-blouse', 'Блузка «Шёлк»']),
   ['shoes-sandals', 'Босоножки «Серебро»', 'rare', TINT.silver],
 ]);
 
 add('office', [
   ['top-blouse', 'Блузка «Белая»'],
   ['top-blouse', 'Блузка «Пудра»', 'common', TINT.tintPink],
-  ['top-blouse', 'Блузка «Небо»', 'rare', 'sepia(0.45) saturate(2) hue-rotate(170deg)'],
+  gone(['top-blouse', 'Блузка «Небо»', 'rare', 'sepia(0.45) saturate(2) hue-rotate(170deg)']),
   ['top-blazer', 'Жакет «Кэмел»', 'rare'],
   ['top-blazer', 'Жакет «Графит»', 'rare', TINT.noir],
-  ['top-blazer', 'Жакет «Малина»', 'epic', 'hue-rotate(320deg) saturate(1.5) brightness(0.75)'],
+  gone(['top-blazer', 'Жакет «Малина»', 'epic', 'hue-rotate(320deg) saturate(1.5) brightness(0.75)']),
   ['bottom-trousers', 'Брюки «Серые»'],
-  ['bottom-trousers', 'Брюки «Беж»', 'common', 'sepia(0.7) brightness(1.15)'],
+  gone(['bottom-trousers', 'Брюки «Беж»', 'common', 'sepia(0.7) brightness(1.15)']),
   ['bottom-trousers', 'Брюки «Ночь»', 'common', TINT.noir],
-  ['bottom-midi', 'Юбка-миди «Беж»', 'rare'],
-  ['shoes-loafers', 'Лоферы «Шоколад»'],
+  gone(['bottom-midi', 'Юбка-миди «Беж»', 'rare']),
+  gone(['shoes-loafers', 'Лоферы «Шоколад»']),
   ['shoes-loafers', 'Лоферы «Нуар»', 'common', TINT.noir],
-  ['shoes-heels', 'Туфли «Офис»'],
+  gone(['shoes-heels', 'Туфли «Офис»']),
   ['acc-pearls', 'Жемчуг «Классика»', 'rare'],
   ['acc-tote', 'Сумка-тоут «Нуар»'],
   ['acc-tote', 'Сумка-тоут «Карамель»', 'rare', 'invert(0.55) sepia(1) saturate(2.2) hue-rotate(-10deg)'],
@@ -233,15 +285,27 @@ add('office', [
 add('sport', [
   ['top-hoodie', 'Худи «Лаванда»'],
   ['top-hoodie', 'Худи «Мята»', 'common', 'hue-rotate(240deg)'],
-  ['top-hoodie', 'Худи «Персик»', 'rare', 'hue-rotate(60deg) saturate(1.3)'],
+  gone(['top-hoodie', 'Худи «Персик»', 'rare', 'hue-rotate(60deg) saturate(1.3)']),
   ['bottom-leggings', 'Леггинсы «Чёрные»'],
   ['bottom-leggings', 'Леггинсы «Графит»', 'common', 'brightness(2.2)'],
-  ['bottom-shorts', 'Шорты «Светлый деним»', 'common', TINT.lightWash],
+  gone(['bottom-shorts', 'Шорты «Светлый деним»', 'common', TINT.lightWash]),
   ['bottom-shorts', 'Шорты «Белые»', 'rare', 'grayscale(1) brightness(1.55)'],
   ['acc-belt-bag', 'Мини-сумка «Розовая»'],
-  ['acc-belt-bag', 'Мини-сумка «Мята»', 'common', 'hue-rotate(150deg)'],
+  gone(['acc-belt-bag', 'Мини-сумка «Мята»', 'common', 'hue-rotate(150deg)']),
   ['acc-belt-bag', 'Мини-сумка «Нуар»', 'rare', TINT.noir],
 ]);
+
+/* No piece of art in more than MAX_COLOURS colours, and no colour sold twice. */
+{
+  const colours: Record<string, Set<string>> = {};
+  for (const i of ITEMS) {
+    const c = (colours[i.art] ??= new Set());
+    const key = i.filter ?? '';
+    if (c.has(key) && i.shop !== 'starter') throw new Error(`catalog: ${i.art} colour "${key}" is sold twice (${i.id})`);
+    c.add(key);
+    if (c.size > MAX_COLOURS) throw new Error(`catalog: ${i.art} has more than ${MAX_COLOURS} colours (${i.id})`);
+  }
+}
 
 export const STARTER = ITEMS.filter((i) => i.shop === 'starter');
 export const shopItems = (shop: string, dept?: Dept) =>
@@ -259,7 +323,7 @@ const KINDS: { kind: FixtureKind; name: string; slots: Slot[]; look: FixtureLook
   { kind: 'bottoms', name: 'Низ', slots: ['bottom'], look: 'rack' },
   { kind: 'shoes', name: 'Обувь', slots: ['shoes'], look: 'shelf' },
   { kind: 'bags', name: 'Сумки', slots: ['bag'], look: 'shelf' },
-  { kind: 'jewelry', name: 'Украшения', slots: ['necklace', 'earrings'], look: 'case' },
+  { kind: 'jewelry', name: 'Украшения', slots: ['necklace', 'earrings', 'bracelet'], look: 'case' },
   { kind: 'glasses', name: 'Очки', slots: ['glasses'], look: 'stand' },
 ];
 
@@ -273,6 +337,10 @@ const ART_NAMES: Record<string, string> = {
   'shoes-sneakers': 'Кроссовки', 'shoes-heels': 'Туфли', 'shoes-boots': 'Сапоги', 'shoes-sandals': 'Босоножки', 'shoes-loafers': 'Лоферы',
   'acc-hoops': 'Серьги', 'acc-chain': 'Цепочки', 'acc-pearls': 'Жемчуг', 'acc-bag': 'Сумки', 'acc-tote': 'Тоуты',
   'acc-belt-bag': 'Мини-сумки', 'acc-sunglasses': 'Солнечные очки', 'acc-glasses': 'Очки',
+  'top-y2k': 'Топы', 'top-cardigan': 'Кардиганы', 'bottom-y2k': 'Мини', 'bottom-plaid': 'Мини в клетку',
+  'bottom-velour': 'Велюр', 'dress-y2k': 'Платья', 'shoes-platform': 'Платформы', 'shoes-whiteboots': 'Сапоги',
+  'shoes-hightops': 'Кеды', 'shoes-maryjanes': 'Мэри Джейн',
+  'acc-shield': 'Очки', 'acc-choker': 'Чокеры', 'acc-bracelet': 'Браслеты', 'acc-studs': 'Серьги',
 };
 
 export interface Fixture { id: string; name: string; kind: FixtureKind; look: FixtureLook; items: Item[] }
