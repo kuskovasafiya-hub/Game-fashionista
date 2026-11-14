@@ -60,6 +60,11 @@ export const MAKEUPS: Makeup[] = [
   { name: 'Вечерний', art: 'makeup-evening' },
   { name: 'Яркий', art: 'makeup-bright' },
   { name: 'Гламур', art: 'makeup-glam' },
+  { name: 'Нюд', art: 'makeup-nude' },
+  { name: 'Кошачий глаз', art: 'makeup-cateye' },
+  { name: 'Y2K', art: 'makeup-y2k' },
+  { name: 'Персик', art: 'makeup-peach' },
+  { name: 'Готика', art: 'makeup-goth' },
 ];
 
 /** Indices into HAIRSTYLES, HAIR_COLOURS, SKIN_TONES, MAKEUPS (old saves have only `hair`). */

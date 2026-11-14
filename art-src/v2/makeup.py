@@ -67,7 +67,20 @@ def main():
             sizes = ndi.sum(keep, lab, range(1, n + 1))
             keep = np.isin(lab, [i + 1 for i, s in enumerate(sizes) if s >= 25])
         alpha *= ndi.gaussian_filter(ndi.binary_dilation(keep, iterations=3).astype(np.float32), 1.5)
-        out = np.dstack([img[..., :3], 255 * alpha])
+        # Soft edges are makeup mixed with her (light) skin. Unmix them so the layer
+        # holds only the makeup's own colour: edit = a * M + (1 - a) * base. Otherwise
+        # the base's light skin rides along and shows as a pale halo on darker tones.
+        a = np.clip(alpha, 0, 1)[..., None]
+        pure = (img[..., :3] - (1 - a) * base[..., :3]) / np.maximum(a, 0.05)
+        rgb = np.where(a > 0.05, np.clip(pure, 0, 255), img[..., :3])
+        # what is still skin-coloured after unmixing is her skin redrawn, not makeup:
+        # it would keep the light base tone on every other tone. Fade it out by how
+        # close it is to her own skin there (lips and lashes differ a lot, keep them)
+        sys.path.insert(0, str(ROOT.parent))
+        from skin import srgb_to_lab
+        d = np.linalg.norm(srgb_to_lab(rgb.astype(np.float64)) - srgb_to_lab(base[..., :3].astype(np.float64)), axis=-1)
+        alpha *= np.clip((d - 8) / 14, 0, 1)
+        out = np.dstack([rgb, 255 * alpha])
         Image.fromarray(out.clip(0, 255).astype(np.uint8)).save(OUT / f'{name}.png')
         print(name, 'offset', off, 'px', int((alpha > 0.3).sum()))
 
