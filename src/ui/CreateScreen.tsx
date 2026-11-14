@@ -1,17 +1,23 @@
 import { useState } from 'preact/hooks';
-import { DEFAULT_LOOK, Doll, type Look, type Outfit } from '../art/Doll';
+import { DEFAULT_LOOK, Doll, FIGURE_VIEW, PORTRAIT_VIEW, type Look, type Outfit } from '../art/Doll';
 import { STARTER, type Slot } from '../game/catalog';
 import { createCharacter } from '../game/store';
 import { ItemCard, UndressButton } from './common';
-import { LookGrid } from './LookEditor';
+import { Icon, type IconName } from './icons';
+import { LookGrid, type LookPart } from './LookEditor';
 
-type Tab = 'skin' | 'makeup' | 'hair' | 'colour' | 'clothes' | 'shoes' | 'acc';
-const TABS: [Tab, string][] = [
-  ['skin', 'Кожа'], ['makeup', 'Макияж'], ['hair', 'Причёска'], ['colour', 'Цвет волос'],
-  ['clothes', 'Одежда'], ['shoes', 'Обувь'], ['acc', 'Аксессуары'],
+/** Same round icon tabs as the wardrobe: her look first, then the starter clothes. */
+interface CTab { icon: IconName; label: string; slots?: Slot[]; look?: LookPart; required?: boolean }
+const TABS: CTab[] = [
+  { icon: 'hair', label: 'Причёска', look: 'hair' },
+  { icon: 'eye', label: 'Макияж', look: 'makeup' },
+  { icon: 'skin', label: 'Цвет кожи', look: 'skin' },
+  { icon: 'top', label: 'Верх', slots: ['top'], required: true },
+  { icon: 'bottom', label: 'Низ', slots: ['bottom'], required: true },
+  { icon: 'dress', label: 'Платья', slots: ['dress'], required: true },
+  { icon: 'shoes', label: 'Обувь', slots: ['shoes'], required: true },
+  { icon: 'ring', label: 'Аксессуары и сумки', slots: ['necklace', 'earrings', 'glasses', 'bracelet', 'bag'] },
 ];
-/** The clothes tab in groups: a dress replaces a top and a bottom, and back. */
-const CLOTHES: [string, Slot][] = [['Верх', 'top'], ['Низ', 'bottom'], ['Платья', 'dress']];
 const DEFAULT_TOP = 'starter-top-tee-1';
 const DEFAULT_BOTTOM = 'starter-bottom-jeans-1';
 
@@ -20,7 +26,9 @@ export function CreateScreen() {
   const [outfit, setOutfit] = useState<Outfit>({
     top: DEFAULT_TOP, bottom: DEFAULT_BOTTOM, shoes: 'starter-shoes-sneakers-1',
   });
-  const [tab, setTab] = useState<Tab>('skin');
+  const [tab, setTab] = useState(0);
+  /** In the hair tab: hair colours instead of hairstyles, behind the colour wheel button. */
+  const [dye, setDye] = useState(false);
   const [name, setName] = useState('');
 
   const toggle = (slot: Slot, id: string, required = false) => {
@@ -40,54 +48,54 @@ export function CreateScreen() {
   const items = (slots: Slot[]) => STARTER.filter((i) => slots.includes(i.slot));
   const done = name.trim().length > 0;
 
+  const { look: part, slots, required } = TABS[tab];
+  // choosing makeup: zoom in to her face and shoulders
+  const view = part === 'makeup' ? PORTRAIT_VIEW : FIGURE_VIEW;
+
   return (
     <div class="screen create">
-      <div class="stage">
-        <Doll look={look} outfit={outfit} />
-      </div>
-      <UndressButton onClick={() => setOutfit({})} disabled={!Object.keys(outfit).length} />
-      <div class="panel">
-        <h1 class="title">Создай свою модницу</h1>
-        <nav class="tabs">
-          {TABS.map(([t, label]) => (
-            <button class={'tab' + (tab === t ? ' active' : '')} onClick={() => setTab(t)}>{label}</button>
-          ))}
-        </nav>
-        <div class="options">
-          {(tab === 'skin' || tab === 'makeup' || tab === 'hair' || tab === 'colour') && (
-            <LookGrid part={tab} look={look} onChange={setLook} />
-          )}
-          {tab === 'clothes' && CLOTHES.map(([label, slot]) => (
-            <section class="group">
-              <h3 class="group-title">{label}</h3>
-              <div class="grid">
-                {items([slot]).map((i) => (
-                  <ItemCard item={i} selected={outfit[i.slot] === i.id} onClick={() => toggle(i.slot, i.id, true)} />
-                ))}
-              </div>
-            </section>
-          ))}
-          {tab === 'shoes' && (
-            <div class="grid">
-              {items(['shoes']).map((i) => (
-                <ItemCard item={i} selected={outfit.shoes === i.id} onClick={() => toggle('shoes', i.id, true)} />
-              ))}
-            </div>
-          )}
-          {tab === 'acc' && (
-            <div class="grid">
-              {items(['necklace', 'earrings', 'glasses', 'bracelet', 'bag']).map((i) => (
-                <ItemCard item={i} selected={outfit[i.slot] === i.id} onClick={() => toggle(i.slot, i.id)} />
-              ))}
-            </div>
-          )}
-        </div>
-        <div class="create-footer">
-          <input class="input" maxLength={16} placeholder="Имя модницы" value={name} onInput={(e) => setName(e.currentTarget.value)} />
-          <button class="btn primary" disabled={!done} onClick={() => createCharacter(name.trim(), look, outfit)}>
-            Готово ✨
+      <h1 class="title">Создай свою модницу</h1>
+      <nav class="icon-tabs">
+        {TABS.map((t, i) => (
+          <button class={'icon-tab' + (tab === i ? ' active' : '')} onClick={() => setTab(i)} title={t.label} aria-label={t.label}>
+            <Icon name={t.icon} />
           </button>
+        ))}
+      </nav>
+      <div class="split">
+        <div class="split-left">
+          <div class={'split-doll' + (part === 'makeup' ? ' portrait' : '')} style={{ '--fig-ratio': view[2] / view[3] }}>
+            <Doll key={part === 'makeup' ? 'face' : 'figure'} class="doll" look={look} outfit={outfit} view={view} />
+          </div>
+          <UndressButton onClick={() => setOutfit({})} disabled={!Object.keys(outfit).length} />
         </div>
+        <div class="split-items">
+          {part === 'hair' && (
+            <div class="hair-head">
+              <b>{dye ? 'Цвет волос' : 'Причёска'}</b>
+              <button
+                class={'icon-tab colour-btn' + (dye ? ' active' : '')} onClick={() => setDye(!dye)}
+                title={dye ? 'Причёски' : 'Цвет волос'} aria-label={dye ? 'Причёски' : 'Цвет волос'}
+              >
+                <Icon name="colour" />
+              </button>
+            </div>
+          )}
+          {part && <LookGrid part={part === 'hair' && dye ? 'colour' : part} look={look} onChange={setLook} two />}
+          {slots && (
+            <div class="grid two">
+              {items(slots).map((i) => (
+                <ItemCard item={i} selected={outfit[i.slot] === i.id} onClick={() => toggle(i.slot, i.id, required)} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      <div class="create-footer">
+        <input class="input" maxLength={16} placeholder="Имя модницы" value={name} onInput={(e) => setName(e.currentTarget.value)} />
+        <button class="btn primary" disabled={!done} onClick={() => createCharacter(name.trim(), look, outfit)}>
+          Готово ✨
+        </button>
       </div>
     </div>
   );

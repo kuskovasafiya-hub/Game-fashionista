@@ -169,8 +169,11 @@ function withXp(s: Save, amount: number): [Save, LevelUp | null] {
 /* ---------- character ---------- */
 
 export function createCharacter(name: string, look: Look, outfit: Outfit) {
-  const owned = Object.values(outfit).filter(Boolean) as string[];
-  commit({ ...state, created: true, name, look, outfit, owned, discovered: owned });
+  const worn = Object.values(outfit).filter(Boolean) as string[];
+  // Keep anything already owned: the debug panel can reopen this screen mid-game.
+  const owned = [...new Set([...state.owned, ...worn])];
+  const discovered = [...new Set([...state.discovered, ...worn])];
+  commit({ ...state, created: true, name, look, outfit, owned, discovered });
 }
 
 export function equip(itemId: string) {

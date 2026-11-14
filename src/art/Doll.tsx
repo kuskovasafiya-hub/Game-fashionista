@@ -85,6 +85,12 @@ export const FIGURE_VIEW: [number, number, number, number] = (() => {
   return [x0, y0, x1 - x0, y1 - y0];
 })();
 
+/**
+ * Face and shoulders, for choosing makeup: the model zooms in to this. It starts where
+ * the figure does, so the tallest hairstyle (a bun) is never cut off at the top.
+ */
+export const PORTRAIT_VIEW: [number, number, number, number] = [332, FIGURE_VIEW[1], 360, 430 - FIGURE_VIEW[1]];
+
 export const artUrl = (name: string) => `${import.meta.env.BASE_URL}art/${name}.webp`;
 
 /** `recolour`: a hair colour id, for hair layers (they have no skin). */

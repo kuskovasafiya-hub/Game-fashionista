@@ -1,6 +1,6 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
-import { Doll, FIGURE_VIEW, artUrl } from '../art/Doll';
+import { Doll, FIGURE_VIEW, PORTRAIT_VIEW, artUrl } from '../art/Doll';
 import { ITEM_BY_ID, type Slot } from '../game/catalog';
 import { dressCodeMatch, fits, type Theme } from '../game/events';
 import { equip, ownedInSlot, sell, sellPrice, setLook, undressAll, useGame } from '../game/store';
@@ -35,6 +35,8 @@ export function WardrobeScreen({ event, footer }: { event?: Theme; footer?: Comp
   useSceneBackground(event?.id);
   const [selling, setSelling] = useState<string | null>(null);
   const { look, slots } = TABS[tab];
+  // choosing makeup: zoom in to her face and shoulders
+  const view = look === 'makeup' ? PORTRAIT_VIEW : FIGURE_VIEW;
   const items = slots ? ownedIn(slots) : [];
   const sellItem = selling ? ITEM_BY_ID[selling] : null;
   const shown = event ? [...items].sort((a, b) => Number(fits(b, event.tags)) - Number(fits(a, event.tags))) : items;
@@ -51,8 +53,8 @@ export function WardrobeScreen({ event, footer }: { event?: Theme; footer?: Comp
       </nav>
       <div class="split">
         <div class="split-left">
-          <div class="split-doll" style={{ '--fig-ratio': FIGURE_VIEW[2] / FIGURE_VIEW[3] }}>
-            <Doll class="doll" look={g.look} outfit={g.outfit} view={FIGURE_VIEW} />
+          <div class={'split-doll' + (look === 'makeup' ? ' portrait' : '')} style={{ '--fig-ratio': view[2] / view[3] }}>
+            <Doll key={look === 'makeup' ? 'face' : 'figure'} class="doll" look={g.look} outfit={g.outfit} view={view} />
           </div>
           <UndressButton onClick={undressAll} disabled={!Object.keys(g.outfit).length} />
         </div>

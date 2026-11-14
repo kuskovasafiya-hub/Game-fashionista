@@ -169,20 +169,14 @@ button:disabled { cursor: default; }
 
 /* Create & wardrobe */
 .create, .wardrobe { display: flex; flex-direction: column; padding: 0; height: 100%; }
-.create .stage { height: 46dvh; flex: none; }
-.create .panel {
-  flex: 1; display: flex; flex-direction: column; min-height: 0;
-  padding: 14px 16px 16px; background: rgba(255, 255, 255, 0.7);
-  border-radius: 34px 34px 0 0; box-shadow: var(--soft);
-}
-.create .title { text-align: center; font-size: 19px; }
-.group + .group { margin-top: 12px; }
-.group-title { margin: 0 0 6px 2px; font-size: 14px; font-weight: 800; color: var(--muted); }
-.options { flex: 1; overflow-y: auto; min-height: 90px; }
+/* creation: the wardrobe layout — icon tabs, the model left, choices right, the name below */
+.create { padding: 10px 12px 12px; }
+.create .title { flex: none; margin: 2px 0 8px; font-size: 19px; }
+.create .split { padding-bottom: 6px; }
 .swatches { display: flex; flex-wrap: wrap; gap: 12px; padding: 6px 2px; }
 .swatch { width: 46px; height: 46px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); }
 .swatch.selected { outline: 3px solid var(--accent); outline-offset: 2px; }
-.create-footer { display: flex; gap: 8px; align-items: center; padding-top: 10px; }
+.create-footer { flex: none; display: flex; gap: 8px; align-items: center; padding-top: 8px; }
 .create-footer .btn { width: auto; flex: none; margin: 0; }
 .input {
   flex: 1; min-width: 0; padding: 13px 14px; border-radius: 14px; border: 2px solid var(--line);
@@ -319,6 +313,10 @@ button:disabled { cursor: default; }
 .split-doll {
   position: relative; container-type: size; display: flex; justify-content: center; align-items: flex-end; min-height: 0;
 }
+/* makeup: a close-up of face and shoulders, in the middle of the column */
+.split-doll.portrait { align-items: center; }
+.split-doll.portrait .doll { animation: zoom-in 0.3s ease-out; }
+@keyframes zoom-in { from { transform: scale(0.6); opacity: 0; } }
 /* as big as fits the column; --fig-ratio is the cropped figure's width / height */
 .split-doll .doll { flex: none; width: min(100cqw, calc(var(--fig-ratio, 0.42) * 100cqh)); }
 .split-items { min-height: 0; overflow-y: auto; padding: 2px; }
@@ -519,7 +517,7 @@ button:disabled { cursor: default; }
   position: absolute; top: 2px; right: -9px; display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px;
   border-radius: 10px; border: 2px solid #fff; background: var(--red); color: #fff; font-size: 11px; font-weight: 900;
 }
-.nav-item.active 
+
 /* Voting lobby */
 .feature-tile.heart svg { width: 28px; height: 28px; fill: #fff; filter: drop-shadow(0 1px 0 rgba(120, 60, 140, 0.35)); }
 .feature-tile.ticket { font-size: 28px; }
@@ -945,5 +943,4 @@ button:disabled { cursor: default; }
   background: rgba(255, 255, 255, 0.75); color: var(--muted); font-weight: 700; font-size: 11px;
   border: 1px solid var(--line);
 }
-.create > .undress { margin: 6px auto 0; }
 .undress:disabled { opacity: 0.45; }

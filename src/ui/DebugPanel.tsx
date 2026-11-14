@@ -151,10 +151,12 @@ export function DebugPanel({ onClose, onLevelUp }: { onClose: () => void; onLeve
           <div class="dbg-btns">
             <Btn onClick={copySave}>Скопировать</Btn>
             <Btn onClick={loadSave}>Загрузить</Btn>
+            <Btn onClick={() => { debugPatch({ created: false }); onClose(); }}>Начать с выбора персонажа</Btn>
             <Btn danger onClick={() => { if (confirm('Начать игру заново? Весь прогресс удалится.')) { resetGame(); onClose(); } }}>
               Сбросить прогресс
             </Btn>
           </div>
+          <p class="dbg-hint">«Начать с выбора персонажа» сохраняет монеты, уровень и вещи. «Сбросить прогресс» стирает всё.</p>
         </section>
 
         {note && <div class="dbg-note">{note}</div>}
