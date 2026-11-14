@@ -94,11 +94,11 @@ export function LevelUpModal({ lu, onClose }: { lu: LevelUp; onClose: () => void
   );
 }
 
-/** «Снять всё»: a small button in the corner of the model's frame. */
+/** «Снять всё»: a small, quiet button under the model. */
 export function UndressButton({ onClick, disabled }: { onClick: () => void; disabled?: boolean }) {
   return (
     <button class="undress" onClick={onClick} disabled={disabled} title="Снять всё">
-      👙 Снять всё
+      Снять всё
     </button>
   );
 }

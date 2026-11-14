@@ -1,26 +1,26 @@
 import type { ComponentChildren } from 'preact';
-import { useState } from 'preact/hooks';
-import { Doll, FIGURE_VIEW } from '../art/Doll';
+import { useEffect, useState } from 'preact/hooks';
+import { Doll, FIGURE_VIEW, artUrl } from '../art/Doll';
 import { ITEM_BY_ID, type Slot } from '../game/catalog';
 import { dressCodeMatch, fits, type Theme } from '../game/events';
 import { equip, ownedInSlot, sell, sellPrice, setLook, undressAll, useGame } from '../game/store';
 import { DressCode, ItemCard, Modal, RarityTag, UndressButton, fmt } from './common';
 import { Icon, type IconName } from './icons';
-import { LookEditor, type LookPart } from './LookEditor';
+import { LookGrid, type LookPart } from './LookEditor';
 
-/** Wardrobe tabs, as round icons: her look first, then clothes; every kind of jewellery shares the ring. */
-interface WTab { icon: IconName; label: string; slots?: Slot[]; look?: LookPart[] }
+/** Wardrobe tabs, as round icons: her look first, then clothes; bags and jewellery share the ring. */
+interface WTab { icon: IconName; label: string; slots?: Slot[]; look?: LookPart }
 const TABS: WTab[] = [
-  { icon: 'hair', label: 'Причёска и цвет волос', look: ['hair', 'colour'] },
-  { icon: 'eye', label: 'Макияж и кожа', look: ['makeup', 'skin'] },
+  { icon: 'hair', label: 'Причёска', look: 'hair' },
+  { icon: 'eye', label: 'Макияж', look: 'makeup' },
+  { icon: 'skin', label: 'Цвет кожи', look: 'skin' },
   { icon: 'top', label: 'Верх', slots: ['top'] },
   { icon: 'bottom', label: 'Низ', slots: ['bottom'] },
   { icon: 'dress', label: 'Платья', slots: ['dress'] },
   { icon: 'shoes', label: 'Обувь', slots: ['shoes'] },
-  { icon: 'bag', label: 'Сумки', slots: ['bag'] },
-  { icon: 'ring', label: 'Украшения и очки', slots: ['necklace', 'earrings', 'bracelet', 'glasses'] },
+  { icon: 'ring', label: 'Аксессуары и сумки', slots: ['necklace', 'earrings', 'bracelet', 'glasses', 'bag'] },
 ];
-const FIRST_CLOTHES = 2;
+const FIRST_CLOTHES = 3;
 const ownedIn = (slots: Slot[]) => slots.flatMap((s) => ownedInSlot(s));
 
 /**
@@ -30,6 +30,9 @@ const ownedIn = (slots: Slot[]) => slots.flatMap((s) => ownedInSlot(s));
 export function WardrobeScreen({ event, footer }: { event?: Theme; footer?: ComponentChildren }) {
   const g = useGame();
   const [tab, setTab] = useState(FIRST_CLOTHES);
+  /** In the hair tab: hair colours instead of hairstyles, behind the colour wheel button. */
+  const [dye, setDye] = useState(false);
+  useSceneBackground(event?.id);
   const [selling, setSelling] = useState<string | null>(null);
   const { look, slots } = TABS[tab];
   const items = slots ? ownedIn(slots) : [];
@@ -54,7 +57,18 @@ export function WardrobeScreen({ event, footer }: { event?: Theme; footer?: Comp
           <UndressButton onClick={undressAll} disabled={!Object.keys(g.outfit).length} />
         </div>
         <div class="split-items">
-          {look && <LookEditor key={tab} look={g.look} onChange={setLook} parts={look} />}
+          {look === 'hair' && (
+            <div class="hair-head">
+              <b>{dye ? 'Цвет волос' : 'Причёска'}</b>
+              <button
+                class={'icon-tab colour-btn' + (dye ? ' active' : '')} onClick={() => setDye(!dye)}
+                title={dye ? 'Причёски' : 'Цвет волос'} aria-label={dye ? 'Причёски' : 'Цвет волос'}
+              >
+                <Icon name="colour" />
+              </button>
+            </div>
+          )}
+          {look && <LookGrid part={look === 'hair' && dye ? 'colour' : look} look={g.look} onChange={setLook} two />}
           {slots && items.length === 0 && <p class="muted center small">Пока пусто. Загляни в магазины!</p>}
           <div class="grid two">
             {shown.map((i) => (
@@ -88,6 +102,20 @@ export function WardrobeScreen({ event, footer }: { event?: Theme; footer?: Comp
       )}
     </div>
   );
+}
+
+/**
+ * In the fitting room the event's or scene's picture fills the whole game screen, behind
+ * the HUD too (the bottom menu stays white): set on .app while the fitting room is open.
+ */
+function useSceneBackground(bg?: string) {
+  useEffect(() => {
+    const app = document.querySelector<HTMLElement>('.app');
+    if (!bg || !app) return;
+    app.style.setProperty('--scene', `url(${artUrl('bg-' + bg)})`);
+    app.classList.add('scene-bg');
+    return () => { app.style.removeProperty('--scene'); app.classList.remove('scene-bg'); };
+  }, [bg]);
 }
 
 /** Event name, accepted tags and the live dress code match, with what is still missing. */

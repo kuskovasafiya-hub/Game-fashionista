@@ -39,7 +39,7 @@ export const HAIR_COLOURS: HairColour[] = [
   { id: 'honey', name: 'Медовый', color: '#c99050' },
   { id: 'platinum', name: 'Платина', color: '#e4d9c6' },
   { id: 'pink', name: 'Розовый', color: '#e27aab' },
-  { id: 'lavender', name: 'Лавандовый', color: '#9b7ed4' },
+  { id: 'lavender', name: 'Лаванда', color: '#9b7ed4' },
   { id: 'blue', name: 'Голубой', color: '#4f8ad0' },
 ];
 
