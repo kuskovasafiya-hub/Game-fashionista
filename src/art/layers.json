@@ -503,62 +503,6 @@
   "h": 487,
   "cut": 1017
  },
- "makeup-bright": {
-  "x": 438,
-  "y": 137,
-  "w": 146,
-  "h": 94,
-  "skin": true
- },
- "makeup-cateye": {
-  "x": 435,
-  "y": 127,
-  "w": 145,
-  "h": 122,
-  "skin": true
- },
- "makeup-evening": {
-  "x": 438,
-  "y": 134,
-  "w": 145,
-  "h": 95,
-  "skin": true
- },
- "makeup-glam": {
-  "x": 437,
-  "y": 141,
-  "w": 142,
-  "h": 90,
-  "skin": true
- },
- "makeup-goth": {
-  "x": 438,
-  "y": 135,
-  "w": 146,
-  "h": 96,
-  "skin": true
- },
- "makeup-nude": {
-  "x": 438,
-  "y": 149,
-  "w": 140,
-  "h": 48,
-  "skin": true
- },
- "makeup-peach": {
-  "x": 436,
-  "y": 138,
-  "w": 143,
-  "h": 60,
-  "skin": true
- },
- "makeup-y2k": {
-  "x": 438,
-  "y": 134,
-  "w": 141,
-  "h": 97,
-  "skin": true
- },
  "product-acc-bag": {
   "x": 83,
   "y": 16,
@@ -828,5 +772,56 @@
   "y": 24,
   "w": 793,
   "h": 975
+ },
+ "makeup-bright": {
+  "x": 444,
+  "y": 139,
+  "w": 135,
+  "h": 89,
+  "skin": true
+ },
+ "makeup-cateye": {
+  "x": 447,
+  "y": 137,
+  "w": 130,
+  "h": 91
+ },
+ "makeup-evening": {
+  "x": 445,
+  "y": 137,
+  "w": 134,
+  "h": 91
+ },
+ "makeup-glam": {
+  "x": 444,
+  "y": 142,
+  "w": 133,
+  "h": 86
+ },
+ "makeup-goth": {
+  "x": 444,
+  "y": 139,
+  "w": 135,
+  "h": 89
+ },
+ "makeup-nude": {
+  "x": 444,
+  "y": 139,
+  "w": 133,
+  "h": 89,
+  "skin": true
+ },
+ "makeup-peach": {
+  "x": 443,
+  "y": 137,
+  "w": 136,
+  "h": 91,
+  "skin": true
+ },
+ "makeup-y2k": {
+  "x": 444,
+  "y": 142,
+  "w": 135,
+  "h": 86
  }
 }

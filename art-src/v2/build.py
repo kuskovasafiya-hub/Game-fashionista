@@ -136,10 +136,21 @@ def main():
                 img[..., 3] *= 1 - np.clip(w * 1.5, 0, 1)
         save(img, name, layers, **({'cut': cuts[name]} if name in cuts else {}))
 
+    # makeup is painted from soft zone masks (makeup.py): one file for every tone, but
+    # a look with blush has its own <look>~<tone> (the blush tints each skin tone)
     for p in sorted(OUT.glob('makeup-*.png')):
-        img = rgba(p)
-        save(img, p.stem, layers)
-        tones(img, p.stem, skin.skin_weight(img[..., :3]) * (img[..., 3] > 0), mean, layers)
+        if '~' in p.stem:
+            continue
+        save(rgba(p), p.stem, layers)
+        for old in ART.glob(f'{p.stem}~*.webp'):
+            old.unlink()
+        box = layers[p.stem]
+        sl = (slice(box['y'], box['y'] + box['h']), slice(box['x'], box['x'] + box['w']))
+        for t in (t for t, lab in skin.TONES.items() if lab is not None):
+            if (OUT / f'{p.stem}~{t}.png').exists():
+                Image.fromarray(rgba(OUT / f'{p.stem}~{t}.png')[sl].clip(0, 255).round().astype(np.uint8)).save(
+                    ART / f'{p.stem}~{t}.webp', 'WEBP', quality=88, method=6)
+                box['skin'] = True
 
     for p in sorted(PRODUCTS.glob('*.png')):
         img = rgba(p)
