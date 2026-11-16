@@ -43,6 +43,15 @@ const looks: [Look, Outfit][] = [
   [{ hair: 1, skin: 4, makeup: 2 }, { top: 'sport-top-sporttop-1', bottom: 'sport-bottom-tennis-2', shoes: 'step-shoes-runners-2', bracelet: 'glam-acc-bracelet-bangles-2', necklace: 'glam-acc-neck-pendant-2' }],
   [{ hair: 2, skin: 0, makeup: 3 }, { dress: 'evening-dress-gown-1', shoes: 'evening-shoes-mules-1', earrings: 'glam-acc-ear-drops-1', bracelet: 'glam-acc-bracelet-tennis-1', bag: 'glam-acc-bag-clutch-1' }],
   [{ hair: 2, skin: 4, makeup: 3 }, { dress: 'starter-dress-black-1', shoes: 'starter-shoes-heels-1', earrings: 'glam-acc-ear-drops-2', bracelet: 'glam-acc-bracelet-tennis-2', bag: 'glam-acc-bag-clutch-2' }],
+  // batch 3: Премиум
+  [{ hair: 5, skin: 0, makeup: 3 }, { dress: 'premium-dress-ballgown-1', earrings: 'premium-acc-ear-chandelier-1', necklace: 'premium-acc-neck-diamond-1' }],
+  [{ hair: 2, skin: 4, makeup: 3 }, { dress: 'premium-dress-ballgown-2', earrings: 'premium-acc-ear-chandelier-2', necklace: 'premium-acc-neck-diamond-2' }],
+  [{ hair: 1, skin: 0, makeup: 2 }, { dress: 'premium-dress-velvet-1', shoes: 'premium-shoes-velvet-2', bag: 'premium-acc-bag-quilted-2' }],
+  [{ hair: 6, skin: 4, makeup: 2 }, { dress: 'premium-dress-velvet-2', shoes: 'premium-shoes-velvet-1', bag: 'premium-acc-bag-quilted-1' }],
+  [{ hair: 0, skin: 0, makeup: 1 }, { top: 'premium-top-tweed-1', bottom: 'premium-bottom-leather-2', shoes: 'premium-shoes-boots-riding-1', glasses: 'premium-acc-cateye-1' }],
+  [{ hair: 3, skin: 4, makeup: 1 }, { top: 'premium-top-tweed-2', bottom: 'premium-bottom-sequin-2', shoes: 'premium-shoes-velvet-1', glasses: 'premium-acc-cateye-2' }],
+  [{ hair: 4, skin: 0, makeup: 0 }, { top: 'premium-top-faux-1', bottom: 'premium-bottom-sequin-1', shoes: 'premium-shoes-boots-riding-2' }],
+  [{ hair: 5, skin: 4, makeup: 0 }, { top: 'premium-top-faux-2', bottom: 'premium-bottom-leather-1', shoes: 'premium-shoes-boots-riding-1' }],
 ];
 
 function Board() {

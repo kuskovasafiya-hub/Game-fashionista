@@ -52,7 +52,7 @@ export const SHOPS: Shop[] = [
   { id: 'glam', name: 'Блеск', about: 'Украшения, серьги и сумочки', level: 5, depts: ['accessories'], color: '#F7C548', emoji: '💎' },
   { id: 'evening', name: 'Вечерний', about: 'Платья для вечеринок и балов', level: 7, depts: ['clothes', 'shoes'], color: '#9B5DE5', emoji: '🥂' },
   { id: 'sport', name: 'Спорт & Чилл', about: 'Спорт, отдых и уют', level: 10, depts: ['clothes', 'accessories'], color: '#00BBA7', emoji: '🏖️' },
-  { id: 'premium', name: 'Премиум-бутик', about: 'Дорого, редко, роскошно', level: 13, depts: ['clothes', 'shoes', 'accessories'], color: '#2B2D42', emoji: '👑', soon: true },
+  { id: 'premium', name: 'Премиум-бутик', about: 'Дорого, редко, роскошно', level: 13, depts: ['clothes', 'shoes', 'accessories'], color: '#2B2D42', emoji: '👑' },
 ];
 
 /** Which slot each piece of art belongs to. */
@@ -82,6 +82,11 @@ const ART_SLOT: Record<string, Slot> = {
   'bottom-bikers': 'bottom', 'bottom-tennis': 'bottom', 'acc-bag-sport': 'bag',
   'shoes-runners': 'shoes', 'acc-ear-drops': 'earrings', 'acc-bracelet-tennis': 'bracelet',
   'acc-bag-clutch': 'bag', 'acc-neck-pendant': 'necklace', 'acc-bracelet-bangles': 'bracelet',
+  // batch 3
+  'dress-ballgown': 'dress', 'dress-velvet': 'dress', 'top-tweed': 'top',
+  'top-faux': 'top', 'bottom-leather': 'bottom', 'bottom-sequin': 'bottom',
+  'shoes-boots-riding': 'shoes', 'shoes-velvet': 'shoes', 'acc-bag-quilted': 'bag',
+  'acc-neck-diamond': 'necklace', 'acc-ear-chandelier': 'earrings', 'acc-cateye': 'glasses',
 };
 
 /** Style tags of each piece of art: what dress codes it fits. */
@@ -107,13 +112,17 @@ const ART_TAGS: Record<string, Tag[]> = {
   'acc-shield': ['party', 'beach'], 'acc-choker': ['party', 'casual'], 'acc-bracelet': ['casual', 'party', 'beach'], 'acc-studs': ['casual', 'party'],
   'shoes-ankleboots': ['casual', 'winter'], 'shoes-flats': ['casual', 'office'], 'shoes-slipons': ['casual', 'sport'],
   'dress-wrap': ['casual', 'beach'], 'dress-sheath': ['office', 'evening'], 'dress-shirt': ['office', 'casual'],
-  'shoes-pumps': ['office', 'evening'], 'acc-studs-pearl': ['office', 'evening'],
+  'shoes-pumps': ['office', 'casual'], 'acc-studs-pearl': ['office', 'evening'],
   'top-bustier': ['evening', 'party'], 'top-sequin': ['party', 'evening'], 'bottom-satin': ['evening', 'office'],
   'shoes-mules': ['evening', 'party'],
   'top-sporttop': ['sport', 'beach'], 'top-zip': ['sport', 'casual'], 'bottom-joggers': ['sport', 'casual'],
   'bottom-bikers': ['sport', 'beach'], 'bottom-tennis': ['sport', 'casual'], 'acc-bag-sport': ['sport', 'casual'],
   'shoes-runners': ['sport', 'casual'], 'acc-ear-drops': ['evening', 'party'], 'acc-bracelet-tennis': ['evening', 'party'],
   'acc-bag-clutch': ['evening', 'party'], 'acc-neck-pendant': ['casual', 'party'], 'acc-bracelet-bangles': ['casual', 'party', 'beach'],
+  'dress-ballgown': ['evening'], 'dress-velvet': ['evening', 'winter'], 'top-tweed': ['office', 'evening'],
+  'top-faux': ['winter', 'party'], 'bottom-leather': ['party', 'evening'], 'bottom-sequin': ['party', 'evening'],
+  'shoes-boots-riding': ['winter', 'casual'], 'shoes-velvet': ['office', 'evening'], 'acc-bag-quilted': ['evening', 'office'],
+  'acc-neck-diamond': ['evening', 'party'], 'acc-ear-chandelier': ['evening', 'party'], 'acc-cateye': ['party', 'beach', 'casual'],
 };
 /** A shop adds its own style to everything it sells. */
 const SHOP_TAGS: Record<string, Tag[]> = { glam: ['party'], evening: ['evening'], office: ['office'], sport: ['sport'], y2k: ['party'] };
@@ -331,8 +340,8 @@ add('office', [
   ['dress-shirt', 'Платье-рубашка «Небо»', 'common'],
   ['dress-shirt', 'Платье-рубашка «Песок»', 'common', 'sepia(0.8) saturate(0.9) brightness(1.05)'],
   // drawn ivory: a nude shoe would be taken for her foot when the build splits the foot off
-  ['shoes-pumps', 'Лодочки «Айвори»', 'common'],
-  ['shoes-pumps', 'Лодочки «Нюд»', 'common', 'brightness(0.88) sepia(0.6) saturate(1.6) hue-rotate(-20deg)'],
+  ['shoes-pumps', 'Балетки-лодочки «Айвори»', 'common'],
+  ['shoes-pumps', 'Балетки-лодочки «Нюд»', 'common', 'brightness(0.88) sepia(0.6) saturate(1.6) hue-rotate(-20deg)'],
   ['acc-studs-pearl', 'Серьги «Жемчужинки»', 'common'],
   ['acc-studs-pearl', 'Серьги «Розовый жемчуг»', 'common', TINT.tintPink],
 ]);
@@ -360,6 +369,34 @@ add('sport', [
   ['bottom-tennis', 'Юбка «Теннис-мята»', 'rare', TINT.tintMint],
   ['acc-bag-sport', 'Мини-сумка «Спорт-мята»', 'common'],
   ['acc-bag-sport', 'Мини-сумка «Спорт-лимон»', 'common', 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.15)'],
+]);
+
+/* Премиум: only rare and epic pieces, so a search here finds rarer things. */
+add('premium', [
+  ['dress-ballgown', 'Платье «Бал»', 'epic'],
+  ['dress-ballgown', 'Платье «Бал-роза»', 'epic', TINT.tintPink],
+  ['dress-velvet', 'Платье «Бархат-вино»', 'epic'],
+  ['dress-velvet', 'Платье «Бархат-полночь»', 'epic', 'hue-rotate(240deg) saturate(0.9)'],
+  ['top-tweed', 'Жакет «Твид-айвори»', 'epic'],
+  ['top-tweed', 'Жакет «Твид-пудра»', 'epic', 'sepia(0.45) saturate(2.2) hue-rotate(295deg) brightness(1.02)'],
+  ['top-faux', 'Шубка «Облако»', 'epic'],
+  ['top-faux', 'Шубка «Кэмел»', 'epic', 'brightness(0.55) sepia(1) saturate(1.5)'],
+  ['bottom-leather', 'Брюки «Кожа-шоколад»', 'rare'],
+  ['bottom-leather', 'Брюки «Кожа-нуар»', 'rare', TINT.noir],
+  ['bottom-sequin', 'Юбка «Золотые пайетки»', 'epic'],
+  ['bottom-sequin', 'Юбка «Серебряные пайетки»', 'epic', TINT.silver],
+  ['shoes-boots-riding', 'Сапоги «Бордо»', 'rare'],
+  ['shoes-boots-riding', 'Сапоги «Нуар»', 'rare', TINT.noir],
+  ['shoes-velvet', 'Лоферы «Королевский бархат»', 'epic'],
+  ['shoes-velvet', 'Лоферы «Винный бархат»', 'epic', 'hue-rotate(100deg)'],
+  ['acc-bag-quilted', 'Сумка «Стёганая пудра»', 'epic'],
+  ['acc-bag-quilted', 'Сумка «Стёганая нуар»', 'epic', TINT.noir],
+  ['acc-neck-diamond', 'Колье «Бриллианты»', 'epic'],
+  ['acc-neck-diamond', 'Колье «Сапфиры»', 'epic', 'sepia(1) saturate(5) hue-rotate(180deg) brightness(0.9)'],
+  ['acc-ear-chandelier', 'Серьги «Люстры»', 'epic'],
+  ['acc-ear-chandelier', 'Серьги «Люстры-золото»', 'epic', 'sepia(1) saturate(2.5) brightness(0.95)'],
+  ['acc-cateye', 'Очки «Кошачий глаз»', 'rare'],
+  ['acc-cateye', 'Очки «Кошачий глаз-карамель»', 'rare', 'sepia(1) saturate(2) brightness(0.8)'],
 ]);
 
 /* No piece of art in more than MAX_COLOURS colours, and no colour sold twice. */

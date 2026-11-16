@@ -18,6 +18,18 @@
   "w": 272,
   "h": 242
  },
+ "dress-ballgown-front": {
+  "x": 250,
+  "y": 358,
+  "w": 522,
+  "h": 1133
+ },
+ "dress-ballgown-back": {
+  "x": 455,
+  "y": 325,
+  "w": 114,
+  "h": 24
+ },
  "dress-black-front": {
   "x": 368,
   "y": 355,
@@ -83,6 +95,18 @@
   "y": 877,
   "w": 392,
   "h": 51
+ },
+ "dress-velvet-front": {
+  "x": 295,
+  "y": 290,
+  "w": 428,
+  "h": 916
+ },
+ "dress-velvet-back": {
+  "x": 428,
+  "y": 288,
+  "w": 168,
+  "h": 26
  },
  "dress-wrap-front": {
   "x": 283,
@@ -258,6 +282,19 @@
   "w": 176,
   "h": 41
  },
+ "top-faux-front": {
+  "x": 264,
+  "y": 225,
+  "w": 496,
+  "h": 507,
+  "hem": true
+ },
+ "top-faux-back": {
+  "x": 397,
+  "y": 243,
+  "w": 229,
+  "h": 105
+ },
  "top-hoodie-front": {
   "x": 267,
   "y": 258,
@@ -323,6 +360,19 @@
   "w": 104,
   "h": 25
  },
+ "top-tweed-front": {
+  "x": 295,
+  "y": 277,
+  "w": 431,
+  "h": 451,
+  "hem": true
+ },
+ "top-tweed-back": {
+  "x": 423,
+  "y": 280,
+  "w": 178,
+  "h": 44
+ },
  "top-y2k-front": {
   "x": 407,
   "y": 261,
@@ -354,6 +404,12 @@
   "y": 811,
   "w": 199,
   "h": 214
+ },
+ "acc-bag-quilted": {
+  "x": 205,
+  "y": 811,
+  "w": 231,
+  "h": 282
  },
  "acc-bag-sport": {
   "x": 218,
@@ -391,6 +447,12 @@
   "w": 43,
   "h": 38
  },
+ "acc-cateye": {
+  "x": 438,
+  "y": 138,
+  "w": 152,
+  "h": 74
+ },
  "acc-chain": {
   "x": 449,
   "y": 273,
@@ -402,6 +464,12 @@
   "y": 254,
   "w": 76,
   "h": 43
+ },
+ "acc-ear-chandelier": {
+  "x": 432,
+  "y": 188,
+  "w": 159,
+  "h": 130
  },
  "acc-ear-drops": {
   "x": 439,
@@ -420,6 +488,12 @@
   "y": 188,
   "w": 150,
   "h": 59
+ },
+ "acc-neck-diamond": {
+  "x": 445,
+  "y": 273,
+  "w": 133,
+  "h": 89
  },
  "acc-neck-pendant": {
   "x": 469,
@@ -487,6 +561,12 @@
   "w": 302,
   "h": 825
  },
+ "bottom-leather": {
+  "x": 368,
+  "y": 526,
+  "w": 285,
+  "h": 873
+ },
  "bottom-leggings": {
   "x": 364,
   "y": 584,
@@ -510,6 +590,12 @@
   "y": 543,
   "w": 287,
   "h": 859
+ },
+ "bottom-sequin": {
+  "x": 370,
+  "y": 494,
+  "w": 281,
+  "h": 635
  },
  "bottom-shorts": {
   "x": 345,
@@ -553,6 +639,20 @@
   "w": 269,
   "h": 166,
   "cut": 1334
+ },
+ "shoes-boots-riding-foot": {
+  "x": 398,
+  "y": 1052,
+  "w": 226,
+  "h": 11,
+  "skin": true
+ },
+ "shoes-boots-riding": {
+  "x": 383,
+  "y": 1052,
+  "w": 255,
+  "h": 446,
+  "cut": 1061
  },
  "shoes-boots": {
   "x": 382,
@@ -631,17 +731,17 @@
   "cut": 1336
  },
  "shoes-mules-foot": {
-  "x": 397,
+  "x": 403,
   "y": 1291,
-  "w": 227,
-  "h": 151,
+  "w": 217,
+  "h": 127,
   "skin": true
  },
  "shoes-mules": {
-  "x": 386,
+  "x": 392,
   "y": 1291,
-  "w": 250,
-  "h": 215,
+  "w": 240,
+  "h": 206,
   "cut": 1300
  },
  "shoes-platform-foot": {
@@ -659,18 +759,18 @@
   "cut": 1300
  },
  "shoes-pumps-foot": {
-  "x": 403,
-  "y": 1337,
-  "w": 216,
-  "h": 112,
+  "x": 404,
+  "y": 1291,
+  "w": 214,
+  "h": 151,
   "skin": true
  },
  "shoes-pumps": {
-  "x": 391,
-  "y": 1337,
-  "w": 240,
-  "h": 173,
-  "cut": 1346
+  "x": 395,
+  "y": 1291,
+  "w": 233,
+  "h": 208,
+  "cut": 1300
  },
  "shoes-runners-foot": {
   "x": 408,
@@ -718,6 +818,20 @@
   "y": 1291,
   "w": 263,
   "h": 199,
+  "cut": 1300
+ },
+ "shoes-velvet-foot": {
+  "x": 404,
+  "y": 1291,
+  "w": 216,
+  "h": 135,
+  "skin": true
+ },
+ "shoes-velvet": {
+  "x": 388,
+  "y": 1291,
+  "w": 247,
+  "h": 206,
   "cut": 1300
  },
  "shoes-whiteboots-foot": {
@@ -791,6 +905,12 @@
   "w": 860,
   "h": 843
  },
+ "product-acc-bag-quilted": {
+  "x": 77,
+  "y": 42,
+  "w": 867,
+  "h": 943
+ },
  "product-acc-bag-sport": {
   "x": 66,
   "y": 34,
@@ -827,6 +947,12 @@
   "w": 1099,
   "h": 1161
  },
+ "product-acc-cateye": {
+  "x": 41,
+  "y": 368,
+  "w": 941,
+  "h": 332
+ },
  "product-acc-chain": {
   "x": 146,
   "y": 54,
@@ -838,6 +964,12 @@
   "y": 222,
   "w": 916,
   "h": 596
+ },
+ "product-acc-ear-chandelier": {
+  "x": 189,
+  "y": 43,
+  "w": 645,
+  "h": 947
  },
  "product-acc-ear-drops": {
   "x": 344,
@@ -856,6 +988,12 @@
   "y": 252,
   "w": 873,
   "h": 526
+ },
+ "product-acc-neck-diamond": {
+  "x": 43,
+  "y": 68,
+  "w": 936,
+  "h": 881
  },
  "product-acc-neck-pendant": {
   "x": 207,
@@ -923,6 +1061,12 @@
   "w": 416,
   "h": 990
  },
+ "product-bottom-leather": {
+  "x": 329,
+  "y": 16,
+  "w": 365,
+  "h": 994
+ },
  "product-bottom-leggings": {
   "x": 332,
   "y": 31,
@@ -946,6 +1090,12 @@
   "y": 55,
   "w": 326,
   "h": 927
+ },
+ "product-bottom-sequin": {
+  "x": 298,
+  "y": 61,
+  "w": 420,
+  "h": 919
  },
  "product-bottom-shorts": {
   "x": 18,
@@ -983,6 +1133,12 @@
   "w": 1003,
   "h": 658
  },
+ "product-dress-ballgown": {
+  "x": 209,
+  "y": 47,
+  "w": 603,
+  "h": 960
+ },
  "product-dress-black": {
   "x": 265,
   "y": 102,
@@ -1019,6 +1175,12 @@
   "w": 604,
   "h": 976
  },
+ "product-dress-velvet": {
+  "x": 198,
+  "y": 50,
+  "w": 623,
+  "h": 936
+ },
  "product-dress-wrap": {
   "x": 236,
   "y": 32,
@@ -1036,6 +1198,12 @@
   "y": 169,
   "w": 966,
   "h": 696
+ },
+ "product-shoes-boots-riding": {
+  "x": 278,
+  "y": 42,
+  "w": 468,
+  "h": 955
  },
  "product-shoes-boots": {
   "x": 276,
@@ -1074,10 +1242,10 @@
   "h": 912
  },
  "product-shoes-mules": {
-  "x": 107,
-  "y": 61,
-  "w": 811,
-  "h": 917
+  "x": 79,
+  "y": 75,
+  "w": 862,
+  "h": 879
  },
  "product-shoes-platform": {
   "x": 112,
@@ -1086,10 +1254,10 @@
   "h": 889
  },
  "product-shoes-pumps": {
-  "x": 121,
-  "y": 52,
-  "w": 779,
-  "h": 940
+  "x": 122,
+  "y": 18,
+  "w": 776,
+  "h": 994
  },
  "product-shoes-runners": {
   "x": 74,
@@ -1114,6 +1282,12 @@
   "y": 90,
   "w": 914,
   "h": 830
+ },
+ "product-shoes-velvet": {
+  "x": 47,
+  "y": 72,
+  "w": 929,
+  "h": 899
  },
  "product-shoes-whiteboots": {
   "x": 211,
@@ -1157,6 +1331,12 @@
   "w": 966,
   "h": 781
  },
+ "product-top-faux": {
+  "x": 46,
+  "y": 42,
+  "w": 934,
+  "h": 949
+ },
  "product-top-hoodie": {
   "x": 55,
   "y": 75,
@@ -1186,6 +1366,12 @@
   "y": 69,
   "w": 752,
   "h": 901
+ },
+ "product-top-tweed": {
+  "x": 27,
+  "y": 63,
+  "w": 970,
+  "h": 904
  },
  "product-top-y2k": {
   "x": 111,

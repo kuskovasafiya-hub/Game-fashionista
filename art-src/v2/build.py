@@ -134,6 +134,15 @@ def main():
                 # is its own layer, toned and drawn unfiltered under the shoe
                 foot = img.copy()
                 foot[..., 3] *= np.clip(w * 1.5, 0, 1)
+                # Codex redraws the foot a little lighter and greyer than her skin; toned
+                # darker, that shows as a pale film over the ankle. Where her own foot is
+                # under it, take her skin's colour instead, keeping only the shadows Codex
+                # drew (the shoe's edge on the instep), never its lightening
+                under = skin.skin_weight(body[..., :3], strict=False) * (body[..., 3] > 200)
+                lum = lambda x: x[..., :3].mean(axis=-1, keepdims=True)
+                shade = np.clip(lum(foot) / np.maximum(lum(body), 1), 0.55, 1.0)
+                mix = np.clip(under * 1.5, 0, 1)[..., None]
+                foot[..., :3] = foot[..., :3] * (1 - mix) + body[..., :3] * shade * mix
                 save(foot, f'{name}-foot', layers)
                 tones(foot, f'{name}-foot', np.clip(w * 1.5, 0, 1), mean, layers)
                 img = img.copy()
