@@ -32,6 +32,7 @@ OUT = V2 / 'out'
 ART = ROOT / 'public' / 'art'
 PRODUCTS = V2.parent / 'raw' / 'product'
 PY = sys.executable
+NO_FOOT = {'shoes-ankleboots'}
 
 
 def rgba(path):
@@ -113,7 +114,10 @@ def main():
     for p in singles:
         name, img = p.stem, rgba(p)
         cuts = json.loads((OUT / 'cuts.json').read_text()) if (OUT / 'cuts.json').exists() else {}
-        if name in cuts:                 # closed shoes only: a sandal's gold straps are not skin
+        # closed shoes only: a sandal's gold straps are not skin. Boots in NO_FOOT hide
+        # the whole foot and show no skin above the shaft, while their brown suede
+        # passes for skin: they bring no foot (the cut still hides her bare toes)
+        if name in cuts and name not in NO_FOOT:
             w = skin.skin_weight(img[..., :3], strict=False) * (img[..., 3] > 0)
             # her foot is the skin that grows down from the ankle at the layer's top;
             # skin-coloured bits inside the shoe (a gold buckle, a highlight) are not

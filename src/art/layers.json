@@ -48,6 +48,30 @@
   "w": 285,
   "h": 859
  },
+ "dress-sheath-front": {
+  "x": 354,
+  "y": 281,
+  "w": 314,
+  "h": 725
+ },
+ "dress-sheath-back": {
+  "x": 463,
+  "y": 315,
+  "w": 97,
+  "h": 25
+ },
+ "dress-shirt-front": {
+  "x": 324,
+  "y": 259,
+  "w": 377,
+  "h": 716
+ },
+ "dress-shirt-back": {
+  "x": 471,
+  "y": 285,
+  "w": 84,
+  "h": 31
+ },
  "dress-sundress-front": {
   "x": 312,
   "y": 290,
@@ -59,6 +83,18 @@
   "y": 877,
   "w": 392,
   "h": 51
+ },
+ "dress-wrap-front": {
+  "x": 283,
+  "y": 287,
+  "w": 457,
+  "h": 830
+ },
+ "dress-wrap-back": {
+  "x": 462,
+  "y": 295,
+  "w": 100,
+  "h": 32
  },
  "dress-y2k-front": {
   "x": 364,
@@ -170,6 +206,19 @@
   "w": 108,
   "h": 37
  },
+ "top-bustier-front": {
+  "x": 406,
+  "y": 290,
+  "w": 211,
+  "h": 284,
+  "hem": true
+ },
+ "top-bustier-back": {
+  "x": 419,
+  "y": 304,
+  "w": 186,
+  "h": 37
+ },
  "top-cardigan-front": {
   "x": 283,
   "y": 271,
@@ -222,6 +271,32 @@
   "w": 274,
   "h": 98
  },
+ "top-sequin-front": {
+  "x": 379,
+  "y": 292,
+  "w": 266,
+  "h": 373,
+  "hem": true
+ },
+ "top-sequin-back": {
+  "x": 430,
+  "y": 321,
+  "w": 164,
+  "h": 31
+ },
+ "top-sporttop-front": {
+  "x": 400,
+  "y": 282,
+  "w": 224,
+  "h": 269,
+  "hem": true
+ },
+ "top-sporttop-back": {
+  "x": 431,
+  "y": 326,
+  "w": 162,
+  "h": 33
+ },
  "top-sweater-front": {
   "x": 295,
   "y": 277,
@@ -261,6 +336,31 @@
   "w": 130,
   "h": 54
  },
+ "top-zip-front": {
+  "x": 294,
+  "y": 240,
+  "w": 435,
+  "h": 482,
+  "hem": true
+ },
+ "top-zip-back": {
+  "x": 451,
+  "y": 258,
+  "w": 123,
+  "h": 36
+ },
+ "acc-bag-clutch": {
+  "x": 221,
+  "y": 811,
+  "w": 199,
+  "h": 214
+ },
+ "acc-bag-sport": {
+  "x": 218,
+  "y": 810,
+  "w": 206,
+  "h": 244
+ },
  "acc-bag": {
   "x": 204,
   "y": 811,
@@ -272,6 +372,18 @@
   "y": 811,
   "w": 228,
   "h": 309
+ },
+ "acc-bracelet-bangles": {
+  "x": 685,
+  "y": 683,
+  "w": 32,
+  "h": 40
+ },
+ "acc-bracelet-tennis": {
+  "x": 679,
+  "y": 695,
+  "w": 46,
+  "h": 25
  },
  "acc-bracelet": {
   "x": 682,
@@ -291,6 +403,12 @@
   "w": 76,
   "h": 43
  },
+ "acc-ear-drops": {
+  "x": 439,
+  "y": 188,
+  "w": 145,
+  "h": 100
+ },
  "acc-glasses": {
   "x": 432,
   "y": 89,
@@ -303,6 +421,12 @@
   "w": 150,
   "h": 59
  },
+ "acc-neck-pendant": {
+  "x": 469,
+  "y": 273,
+  "w": 85,
+  "h": 110
+ },
  "acc-pearls": {
   "x": 453,
   "y": 273,
@@ -314,6 +438,12 @@
   "y": 148,
   "w": 159,
   "h": 47
+ },
+ "acc-studs-pearl": {
+  "x": 441,
+  "y": 176,
+  "w": 141,
+  "h": 23
  },
  "acc-studs": {
   "x": 441,
@@ -339,11 +469,23 @@
   "w": 365,
   "h": 794
  },
+ "bottom-bikers": {
+  "x": 372,
+  "y": 520,
+  "w": 279,
+  "h": 322
+ },
  "bottom-jeans": {
   "x": 299,
   "y": 557,
   "w": 425,
   "h": 901
+ },
+ "bottom-joggers": {
+  "x": 360,
+  "y": 555,
+  "w": 302,
+  "h": 825
  },
  "bottom-leggings": {
   "x": 364,
@@ -363,6 +505,12 @@
   "w": 340,
   "h": 193
  },
+ "bottom-satin": {
+  "x": 368,
+  "y": 543,
+  "w": 287,
+  "h": 859
+ },
  "bottom-shorts": {
   "x": 345,
   "y": 559,
@@ -374,6 +522,12 @@
   "y": 554,
   "w": 368,
   "h": 338
+ },
+ "bottom-tennis": {
+  "x": 333,
+  "y": 557,
+  "w": 357,
+  "h": 280
  },
  "bottom-trousers": {
   "x": 318,
@@ -393,11 +547,32 @@
   "w": 315,
   "h": 211
  },
+ "shoes-ankleboots": {
+  "x": 377,
+  "y": 1325,
+  "w": 269,
+  "h": 166,
+  "cut": 1334
+ },
  "shoes-boots": {
   "x": 382,
   "y": 999,
   "w": 254,
   "h": 500
+ },
+ "shoes-flats-foot": {
+  "x": 403,
+  "y": 1373,
+  "w": 217,
+  "h": 71,
+  "skin": true
+ },
+ "shoes-flats": {
+  "x": 390,
+  "y": 1373,
+  "w": 241,
+  "h": 124,
+  "cut": 1382
  },
  "shoes-heels-foot": {
   "x": 403,
@@ -455,6 +630,20 @@
   "h": 179,
   "cut": 1336
  },
+ "shoes-mules-foot": {
+  "x": 397,
+  "y": 1291,
+  "w": 227,
+  "h": 151,
+  "skin": true
+ },
+ "shoes-mules": {
+  "x": 386,
+  "y": 1291,
+  "w": 250,
+  "h": 215,
+  "cut": 1300
+ },
  "shoes-platform-foot": {
   "x": 404,
   "y": 1291,
@@ -469,11 +658,53 @@
   "h": 210,
   "cut": 1300
  },
+ "shoes-pumps-foot": {
+  "x": 403,
+  "y": 1337,
+  "w": 216,
+  "h": 112,
+  "skin": true
+ },
+ "shoes-pumps": {
+  "x": 391,
+  "y": 1337,
+  "w": 240,
+  "h": 173,
+  "cut": 1346
+ },
+ "shoes-runners-foot": {
+  "x": 408,
+  "y": 1349,
+  "w": 204,
+  "h": 17,
+  "skin": true
+ },
+ "shoes-runners": {
+  "x": 381,
+  "y": 1349,
+  "w": 260,
+  "h": 143,
+  "cut": 1358
+ },
  "shoes-sandals": {
   "x": 386,
   "y": 1303,
   "w": 249,
   "h": 191
+ },
+ "shoes-slipons-foot": {
+  "x": 409,
+  "y": 1291,
+  "w": 207,
+  "h": 96,
+  "skin": true
+ },
+ "shoes-slipons": {
+  "x": 388,
+  "y": 1291,
+  "w": 251,
+  "h": 200,
+  "cut": 1300
  },
  "shoes-sneakers-foot": {
   "x": 408,
@@ -502,276 +733,6 @@
   "w": 288,
   "h": 487,
   "cut": 1017
- },
- "product-acc-bag": {
-  "x": 83,
-  "y": 16,
-  "w": 852,
-  "h": 992
- },
- "product-acc-belt-bag": {
-  "x": 162,
-  "y": 42,
-  "w": 696,
-  "h": 936
- },
- "product-acc-bracelet": {
-  "x": 83,
-  "y": 0,
-  "w": 1099,
-  "h": 1161
- },
- "product-acc-chain": {
-  "x": 146,
-  "y": 54,
-  "w": 730,
-  "h": 915
- },
- "product-acc-choker": {
-  "x": 54,
-  "y": 222,
-  "w": 916,
-  "h": 596
- },
- "product-acc-glasses": {
-  "x": 49,
-  "y": 352,
-  "w": 926,
-  "h": 356
- },
- "product-acc-hoops": {
-  "x": 74,
-  "y": 252,
-  "w": 873,
-  "h": 526
- },
- "product-acc-pearls": {
-  "x": 62,
-  "y": 135,
-  "w": 897,
-  "h": 752
- },
- "product-acc-shield": {
-  "x": 28,
-  "y": 393,
-  "w": 969,
-  "h": 293
- },
- "product-acc-studs": {
-  "x": 39,
-  "y": 349,
-  "w": 945,
-  "h": 341
- },
- "product-acc-sunglasses": {
-  "x": 63,
-  "y": 405,
-  "w": 899,
-  "h": 233
- },
- "product-acc-tote": {
-  "x": 143,
-  "y": 39,
-  "w": 739,
-  "h": 944
- },
- "product-bottom-baggy": {
-  "x": 256,
-  "y": 28,
-  "w": 515,
-  "h": 979
- },
- "product-bottom-jeans": {
-  "x": 277,
-  "y": 11,
-  "w": 470,
-  "h": 1004
- },
- "product-bottom-leggings": {
-  "x": 332,
-  "y": 31,
-  "w": 360,
-  "h": 968
- },
- "product-bottom-midi": {
-  "x": 283,
-  "y": 25,
-  "w": 458,
-  "h": 985
- },
- "product-bottom-plaid": {
-  "x": 10,
-  "y": 269,
-  "w": 1005,
-  "h": 519
- },
- "product-bottom-shorts": {
-  "x": 18,
-  "y": 139,
-  "w": 989,
-  "h": 748
- },
- "product-bottom-skirt": {
-  "x": 24,
-  "y": 134,
-  "w": 975,
-  "h": 770
- },
- "product-bottom-trousers": {
-  "x": 302,
-  "y": 18,
-  "w": 420,
-  "h": 990
- },
- "product-bottom-velour": {
-  "x": 256,
-  "y": 35,
-  "w": 505,
-  "h": 965
- },
- "product-bottom-y2k": {
-  "x": 11,
-  "y": 190,
-  "w": 1003,
-  "h": 658
- },
- "product-dress-black": {
-  "x": 265,
-  "y": 102,
-  "w": 489,
-  "h": 854
- },
- "product-dress-gown": {
-  "x": 321,
-  "y": 13,
-  "w": 377,
-  "h": 1002
- },
- "product-dress-red": {
-  "x": 348,
-  "y": 18,
-  "w": 326,
-  "h": 995
- },
- "product-dress-sundress": {
-  "x": 210,
-  "y": 29,
-  "w": 604,
-  "h": 976
- },
- "product-dress-y2k": {
-  "x": 242,
-  "y": 22,
-  "w": 539,
-  "h": 986
- },
- "product-shoes-boots": {
-  "x": 276,
-  "y": 42,
-  "w": 472,
-  "h": 945
- },
- "product-shoes-heels": {
-  "x": 132,
-  "y": 69,
-  "w": 760,
-  "h": 886
- },
- "product-shoes-hightops": {
-  "x": 122,
-  "y": 65,
-  "w": 782,
-  "h": 898
- },
- "product-shoes-loafers": {
-  "x": 55,
-  "y": 56,
-  "w": 913,
-  "h": 911
- },
- "product-shoes-maryjanes": {
-  "x": 107,
-  "y": 65,
-  "w": 809,
-  "h": 912
- },
- "product-shoes-platform": {
-  "x": 112,
-  "y": 68,
-  "w": 802,
-  "h": 889
- },
- "product-shoes-sandals": {
-  "x": 108,
-  "y": 74,
-  "w": 808,
-  "h": 881
- },
- "product-shoes-sneakers": {
-  "x": 55,
-  "y": 90,
-  "w": 914,
-  "h": 830
- },
- "product-shoes-whiteboots": {
-  "x": 211,
-  "y": 21,
-  "w": 589,
-  "h": 986
- },
- "product-top-blazer": {
-  "x": 135,
-  "y": 51,
-  "w": 753,
-  "h": 931
- },
- "product-top-blouse": {
-  "x": 129,
-  "y": 59,
-  "w": 765,
-  "h": 937
- },
- "product-top-cardigan": {
-  "x": 33,
-  "y": 109,
-  "w": 956,
-  "h": 846
- },
- "product-top-crochet": {
-  "x": 16,
-  "y": 78,
-  "w": 987,
-  "h": 899
- },
- "product-top-crop": {
-  "x": 29,
-  "y": 135,
-  "w": 966,
-  "h": 781
- },
- "product-top-hoodie": {
-  "x": 55,
-  "y": 75,
-  "w": 914,
-  "h": 917
- },
- "product-top-sweater": {
-  "x": 107,
-  "y": 72,
-  "w": 810,
-  "h": 916
- },
- "product-top-tee": {
-  "x": 136,
-  "y": 69,
-  "w": 752,
-  "h": 901
- },
- "product-top-y2k": {
-  "x": 111,
-  "y": 24,
-  "w": 793,
-  "h": 975
  },
  "makeup-bright": {
   "x": 444,
@@ -823,5 +784,419 @@
   "y": 142,
   "w": 135,
   "h": 86
+ },
+ "product-acc-bag-clutch": {
+  "x": 82,
+  "y": 96,
+  "w": 860,
+  "h": 843
+ },
+ "product-acc-bag-sport": {
+  "x": 66,
+  "y": 34,
+  "w": 891,
+  "h": 970
+ },
+ "product-acc-bag": {
+  "x": 83,
+  "y": 16,
+  "w": 852,
+  "h": 992
+ },
+ "product-acc-belt-bag": {
+  "x": 162,
+  "y": 42,
+  "w": 696,
+  "h": 936
+ },
+ "product-acc-bracelet-bangles": {
+  "x": 60,
+  "y": 434,
+  "w": 1130,
+  "h": 520
+ },
+ "product-acc-bracelet-tennis": {
+  "x": 37,
+  "y": 81,
+  "w": 938,
+  "h": 862
+ },
+ "product-acc-bracelet": {
+  "x": 83,
+  "y": 0,
+  "w": 1099,
+  "h": 1161
+ },
+ "product-acc-chain": {
+  "x": 146,
+  "y": 54,
+  "w": 730,
+  "h": 915
+ },
+ "product-acc-choker": {
+  "x": 54,
+  "y": 222,
+  "w": 916,
+  "h": 596
+ },
+ "product-acc-ear-drops": {
+  "x": 344,
+  "y": 42,
+  "w": 359,
+  "h": 948
+ },
+ "product-acc-glasses": {
+  "x": 49,
+  "y": 352,
+  "w": 926,
+  "h": 356
+ },
+ "product-acc-hoops": {
+  "x": 74,
+  "y": 252,
+  "w": 873,
+  "h": 526
+ },
+ "product-acc-neck-pendant": {
+  "x": 207,
+  "y": 47,
+  "w": 607,
+  "h": 935
+ },
+ "product-acc-pearls": {
+  "x": 62,
+  "y": 135,
+  "w": 897,
+  "h": 752
+ },
+ "product-acc-shield": {
+  "x": 28,
+  "y": 393,
+  "w": 969,
+  "h": 293
+ },
+ "product-acc-studs-pearl": {
+  "x": 65,
+  "y": 319,
+  "w": 890,
+  "h": 399
+ },
+ "product-acc-studs": {
+  "x": 39,
+  "y": 349,
+  "w": 945,
+  "h": 341
+ },
+ "product-acc-sunglasses": {
+  "x": 63,
+  "y": 405,
+  "w": 899,
+  "h": 233
+ },
+ "product-acc-tote": {
+  "x": 143,
+  "y": 39,
+  "w": 739,
+  "h": 944
+ },
+ "product-bottom-baggy": {
+  "x": 256,
+  "y": 28,
+  "w": 515,
+  "h": 979
+ },
+ "product-bottom-bikers": {
+  "x": 113,
+  "y": 54,
+  "w": 798,
+  "h": 926
+ },
+ "product-bottom-jeans": {
+  "x": 277,
+  "y": 11,
+  "w": 470,
+  "h": 1004
+ },
+ "product-bottom-joggers": {
+  "x": 304,
+  "y": 14,
+  "w": 416,
+  "h": 990
+ },
+ "product-bottom-leggings": {
+  "x": 332,
+  "y": 31,
+  "w": 360,
+  "h": 968
+ },
+ "product-bottom-midi": {
+  "x": 283,
+  "y": 25,
+  "w": 458,
+  "h": 985
+ },
+ "product-bottom-plaid": {
+  "x": 10,
+  "y": 269,
+  "w": 1005,
+  "h": 519
+ },
+ "product-bottom-satin": {
+  "x": 349,
+  "y": 55,
+  "w": 326,
+  "h": 927
+ },
+ "product-bottom-shorts": {
+  "x": 18,
+  "y": 139,
+  "w": 989,
+  "h": 748
+ },
+ "product-bottom-skirt": {
+  "x": 24,
+  "y": 134,
+  "w": 975,
+  "h": 770
+ },
+ "product-bottom-tennis": {
+  "x": 22,
+  "y": 206,
+  "w": 978,
+  "h": 662
+ },
+ "product-bottom-trousers": {
+  "x": 302,
+  "y": 18,
+  "w": 420,
+  "h": 990
+ },
+ "product-bottom-velour": {
+  "x": 256,
+  "y": 35,
+  "w": 505,
+  "h": 965
+ },
+ "product-bottom-y2k": {
+  "x": 11,
+  "y": 190,
+  "w": 1003,
+  "h": 658
+ },
+ "product-dress-black": {
+  "x": 265,
+  "y": 102,
+  "w": 489,
+  "h": 854
+ },
+ "product-dress-gown": {
+  "x": 321,
+  "y": 13,
+  "w": 377,
+  "h": 1002
+ },
+ "product-dress-red": {
+  "x": 348,
+  "y": 18,
+  "w": 326,
+  "h": 995
+ },
+ "product-dress-sheath": {
+  "x": 274,
+  "y": 17,
+  "w": 474,
+  "h": 993
+ },
+ "product-dress-shirt": {
+  "x": 250,
+  "y": 29,
+  "w": 523,
+  "h": 967
+ },
+ "product-dress-sundress": {
+  "x": 210,
+  "y": 29,
+  "w": 604,
+  "h": 976
+ },
+ "product-dress-wrap": {
+  "x": 236,
+  "y": 32,
+  "w": 551,
+  "h": 969
+ },
+ "product-dress-y2k": {
+  "x": 242,
+  "y": 22,
+  "w": 539,
+  "h": 986
+ },
+ "product-shoes-ankleboots": {
+  "x": 29,
+  "y": 169,
+  "w": 966,
+  "h": 696
+ },
+ "product-shoes-boots": {
+  "x": 276,
+  "y": 42,
+  "w": 472,
+  "h": 945
+ },
+ "product-shoes-flats": {
+  "x": 69,
+  "y": 65,
+  "w": 885,
+  "h": 921
+ },
+ "product-shoes-heels": {
+  "x": 132,
+  "y": 69,
+  "w": 760,
+  "h": 886
+ },
+ "product-shoes-hightops": {
+  "x": 122,
+  "y": 65,
+  "w": 782,
+  "h": 898
+ },
+ "product-shoes-loafers": {
+  "x": 55,
+  "y": 56,
+  "w": 913,
+  "h": 911
+ },
+ "product-shoes-maryjanes": {
+  "x": 107,
+  "y": 65,
+  "w": 809,
+  "h": 912
+ },
+ "product-shoes-mules": {
+  "x": 107,
+  "y": 61,
+  "w": 811,
+  "h": 917
+ },
+ "product-shoes-platform": {
+  "x": 112,
+  "y": 68,
+  "w": 802,
+  "h": 889
+ },
+ "product-shoes-pumps": {
+  "x": 121,
+  "y": 52,
+  "w": 779,
+  "h": 940
+ },
+ "product-shoes-runners": {
+  "x": 74,
+  "y": 151,
+  "w": 876,
+  "h": 746
+ },
+ "product-shoes-sandals": {
+  "x": 108,
+  "y": 74,
+  "w": 808,
+  "h": 881
+ },
+ "product-shoes-slipons": {
+  "x": 32,
+  "y": 58,
+  "w": 960,
+  "h": 919
+ },
+ "product-shoes-sneakers": {
+  "x": 55,
+  "y": 90,
+  "w": 914,
+  "h": 830
+ },
+ "product-shoes-whiteboots": {
+  "x": 211,
+  "y": 21,
+  "w": 589,
+  "h": 986
+ },
+ "product-top-blazer": {
+  "x": 135,
+  "y": 51,
+  "w": 753,
+  "h": 931
+ },
+ "product-top-blouse": {
+  "x": 129,
+  "y": 59,
+  "w": 765,
+  "h": 937
+ },
+ "product-top-bustier": {
+  "x": 189,
+  "y": 29,
+  "w": 647,
+  "h": 967
+ },
+ "product-top-cardigan": {
+  "x": 33,
+  "y": 109,
+  "w": 956,
+  "h": 846
+ },
+ "product-top-crochet": {
+  "x": 16,
+  "y": 78,
+  "w": 987,
+  "h": 899
+ },
+ "product-top-crop": {
+  "x": 29,
+  "y": 135,
+  "w": 966,
+  "h": 781
+ },
+ "product-top-hoodie": {
+  "x": 55,
+  "y": 75,
+  "w": 914,
+  "h": 917
+ },
+ "product-top-sequin": {
+  "x": 196,
+  "y": 21,
+  "w": 632,
+  "h": 986
+ },
+ "product-top-sporttop": {
+  "x": 120,
+  "y": 27,
+  "w": 783,
+  "h": 973
+ },
+ "product-top-sweater": {
+  "x": 107,
+  "y": 72,
+  "w": 810,
+  "h": 916
+ },
+ "product-top-tee": {
+  "x": 136,
+  "y": 69,
+  "w": 752,
+  "h": 901
+ },
+ "product-top-y2k": {
+  "x": 111,
+  "y": 24,
+  "w": 793,
+  "h": 975
+ },
+ "product-top-zip": {
+  "x": 63,
+  "y": 27,
+  "w": 897,
+  "h": 975
  }
 }

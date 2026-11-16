@@ -9,9 +9,9 @@ import { LookGrid, type LookPart } from './LookEditor';
 /** Same round icon tabs as the wardrobe: her look first, then the starter clothes. */
 interface CTab { icon: IconName; label: string; slots?: Slot[]; look?: LookPart; required?: boolean }
 const TABS: CTab[] = [
+  { icon: 'skin', label: 'Цвет кожи', look: 'skin' },
   { icon: 'hair', label: 'Причёска', look: 'hair' },
   { icon: 'eye', label: 'Макияж', look: 'makeup' },
-  { icon: 'skin', label: 'Цвет кожи', look: 'skin' },
   { icon: 'top', label: 'Верх', slots: ['top'], required: true },
   { icon: 'bottom', label: 'Низ', slots: ['bottom'], required: true },
   { icon: 'dress', label: 'Платья', slots: ['dress'], required: true },

@@ -12,3 +12,5 @@ art-src/v2/raw/single
 art-src/v2/raw/old
 art-src/v2/**/*.log
 art-src/raw-alt
+# review sheets made by art-src/v2/batch.py (rebuilt with `batch.py sheet <batch>`)
+art-src/v2/review

@@ -11,9 +11,9 @@ import { LookGrid, type LookPart } from './LookEditor';
 /** Wardrobe tabs, as round icons: her look first, then clothes; bags and jewellery share the ring. */
 interface WTab { icon: IconName; label: string; slots?: Slot[]; look?: LookPart }
 const TABS: WTab[] = [
+  { icon: 'skin', label: 'Цвет кожи', look: 'skin' },
   { icon: 'hair', label: 'Причёска', look: 'hair' },
   { icon: 'eye', label: 'Макияж', look: 'makeup' },
-  { icon: 'skin', label: 'Цвет кожи', look: 'skin' },
   { icon: 'top', label: 'Верх', slots: ['top'] },
   { icon: 'bottom', label: 'Низ', slots: ['bottom'] },
   { icon: 'dress', label: 'Платья', slots: ['dress'] },

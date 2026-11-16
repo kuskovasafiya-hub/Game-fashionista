@@ -1,0 +1,15 @@
+# batch 2: sport (tops, bottoms, a bag), running shoes for Шаг, glam jewellery and a clutch
+# shoes are never skin-coloured as drawn (the build takes skin-like pixels in a closed shoe for her foot)
+# name	slot	shop	rarity	tags	name1	name2	filter2	what	extra
+top-sporttop	top	sport	common	sport,beach	Спорт-топ «Лаванда»	Спорт-топ «Мята»	'hue-rotate(250deg)'	a lilac cropped athletic tank top with wide straps, a round neckline and a racerback, snug, ending above the navel	
+top-zip	top	sport	rare	sport,casual	Олимпийка «Бирюза»	Олимпийка «Коралл»	'hue-rotate(175deg) saturate(1.8) brightness(1.25)'	a fitted white zip-up track jacket with teal sleeves and teal side stripes, long sleeves to the wrists, a stand-up collar, zipped closed, the ribbed hem at her waist	
+bottom-joggers	bottom	sport	common	sport,casual	Джоггеры «Меланж»	Джоггеры «Графит»	'brightness(0.55)'	light-grey melange jogger sweatpants with an elastic waistband and a white drawstring, relaxed legs gathered into ribbed cuffs at the ankles	
+bottom-bikers	bottom	sport	common	sport,beach	Велосипедки «Чёрные»	Велосипедки «Графит»	'brightness(2.2)'	black high-waisted biker shorts, skin-tight, following her leg outline exactly, ending at mid-thigh	
+bottom-tennis	bottom	sport	rare	sport,casual	Юбка «Теннис»	Юбка «Теннис-мята»	TINT.tintMint	a white pleated tennis mini skirt with a flat waistband, ending at mid-thigh	
+acc-bag-sport	bag	sport	common	sport,casual	Мини-сумка «Спорт-мята»	Мини-сумка «Спорт-лимон»	'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.15)'	a small mint-green quilted nylon mini bag with a white zip and a short loop handle	
+shoes-runners	shoes	step	rare	sport,casual	Кроссовки «Кобальт»	Кроссовки «Коралл»	'hue-rotate(150deg) saturate(1.4) brightness(1.3)'	white running sneakers with cobalt-blue mesh panels, cobalt laces and a thick white cushioned sole	
+acc-ear-drops	earrings	glam	rare	evening,party	Серьги «Капли»	Серьги «Капли-серебро»	TINT.silver	a pair of gold drop earrings: a thin gold chain with a small teardrop crystal at the end	each earring hangs from the earlobe and is about 40 pixels long.
+acc-bracelet-tennis	bracelet	glam	epic	evening,party	Браслет «Теннисный»	Браслет «Теннисный-золото»	'sepia(1) saturate(2.5) brightness(0.95)'	a delicate silver tennis bracelet: one row of small sparkling crystals	it is thin, about 6 pixels wide, around her wrist.
+acc-bag-clutch	bag	glam	epic	evening,party	Клатч «Золото»	Клатч «Серебро»	TINT.silver	a small gold metallic box clutch with a short thin gold chain handle	
+acc-neck-pendant	necklace	glam	rare	casual,party	Кулон «Солнце»	Кулон «Луна»	TINT.silver	a thin gold chain necklace with a small round gold pendant engraved with a sun	the chain is about 3 pixels thick, the pendant about 22 pixels across.
+acc-bracelet-bangles	bracelet	glam	common	casual,party,beach	Браслеты «Золотые кольца»	Браслеты «Серебряные кольца»	TINT.silver	a stack of three thin shiny gold bangles	three thin bangles loosely around her wrist.

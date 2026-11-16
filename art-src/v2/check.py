@@ -352,8 +352,9 @@ def fit_earrings(im, body_a, stud=False):
     return out, shifts
 
 
+# matched by name prefix, so that new models (acc-bag-clutch, acc-neck-drop) are fitted too
 BAGS = ('acc-tote', 'acc-bag', 'acc-belt-bag')
-NECKLACES = ('acc-chain', 'acc-pearls')
+NECKLACES = ('acc-chain', 'acc-pearls', 'acc-neck')
 
 
 def neck(body_a):
@@ -518,7 +519,7 @@ def verdict(name, r):
         p.append('shoes much wider than the legs')
     if name == 'shoes-boots' and r.get('top_row', 9999) < 980:      # her knee is at y ~1040
         p.append('boots reach above the knee')
-    if kind == 'acc' and name in BAGS and r['opaque_px'] < 3000:
+    if kind == 'acc' and name.startswith(BAGS) and r['opaque_px'] < 3000:
         p.append('bag missing')
     return p
 
@@ -736,9 +737,9 @@ def fit(name, im, body_a):
     a = im[..., 3] > 128
     if name.startswith('shoes'):
         return fit_shoes(im, body_a)
-    if name in BAGS:
+    if name.startswith(BAGS):
         return fit_bag(im, body_a)
-    if name in NECKLACES:
+    if name.startswith(NECKLACES):
         return fit_necklace(im, body_a)
     return im, [0, 0]
 
