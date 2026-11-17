@@ -36,13 +36,17 @@ def band_only(m, img, above=14, below=30):
     rgb = img[..., :3]
     sat = (rgb.max(axis=-1) - rgb.min(axis=-1)) / np.maximum(rgb.max(axis=-1), 1)
     coloured = m & (rgb.max(axis=-1) > 150)                      # beads, metal: not ink
-    coloured &= ~(skin_weight(rgb, strict=False) > 0.4)          # nor her redrawn skin
+    # nor her redrawn skin (strict: gold, the commonest bracelet colour, is yellower
+    # than skin and must stay)
+    coloured &= ~(skin_weight(rgb, strict=True) > 0.4)
     rows = ndi.uniform_filter1d(coloured.sum(axis=1).astype(float), 9)
     c = int(np.argmax(rows))
     xs = np.nonzero(coloured[c - 6:c + 7].any(axis=0))[0]
+    if not len(xs):
+        return m & ~(skin_weight(rgb, strict=True) > 0.4)
     keep = np.zeros_like(m)
     keep[c - above:c + below, xs.min() - 3:xs.max() + 4] = True
-    m = m & keep & ~(skin_weight(rgb, strict=False) > 0.4)
+    m = m & keep & ~(skin_weight(rgb, strict=True) > 0.4)
     # ink only as the beads' and charm's own outlines: right next to them. The wrist's
     # outline Codex redrew crosses the band as a long stroke; only the bit of it that
     # touches a bead could stay, so strokes are also cut to the bead row's height.

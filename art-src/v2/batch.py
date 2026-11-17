@@ -201,6 +201,26 @@ def generated(r):
     return all(p.exists() for p in raw_files(r)[:3 if route(r)[1] == 'pair' else 1])
 
 
+def wrong_size(r):
+    """Codex sometimes saves a layer landscape (1536x1024): pairs.py cannot use it."""
+    from PIL import Image
+    return [p.name for p in raw_files(r)[:3 if route(r)[1] == 'pair' else 1]
+            if p.exists() and Image.open(p).size != (1024, 1536)]
+
+
+def draw(r):
+    """Draw a layer (2 tries if Codex fails or saves the wrong canvas size)."""
+    for _ in range(2):
+        if generated(r) and wrong_size(r):
+            print(f'wrong canvas size {r["name"]}: {", ".join(wrong_size(r))}', flush=True)
+            reject(r, ['wrong canvas size'])
+        if generated(r):
+            return
+        layer(r)
+    if generated(r) and wrong_size(r):
+        reject(r, ['wrong canvas size'])
+
+
 def layer(r):
     gen, _ = route(r)
     what = r['what'].rstrip('. ') + ON_BODY[r['slot']] + (' ' + r['extra'] if r['extra'] else '')
@@ -247,10 +267,10 @@ def layers(batch, n):
         sys.exit(f'draw the shop pictures first (they are the design reference): {", ".join(missing)}')
     status = {}
     for attempt in range(1 + RETRIES):
-        todo = [r for r in rows if not generated(r)]
+        todo = [r for r in rows if not generated(r) or wrong_size(r)]
         if todo:
             print(f'try {attempt + 1}: drawing {len(todo)} layers', flush=True)
-            parallel(lambda r: [layer(r) for _ in range(2) if not generated(r)], todo, n)
+            parallel(draw, todo, n)
         print('checking...', flush=True)
         report = post()
         bad = []
