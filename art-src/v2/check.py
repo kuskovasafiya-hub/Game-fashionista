@@ -622,8 +622,9 @@ def fit_choker(im, body_a):
     return out, [round(float(sc), 2)]
 
 
-def shrink_earrings(im, max_w=22):
-    """Earrings drawn too big are scaled down about their top (the part on the lobe)."""
+def shrink_earrings(im, max_w=22, max_h=None):
+    """Earrings drawn too big (too wide, or hanging too long) are scaled down about
+    their top (the part on the lobe)."""
     a = im[..., 3] > 128
     lab, n = ndi.label(ndi.binary_dilation(a, iterations=2))
     out = np.zeros_like(im)
@@ -632,11 +633,12 @@ def shrink_earrings(im, max_w=22):
         if cm.sum() < 30:
             continue
         ys, xs = np.nonzero(cm)
-        w = xs.max() - xs.min() + 1
+        w, h = xs.max() - xs.min() + 1, ys.max() - ys.min() + 1
         part = np.where(ndi.binary_dilation(cm, iterations=2)[..., None], im, 0)
-        if w > max_w:
+        sc = min(1.0, max_w / w, max_h / h if max_h else 1.0)
+        if sc < 1:
             ax = (xs.min() + xs.max()) / 2
-            part = scale_part(part, max_w / w, (ax, ys.min()), (ax, ys.min()))
+            part = scale_part(part, sc, (ax, ys.min()), (ax, ys.min()))
         out = np.where(part[..., 3:] > out[..., 3:], part, out)
     return out
 
@@ -712,7 +714,21 @@ def fit_glasses(im, body_a, base_rgba):
     return res, [round(float(angle), 1), round(float(sc), 2)]
 
 
+JEWELLERY = ('acc-hoops', 'acc-ear', 'acc-studs', 'acc-chain', 'acc-pearls', 'acc-neck', 'acc-choker')
+
+
+def drop_haze(im, reach=4):
+    """Codex sometimes fills the inside of a necklace with a faint white wash (alpha up
+    to ~80): keep only pixels within a few px of the solid drawing."""
+    near = ndi.binary_dilation(im[..., 3] >= 128, iterations=reach)
+    out = im.copy()
+    out[..., 3] *= near
+    return out
+
+
 def fit(name, im, body_a):
+    if name.startswith(JEWELLERY):
+        im = drop_haze(im)
     if name.startswith(('acc-shield', 'acc-glasses-drawn')):
         return fit_glasses(im, body_a, rgba(ROOT / 'base.png'))
     if 'choker' in name:
@@ -726,8 +742,10 @@ def fit(name, im, body_a):
             im, legs = fit_legs(im, body_a)
             return im, [0, legs]
         return im, [[0, 1.0], [0, 1.0]]
-    if name.startswith(('acc-hoops', 'acc-ear')):
+    if name.startswith('acc-hoops'):
         return fit_earrings(im, body_a)
+    if name.startswith('acc-ear'):
+        return fit_earrings(shrink_earrings(im, 24, 34), body_a)  # small drops only
     if name.startswith('bottom'):
         im, grown = fit_bottom(im, body_a)
         im, legs = fit_legs(im, body_a)

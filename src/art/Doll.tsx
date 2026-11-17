@@ -194,7 +194,7 @@ export function ItemThumb({ item, silhouette }: { item: Item; silhouette?: boole
   const product = `product-${item.art}`;
   return (
     <img
-      class={'thumb' + (silhouette ? ' silhouette' : '')}
+      class={`thumb slot-${item.slot}` + (silhouette ? ' silhouette' : '')}
       src={artUrl(LAYERS[product] ? product : item.art)}
       style={{ filter: silhouette ? undefined : item.filter }}
       alt=""
