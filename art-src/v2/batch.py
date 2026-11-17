@@ -83,6 +83,9 @@ NAMING = {
     'bracelet': (('acc-bracelet',), 'acc-bracelet-*'),
 }
 POST = ('onbody.py', 'faceacc.py', 'wear.py', 'check.py', 'pairs.py')
+# Doll.FIGURE_VIEW is the box around every layer: one item wider than this frame (now set
+# by bags in her hand and the evening gown) would shrink the doll on every screen
+FRAME_X = (160, 800)
 RETRIES = 2
 
 
@@ -175,9 +178,18 @@ def product_sheet(batch, rows):
 
 # ---------- layers on the doll ----------
 
+def route(r):
+    """(generator, where its output lands). Glasses with one big tinted lens (acc-shield-*)
+    are drawn as a layer of their own and fitted to her eyes by check.py: an edit of her
+    face cannot give a clean lens (Codex re-tints the whole face a little)."""
+    if r['slot'] == 'glasses' and r['name'].startswith('acc-shield'):
+        return 'gen_layer.sh', 'layer'
+    return ROUTE[r['slot']]
+
+
 def raw_files(r):
     """Everything a layer job writes (generator output and what the fit scripts make of it)."""
-    name, (_, where) = r['name'], ROUTE[r['slot']]
+    name, (_, where) = r['name'], route(r)
     if where == 'pair':
         return [RAW / f'{name}-{k}.png' for k in ('ref', 'back', 'front')]
     if where == 'layer':
@@ -186,11 +198,11 @@ def raw_files(r):
 
 
 def generated(r):
-    return all(p.exists() for p in raw_files(r)[:3 if ROUTE[r['slot']][1] == 'pair' else 1])
+    return all(p.exists() for p in raw_files(r)[:3 if route(r)[1] == 'pair' else 1])
 
 
 def layer(r):
-    gen, _ = ROUTE[r['slot']]
+    gen, _ = route(r)
     what = r['what'].rstrip('. ') + ON_BODY[r['slot']] + (' ' + r['extra'] if r['extra'] else '')
     return run([str(V2 / gen), r['name'], what])
 
@@ -203,6 +215,19 @@ def post():
         if (OUT / f).exists():
             report.update(json.loads((OUT / f).read_text()))
     return report
+
+
+def too_wide(r):
+    """How far the layer reaches past the figure frame (px), 0 if it fits."""
+    from PIL import Image
+    import numpy as np
+    over = 0
+    for f in (OUT / f'{r["name"]}.png', OUT / f'{r["name"]}-front.png', OUT / f'{r["name"]}-back.png'):
+        if f.exists():
+            xs = np.nonzero((np.asarray(Image.open(f))[..., 3] > 20).any(axis=0))[0]
+            if len(xs):
+                over = max(over, FRAME_X[0] - xs.min(), xs.max() + 1 - FRAME_X[1])
+    return int(over)
 
 
 def reject(r, why):
@@ -235,6 +260,9 @@ def layers(batch, n):
                 status[r['name']] = ['Codex did not draw it (moderation?): rephrase']
             elif rep is None:
                 status[r['name']] = ['no check report']
+                bad.append(r)
+            elif rep.get('ok', True) and too_wide(r) > 0:
+                status[r['name']] = [f'{too_wide(r)} px wider than the figure frame: the doll would shrink everywhere']
                 bad.append(r)
             elif rep.get('ok', True):
                 status[r['name']] = []

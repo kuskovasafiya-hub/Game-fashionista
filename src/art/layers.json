@@ -36,6 +36,18 @@
   "w": 288,
   "h": 485
  },
+ "dress-cocktail-front": {
+  "x": 367,
+  "y": 287,
+  "w": 288,
+  "h": 558
+ },
+ "dress-cocktail-back": {
+  "x": 410,
+  "y": 315,
+  "w": 200,
+  "h": 34
+ },
  "dress-gown-front": {
   "x": 233,
   "y": 292,
@@ -282,6 +294,19 @@
   "w": 176,
   "h": 41
  },
+ "top-denim-front": {
+  "x": 295,
+  "y": 258,
+  "w": 434,
+  "h": 471,
+  "hem": true
+ },
+ "top-denim-back": {
+  "x": 374,
+  "y": 111,
+  "w": 278,
+  "h": 305
+ },
  "top-faux-front": {
   "x": 264,
   "y": 225,
@@ -334,6 +359,19 @@
   "w": 162,
   "h": 33
  },
+ "top-stripe-front": {
+  "x": 297,
+  "y": 249,
+  "w": 429,
+  "h": 479,
+  "hem": true
+ },
+ "top-stripe-back": {
+  "x": 461,
+  "y": 301,
+  "w": 92,
+  "h": 27
+ },
  "top-sweater-front": {
   "x": 295,
   "y": 277,
@@ -359,6 +397,19 @@
   "y": 288,
   "w": 104,
   "h": 25
+ },
+ "top-turtleneck-front": {
+  "x": 299,
+  "y": 243,
+  "w": 426,
+  "h": 480,
+  "hem": true
+ },
+ "top-turtleneck-back": {
+  "x": 451,
+  "y": 252,
+  "w": 122,
+  "h": 38
  },
  "top-tweed-front": {
   "x": 295,
@@ -398,6 +449,12 @@
   "y": 258,
   "w": 123,
   "h": 36
+ },
+ "acc-bag-bucket": {
+  "x": 220,
+  "y": 811,
+  "w": 198,
+  "h": 304
  },
  "acc-bag-clutch": {
   "x": 221,
@@ -507,6 +564,12 @@
   "w": 117,
   "h": 101
  },
+ "acc-shield-sport": {
+  "x": 444,
+  "y": 146,
+  "w": 138,
+  "h": 48
+ },
  "acc-shield": {
   "x": 432,
   "y": 148,
@@ -549,6 +612,12 @@
   "w": 279,
   "h": 322
  },
+ "bottom-cargo": {
+  "x": 334,
+  "y": 564,
+  "w": 355,
+  "h": 863
+ },
  "bottom-jeans": {
   "x": 299,
   "y": 557,
@@ -578,6 +647,12 @@
   "y": 588,
   "w": 360,
   "h": 767
+ },
+ "bottom-pencil": {
+  "x": 366,
+  "y": 493,
+  "w": 286,
+  "h": 598
  },
  "bottom-plaid": {
   "x": 341,
@@ -621,6 +696,12 @@
   "w": 387,
   "h": 919
  },
+ "bottom-tulle": {
+  "x": 270,
+  "y": 520,
+  "w": 481,
+  "h": 864
+ },
  "bottom-velour": {
   "x": 343,
   "y": 607,
@@ -639,6 +720,27 @@
   "w": 269,
   "h": 166,
   "cut": 1334
+ },
+ "shoes-boots-chelsea": {
+  "x": 384,
+  "y": 1322,
+  "w": 254,
+  "h": 172,
+  "cut": 1331
+ },
+ "shoes-boots-combat-foot": {
+  "x": 391,
+  "y": 1166,
+  "w": 238,
+  "h": 26,
+  "skin": true
+ },
+ "shoes-boots-combat": {
+  "x": 371,
+  "y": 1166,
+  "w": 280,
+  "h": 337,
+  "cut": 1175
  },
  "shoes-boots-riding-foot": {
   "x": 398,
@@ -792,6 +894,20 @@
   "w": 249,
   "h": 191
  },
+ "shoes-slides-foot": {
+  "x": 394,
+  "y": 1372,
+  "w": 234,
+  "h": 106,
+  "skin": true
+ },
+ "shoes-slides": {
+  "x": 387,
+  "y": 1372,
+  "w": 249,
+  "h": 117,
+  "cut": 1381
+ },
  "shoes-slipons-foot": {
   "x": 409,
   "y": 1291,
@@ -898,6 +1014,12 @@
   "y": 142,
   "w": 135,
   "h": 86
+ },
+ "product-acc-bag-bucket": {
+  "x": 162,
+  "y": 15,
+  "w": 679,
+  "h": 994
  },
  "product-acc-bag-clutch": {
   "x": 82,
@@ -1007,6 +1129,12 @@
   "w": 897,
   "h": 752
  },
+ "product-acc-shield-sport": {
+  "x": 33,
+  "y": 333,
+  "w": 957,
+  "h": 400
+ },
  "product-acc-shield": {
   "x": 28,
   "y": 393,
@@ -1049,6 +1177,12 @@
   "w": 798,
   "h": 926
  },
+ "product-bottom-cargo": {
+  "x": 305,
+  "y": 85,
+  "w": 406,
+  "h": 854
+ },
  "product-bottom-jeans": {
   "x": 277,
   "y": 11,
@@ -1078,6 +1212,12 @@
   "y": 25,
   "w": 458,
   "h": 985
+ },
+ "product-bottom-pencil": {
+  "x": 271,
+  "y": 38,
+  "w": 481,
+  "h": 952
  },
  "product-bottom-plaid": {
   "x": 10,
@@ -1121,6 +1261,12 @@
   "w": 420,
   "h": 990
  },
+ "product-bottom-tulle": {
+  "x": 92,
+  "y": 34,
+  "w": 831,
+  "h": 970
+ },
  "product-bottom-velour": {
   "x": 256,
   "y": 35,
@@ -1144,6 +1290,12 @@
   "y": 102,
   "w": 489,
   "h": 854
+ },
+ "product-dress-cocktail": {
+  "x": 286,
+  "y": 41,
+  "w": 438,
+  "h": 936
  },
  "product-dress-gown": {
   "x": 321,
@@ -1198,6 +1350,18 @@
   "y": 169,
   "w": 966,
   "h": 696
+ },
+ "product-shoes-boots-chelsea": {
+  "x": 83,
+  "y": 87,
+  "w": 859,
+  "h": 882
+ },
+ "product-shoes-boots-combat": {
+  "x": 155,
+  "y": 38,
+  "w": 714,
+  "h": 952
  },
  "product-shoes-boots-riding": {
   "x": 278,
@@ -1271,6 +1435,12 @@
   "w": 808,
   "h": 881
  },
+ "product-shoes-slides": {
+  "x": 61,
+  "y": 148,
+  "w": 897,
+  "h": 782
+ },
  "product-shoes-slipons": {
   "x": 32,
   "y": 58,
@@ -1331,6 +1501,12 @@
   "w": 966,
   "h": 781
  },
+ "product-top-denim": {
+  "x": 65,
+  "y": 56,
+  "w": 892,
+  "h": 933
+ },
  "product-top-faux": {
   "x": 46,
   "y": 42,
@@ -1355,6 +1531,12 @@
   "w": 783,
   "h": 973
  },
+ "product-top-stripe": {
+  "x": 45,
+  "y": 47,
+  "w": 933,
+  "h": 930
+ },
  "product-top-sweater": {
   "x": 107,
   "y": 72,
@@ -1366,6 +1548,12 @@
   "y": 69,
   "w": 752,
   "h": 901
+ },
+ "product-top-turtleneck": {
+  "x": 26,
+  "y": 10,
+  "w": 970,
+  "h": 996
  },
  "product-top-tweed": {
   "x": 27,

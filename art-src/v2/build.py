@@ -32,7 +32,7 @@ OUT = V2 / 'out'
 ART = ROOT / 'public' / 'art'
 PRODUCTS = V2.parent / 'raw' / 'product'
 PY = sys.executable
-NO_FOOT = {'shoes-ankleboots'}
+NO_FOOT = {'shoes-ankleboots', 'shoes-boots-chelsea'}
 
 
 def rgba(path):
