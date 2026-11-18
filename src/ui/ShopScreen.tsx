@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { Doll, FIGURE_VIEW, ItemThumb, thumbSrc } from '../art/Doll';
 import { RARITY, SHOPS, shopFixtures, shopItems, type Fixture, type Item, type Shop, type Slot } from '../game/catalog';
 import {
-  NEWBIE_REFILL, SHELF_RUSH_GEMS, allBought, buy, canNewbieRefill, newbieRefill, canAfford, rushShelf, withItem, search, searchCost, shelfLeft, shelfReadyAt, toggleWish, useGame,
+  SHELF_RUSH_GEMS, allBought, buy, canAfford, rushShelf, withItem, search, searchCost, shelfLeft, shelfReadyAt, toggleWish, useGame,
   type BuyResult, type LevelUp, type SearchResult,
 } from '../game/store';
 import { createPortal } from 'preact/compat';
@@ -387,7 +387,6 @@ export function ShopScreen({ shopId, onNoEnergy, onLevelUp }: {
   const [shaking, setShaking] = useState<string | null>(null);
   const [resting, setResting] = useState<Fixture | null>(null);
   const [collection, setCollection] = useState(false);
-  const [refill, setRefill] = useState(false);
   const cost = searchCost(shopId);
   const all = shopItems(shopId);
   const found = all.filter((i) => g.discovered.includes(i.id)).length;
@@ -397,7 +396,7 @@ export function ShopScreen({ shopId, onNoEnergy, onLevelUp }: {
     if (shaking) return;
     if (!shelfLeft(shopId, fx.id, g).length) return;
     if (g.freeSearches <= 0 && shelfReadyAt(shopId, fx.id, g) > Date.now()) return setResting(fx);
-    if (g.energy < cost) return canNewbieRefill(g) ? setRefill(true) : onNoEnergy();
+    if (g.energy < cost) return onNoEnergy();
     setShaking(fx.id);
     setTimeout(() => {
       setShaking(null);
@@ -449,21 +448,6 @@ export function ShopScreen({ shopId, onNoEnergy, onLevelUp }: {
         })}
       </div>
 
-      {refill && (
-        <Modal>
-          <div class="burst cup-burst">☕</div>
-          <h2>Ещё чашечки!</h2>
-          <p class="big">+{NEWBIE_REFILL} ☕</p>
-          <button
-            class="btn primary"
-            onClick={(e) => {
-              flyTo(e.currentTarget, '[data-cur="energy"] i', () => Object.assign(document.createElement('span'), { className: 'flyer-emoji', textContent: '☕' }), { count: 5 });
-              newbieRefill();
-              setRefill(false);
-            }}
-          >Забрать</button>
-        </Modal>
-      )}
       {resting && (
         <Modal onClose={() => setResting(null)}>
           <div class="burst">⏳</div>

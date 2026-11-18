@@ -32,11 +32,14 @@ const SAVE_KEY = 'modshop-save-v2';
  */
 export const TUT_STAGES = ['gift', 'shop', 'wardrobe', 'story', 'events', 'done'] as const;
 export type TutStage = typeof TUT_STAGES[number];
-/** The housewarming gift right after creating the character. */
+/** The housewarming gift right after creating the character: coins and searches without waiting, no cups —
+ * her own 20 cups are the whole first session (about 20 searches). */
 export const GIFT_COINS = 3000;
-export const GIFT_ENERGY = 10;
-/** The first searches ignore the shelf cooldown, so the gift can be spent at once. */
-export const NEWBIE_SEARCHES = 30;
+/** The first searches ignore the shelf cooldown, so her cups can be spent at once. */
+export const NEWBIE_SEARCHES = 20;
+/** A new level refills the cups (+5 on top) only from this level on: levels 2 and 3 come during the
+ * first session and would hand back ~20 more cups. */
+export const LEVEL_CUPS_FROM = 4;
 /** …and the very first ones find the cheapest common pieces of the shelf. */
 export const NEWBIE_COMMON = 6;
 /**
@@ -82,7 +85,6 @@ export interface Save {
   /** Searches left that skip the shelf cooldown (newcomer's gift). */
   freeSearches: number;
   /** The newcomer's one extra handful of cups (when she runs dry while still searching for free) is spent. */
-  tutRefill?: boolean;
 }
 
 /** A look sent to an event. The score is rolled on submission and revealed at resultAt. */
@@ -96,7 +98,7 @@ export interface Entry {
   claimed?: boolean;
 }
 
-export interface LevelUp { level: number; coins: number; gems: number; shops: string[] }
+export interface LevelUp { level: number; coins: number; gems: number; shops: string[]; /** Cups refilled (+5 on top). */ cups: boolean }
 
 export const xpToNext = (level: number) => Math.round(40 * Math.pow(level, 1.4));
 
@@ -215,9 +217,10 @@ function withXp(s: Save, amount: number): [Save, LevelUp | null] {
     SHOPS.filter((sh) => sh.level === level).forEach((sh) => shops.push(sh.name));
   }
   if (level === startLevel) return [{ ...s, xp }, null];
+  const cups = level >= LEVEL_CUPS_FROM;
   return [
-    { ...s, xp, level, coins: s.coins + coins, gems: s.gems + gems, energy: Math.max(s.energy, ENERGY_MAX) + 5 },
-    { level, coins, gems, shops },
+    { ...s, xp, level, coins: s.coins + coins, gems: s.gems + gems, energy: cups ? Math.max(s.energy, ENERGY_MAX) + 5 : s.energy },
+    { level, coins, gems, shops, cups },
   ];
 }
 
@@ -243,17 +246,8 @@ export function claimGift() {
   if (state.tut !== 'gift') return;
   commit({
     ...state, tut: 'shop',
-    coins: state.coins + GIFT_COINS, energy: state.energy + GIFT_ENERGY, freeSearches: NEWBIE_SEARCHES,
+    coins: state.coins + GIFT_COINS, freeSearches: NEWBIE_SEARCHES,
   });
-}
-
-/** Cups in the newcomer's one top-up. */
-export const NEWBIE_REFILL = 10;
-/** She ran out of cups while still on her free searches: one top-up, once. */
-export const canNewbieRefill = (s: Save = state) => !s.tutRefill && s.freeSearches > 0;
-export function newbieRefill() {
-  if (!canNewbieRefill()) return;
-  commit({ ...state, energy: state.energy + NEWBIE_REFILL, tutRefill: true });
 }
 
 /** Bought pieces (the starter set does not count). */

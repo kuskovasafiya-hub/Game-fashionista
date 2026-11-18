@@ -87,7 +87,7 @@ export function LevelUpModal({ lu, onClose }: { lu: LevelUp; onClose: () => void
       <ul class="rewards">
         <li data-reward="coins"><Coin /> +{fmt(lu.coins)}</li>
         <li data-reward="gems">💎 +{lu.gems}</li>
-        <li>☕ Энергия восстановлена, +5 сверху</li>
+        {lu.cups && <li>☕ Энергия восстановлена, +5 сверху</li>}
         {lu.shops.map((s) => <li>🛍️ Открыт магазин «{s}»</li>)}
       </ul>
       <button class="btn primary" onClick={() => { flyRewards(); onClose(); }}>Ура!</button>

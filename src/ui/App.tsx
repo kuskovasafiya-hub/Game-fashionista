@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { EVENTS_LEVEL } from '../game/events';
 import { shopFixtures } from '../game/catalog';
 import {
-  GIFT_COINS, GIFT_ENERGY, NEWBIE_SEARCHES, TUT_BUYS, TUT_RARE_ID, luckyPending, boughtCount, canVote, claimGift, eventsOpen as eventsOpenFor,
+  GIFT_COINS, NEWBIE_SEARCHES, TUT_BUYS, TUT_RARE_ID, luckyPending, boughtCount, canVote, claimGift, eventsOpen as eventsOpenFor,
   reachTut, resultsReady, storyNext, useGame, type LevelUp, type Save,
 } from '../game/store';
 import { StoryMap, StoryScene } from './StoryScreen';
@@ -163,7 +163,6 @@ export function App() {
           <h2>Привет, {g.name}!</h2>
           <p class="muted">Подарок на новоселье:</p>
           <ul class="gift-list">
-            <li data-reward="energy"><b>☕</b>+{GIFT_ENERGY}<small>на поиск</small></li>
             <li data-reward="coins"><b><Coin /></b>+{fmt(GIFT_COINS)}<small>на покупки</small></li>
             <li><b>🔍</b>{NEWBIE_SEARCHES}<small>без ожидания</small></li>
           </ul>
