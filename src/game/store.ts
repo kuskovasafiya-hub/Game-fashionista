@@ -34,9 +34,9 @@ export const TUT_STAGES = ['gift', 'shop', 'wardrobe', 'story', 'events', 'done'
 export type TutStage = typeof TUT_STAGES[number];
 /** The housewarming gift right after creating the character. */
 export const GIFT_COINS = 3000;
-export const GIFT_ENERGY = 30;
+export const GIFT_ENERGY = 10;
 /** The first searches ignore the shelf cooldown, so the gift can be spent at once. */
-export const NEWBIE_SEARCHES = 40;
+export const NEWBIE_SEARCHES = 30;
 /** …and the very first ones find the cheapest common pieces of the shelf. */
 export const NEWBIE_COMMON = 6;
 /**
@@ -248,7 +248,7 @@ export function claimGift() {
 }
 
 /** Cups in the newcomer's one top-up. */
-export const NEWBIE_REFILL = 20;
+export const NEWBIE_REFILL = 10;
 /** She ran out of cups while still on her free searches: one top-up, once. */
 export const canNewbieRefill = (s: Save = state) => !s.tutRefill && s.freeSearches > 0;
 export function newbieRefill() {
