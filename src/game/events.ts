@@ -78,6 +78,8 @@ const SLOT_MS = 4 * 3600 * 1000;
 const TRACK_OFFSET = [0, 1.33, 2.67].map((h) => h * 3600 * 1000);
 const EPOCH = Date.UTC(2026, 0, 1);
 export const RESULT_DELAY_MS = 30 * 60 * 1000;
+/** A story scene look stays on vote for less: the scene itself is already judged. */
+export const STORY_RESULT_MS = 20 * 60 * 1000;
 
 export interface GameEvent extends EventTemplate {
   /** Instance id: `<track>.<slot>`, stable across devices. */
@@ -199,7 +201,7 @@ export const starTier = (stars: number) => (stars >= 5 ? 5 : stars >= 4.5 ? 4 : 
 /** "3,35" / "5" for showing fractional stars. */
 export const starsText = (stars: number) => (Number.isInteger(stars) ? String(stars) : stars.toFixed(2).replace('.', ','));
 
-export function scoreLook(outfit: Outfit, ev: EventTemplate, seed: number): Score {
+export function scoreLook(outfit: Outfit, ev: Pick<EventTemplate, 'tags' | 'cost'>, seed: number): Score {
   const r = rng(seed);
   const match = dressCodeMatch(outfit, ev.tags).total;
   const mine = appeal(outfit, ev.tags);
@@ -237,6 +239,15 @@ export function rewardFor(ev: GameEvent, starsOrTier: number): Reward {
     xp: 20 + 10 * stars,
     item: stars >= 5 ? ev.prize : undefined,
   };
+}
+
+/**
+ * The vote result of a story scene look: about half of a 1-ticket event — coins and XP only;
+ * no prize, no tickets (the story is free) and no cups.
+ */
+export function storyVoteReward(starsOrTier: number): Reward {
+  const stars = starTier(starsOrTier);
+  return { coins: Math.round((STAR_COINS[stars] * 0.5) / 10) * 10, energy: 0, tickets: 0, gems: 0, xp: Math.round((20 + 10 * stars) / 2) };
 }
 
 /* ---------- bots for voting ---------- */

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { Doll, FIGURE_VIEW } from '../art/Doll';
-import { dressCodeMatch, starTier, type Theme } from '../game/events';
+import { STORY_RESULT_MS, dressCodeMatch, starTier, type Theme } from '../game/events';
 import { CHAPTERS, STORY_STEPS, chapterOf, stepById, type StoryStep } from '../game/story';
 import { eventsOpen, playStory, storyNext, storyOpen, useGame, type LevelUp, type StoryResult } from '../game/store';
 import { Coin, DressCode, Modal, TagIcon, fmt } from './common';
@@ -24,7 +24,7 @@ export function StoryCard({ play, toMap, pulse }: { play: (id: string) => void; 
         <span class="ss-pic done">🌟</span>
         <span class="ss-info">
           <b class="ss-name">История пройдена!</b>
-          <small class="muted">Переиграй сцены и собери все ★</small>
+          <small class="muted">Новые главы — скоро</small>
         </span>
         <button class="btn teal ss-play" onClick={toMap}>Главы</button>
       </div>
@@ -78,7 +78,7 @@ export function StoryMap({ play }: { play: (id: string) => void }) {
               return (
                 <button
                   class={'scene-row' + (current ? ' current' : '') + (best ? ' done' : '') + (open ? '' : ' closed')}
-                  disabled={!open} onClick={() => play(st.id)}
+                  disabled={!open || best > 0} onClick={() => play(st.id)}
                 >
                   <span class="scene-icon">{open ? st.emoji : '🔒'}</span>
                   <span class="shop-info">
@@ -118,6 +118,7 @@ export function StoryScene({ stepId, play, toMap, toShops, toEvents, onLevelUp }
     const r = playStory(stepId);
     if (r === 'clothes') return flash('Надень платье или верх с низом');
     if (r === 'locked') return flash('Эта сцена пока закрыта');
+    if (r === 'done') return flash('В эту сцену образ уже отправлен');
     setResult(r);
     // a level-up waits until the stars have landed and the rewards have flown into the wallet
     const lu = r.levelUp;
@@ -183,7 +184,7 @@ function SceneResult({ step, result, after, play, toMap, toShops, toEvents, retr
               {result.reward.gems > 0 && <li data-reward="gems">💎 +{result.reward.gems}</li>}
               {result.reward.energy > 0 && <li data-reward="energy">☕ +{result.reward.energy}</li>}
             </ul>
-            {result.stars < 5 && <p class="muted small">Попади в дресс-код на 100% — будет 5 звёзд и бонус 💎</p>}
+            <p class="muted small">🗳 Образ отправлен на голосование — итоги через {Math.round(STORY_RESULT_MS / 60000)} мин в «Моих образах»</p>
           </div>
           <div class="sr-doll"><Doll class="doll" look={g.look} outfit={g.outfit} /></div>
           <div class="sr-foot">

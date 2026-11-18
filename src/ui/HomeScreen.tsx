@@ -1,12 +1,14 @@
 import { Doll, FIGURE_VIEW } from '../art/Doll';
-import { activeEvents, eventByKey } from '../game/events';
+import { activeEvents } from '../game/events';
+import { voteTargetByKey } from '../game/vote';
 import { StoryCard } from './StoryScreen';
 import { eventsOpen as eventsOpenFor, useGame, xpToNext } from '../game/store';
 import { HEAD_VIEW, timeLeft, useNow } from './EventsScreen';
 
 /**
  * Home, on one screen without scrolling: the player's model (it takes whatever height is left),
- * the next story scene in one row, and — once events are open — the current event and her sent looks side by side.
+ * the next story scene in one row, and — once events are open — the current event and her sent looks side by side
+ * (her looks show up already after her first story scene).
  */
 export function HomeScreen({ pulse, toWardrobe, toEvents, toVote, openEvent, play, toStory }: {
   /** Tutorial: what to tap next pulses. */
@@ -38,9 +40,9 @@ export function HomeScreen({ pulse, toWardrobe, toEvents, toVote, openEvent, pla
 
       <StoryCard play={play} toMap={toStory} pulse={pulse === 'story'} />
 
-      {eventsOpen && (
+      {(eventsOpen || g.entries.length > 0) && (
         <div class="home-row">
-          <EventMini now={now} open={openEvent} />
+          {eventsOpen ? <EventMini now={now} open={openEvent} /> : <span />}
           <LooksMini now={now} toVote={toVote} toEvents={toEvents} />
         </div>
       )}
@@ -82,7 +84,7 @@ function LooksMini({ now, toVote, toEvents }: { now: number; toVote: () => void;
       <b class="mc-name">Мои образы</b>
       <span class="mc-faces">
         {looks.map((e) => (
-          <span class={'mc-face' + (!e.claimed && e.resultAt <= now ? ' ready' : '')} title={eventByKey(e.key)?.name}>
+          <span class={'mc-face' + (!e.claimed && e.resultAt <= now ? ' ready' : '')} title={voteTargetByKey(e.key)?.name}>
             <Doll class="mc-face-doll" look={e.look} outfit={e.outfit} view={HEAD_VIEW} />
           </span>
         ))}

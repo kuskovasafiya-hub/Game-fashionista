@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Doll, FIGURE_VIEW, ItemThumb, artUrl } from '../art/Doll';
 import { ITEM_BY_ID } from '../game/catalog';
 import {
-  DUP_PRIZE_GEMS, botLook, eventByKey, rewardFor, starTier, starsText, rng, seedOf, votePair, type VotePair,
+  DUP_PRIZE_GEMS, botLook, eventByKey, starTier, starsText, rng, seedOf, votePair, type VotePair,
 } from '../game/events';
 import {
   MAJORITY_COINS, RUSH_GEMS, TICKET_GEMS, VOTES_PER_TICKET, buyTicket, canVote, castVote, claimEntry,
-  rushEntry, useGame, type Entry, type LevelUp,
+  entryReward, rushEntry, useGame, type Entry, type LevelUp,
 } from '../game/store';
 import { voteTargetByKey, voteTargetFor, voteTargets, type VoteTarget } from '../game/vote';
 import { Coin, DressCode, Modal, fmt, plural } from './common';
@@ -65,10 +65,13 @@ export function VoteLobby({ vote, toEvents, onLevelUp }: {
 function VoteCard({ ev, now, onVote }: { ev: VoteTarget; now: number; onVote: () => void }) {
   const g = useGame();
   const done = g.votes % VOTES_PER_TICKET;
+  // while her look in this event or scene is on vote, it stands on the card next to a rival
+  const mine = g.entries.find((e) => e.key === ev.key && !e.claimed && e.resultAt > now);
   const pair = useMemo(() => {
     const r = rng(seedOf('preview:' + ev.key));
-    return [botLook(ev.tags, r), botLook(ev.tags, r)];
-  }, [ev.key]);
+    const a = botLook(ev.tags, r), b = botLook(ev.tags, r);
+    return mine ? [{ look: mine.look, outfit: mine.outfit }, b] : [a, b];
+  }, [ev.key, !!mine]);
   return (
     <div class="feature" style={{ '--ec': ev.color }}>
       <div class="feature-bar">
@@ -107,7 +110,7 @@ function LookStories({ entries, now, onOpen, toEvents }: {
         <span class="story-name">образ</span>
       </button>
       {entries.map((e) => {
-        const ev = eventByKey(e.key);
+        const ev = voteTargetByKey(e.key);
         if (!ev) return null;
         const ready = !e.claimed && e.resultAt <= now;
         const done = Math.min(1, Math.max(0, (now - e.at) / Math.max(1, e.resultAt - e.at)));
@@ -135,7 +138,7 @@ function LookStories({ entries, now, onOpen, toEvents }: {
 function WaitModal({ entryKey, now, onClose }: { entryKey: string; now: number; onClose: () => void }) {
   const g = useGame();
   const e = g.entries.find((x) => x.key === entryKey);
-  const ev = eventByKey(entryKey);
+  const ev = voteTargetByKey(entryKey);
   if (!e || !ev) return null;
   const done = Math.min(1, Math.max(0, (now - e.at) / Math.max(1, e.resultAt - e.at)));
   return (
@@ -159,11 +162,13 @@ function WaitModal({ entryKey, now, onClose }: { entryKey: string; now: number; 
 function EventResult({ entryKey, onClose }: { entryKey: string; onClose: (lu: LevelUp | null) => void }) {
   const g = useGame();
   const e = g.entries.find((x) => x.key === entryKey);
-  const ev = eventByKey(entryKey);
+  const ev = voteTargetByKey(entryKey);
+  // only events have a main prize
+  const event = eventByKey(entryKey);
   useSceneBackground(ev?.id);
-  if (!e || !ev) return null;
+  const reward = e && entryReward(entryKey, e.score.stars);
+  if (!e || !ev || !reward) return null;
   const { score } = e;
-  const reward = rewardFor(ev, score.stars);
   const prize = reward.item ? ITEM_BY_ID[reward.item] : undefined;
   const dup = !!prize && g.owned.includes(prize.id) && !e.claimed;
   const claim = () => {
@@ -202,7 +207,7 @@ function EventResult({ entryKey, onClose }: { entryKey: string; onClose: (lu: Le
             <span>Главный приз: <b>{prize.name}</b>{dup && <><br /><small>уже есть — вместо неё 💎 +{DUP_PRIZE_GEMS[prize.rarity]}</small></>}</span>
           </div>
         )}
-        {score.stars < 5 && !prize && <p class="muted small">За 5 звёзд — главный приз: {ITEM_BY_ID[ev.prize]?.name}</p>}
+        {score.stars < 5 && !prize && event && <p class="muted small">За 5 звёзд — главный приз: {ITEM_BY_ID[event.prize]?.name}</p>}
         <button class="btn primary" onClick={claim}>{e.claimed ? 'Закрыть' : 'Забрать'}</button>
       </div>
     </div>

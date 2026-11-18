@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { DEFAULT_LOOK, type Look, type Outfit } from '../art/Doll';
 import { DEPT_SLOTS, ITEM_BY_ID, RARITY, SHOPS, STARTER, shopFixtures, shopItems, type Dept, type Item, type Rarity, type Slot } from './catalog';
-import { DUP_PRIZE_GEMS, EVENTS_LEVEL, RESULT_DELAY_MS, activeEvents, starsFor, dressCodeMatch, eventByKey, hasClothes, rewardFor, scoreLook, seedOf, type Reward, type Score } from './events';
+import { DUP_PRIZE_GEMS, EVENTS_LEVEL, RESULT_DELAY_MS, STORY_RESULT_MS, activeEvents, storyVoteReward, starsFor, dressCodeMatch, eventByKey, hasClothes, rewardFor, scoreLook, seedOf, type Reward, type Score } from './events';
 import { STORY_STEPS, chapterOf, migrateStoryStars, stepById, storyReward, storyStars, type StoryReward } from './story';
 
 export const ENERGY_MAX = 20;
@@ -84,10 +84,12 @@ export interface Save {
   tut: TutStage;
   /** Searches left that skip the shelf cooldown (newcomer's gift). */
   freeSearches: number;
-  /** The newcomer's one extra handful of cups (when she runs dry while still searching for free) is spent. */
 }
 
-/** A look sent to an event. The score is rolled on submission and revealed at resultAt. */
+/**
+ * A look sent to an event (key = event key) or to a story scene (key = `story:<step id>`, the same
+ * key as its vote target). Each can be sent once. The score is rolled on submission and revealed at resultAt.
+ */
 export interface Entry {
   key: string;
   look: Look;
@@ -443,13 +445,17 @@ export function storyOpen(stepId: string, s: Save = state): boolean {
   return i === 0 || s.story[STORY_STEPS[i - 1].id] > 0;
 }
 
-export type StoryError = 'locked' | 'clothes';
+export type StoryError = 'locked' | 'clothes' | 'done';
 export interface StoryResult { stars: number; match: number; best: number; reward: StoryReward; levelUp: LevelUp | null }
 
-/** Show the current look in a story scene: judged at once by its dress code match. */
+/**
+ * Show the current look in a story scene: judged at once by its dress code match. A passing look is
+ * sent, once: it also goes on vote like an event look. A look that misses the dress code is not sent.
+ */
 export function playStory(stepId: string): StoryResult | StoryError {
   const step = stepById(stepId);
   if (!step || !storyOpen(stepId)) return 'locked';
+  if ((state.story[stepId] ?? 0) > 0) return 'done';
   if (!hasClothes(state.outfit)) return 'clothes';
   const match = dressCodeMatch(state.outfit, step.tags).total;
   const stars = storyStars(step, match);
@@ -463,7 +469,17 @@ export function playStory(stepId: string): StoryResult | StoryError {
     gems: state.gems + reward.gems,
     energy: state.energy + reward.energy,
   };
-  if (stars > 0) next = reached(next, 'events');
+  if (stars > 0) {
+    next = reached(next, 'events');
+    const key = 'story:' + stepId;
+    const at = Date.now();
+    const entry: Entry = {
+      key, look: { ...state.look }, outfit: { ...state.outfit }, at,
+      resultAt: at + STORY_RESULT_MS,
+      score: scoreLook(state.outfit, { tags: step.tags, cost: 1 }, seedOf(`${key}:${at}`)),
+    };
+    next = { ...next, entries: [...next.entries.filter((e) => e.key !== key), entry], voteUnlocked: true };
+  }
   let levelUp: LevelUp | null = null;
   if (reward.xp) [next, levelUp] = withXp(next, reward.xp);
   commit(next);
@@ -510,11 +526,19 @@ export function rushEntry(key: string): boolean {
 
 export interface Claim { reward: Reward; /** The prize was already owned and paid out in crystals instead. */ dupGems: number; levelUp: LevelUp | null }
 
+export const isStoryKey = (key: string) => key.startsWith('story:');
+
+/** What a sent look pays once its result is in: an event by its fee, a story scene a smaller fixed reward. */
+export function entryReward(key: string, stars: number): Reward | null {
+  if (isStoryKey(key)) return stepById(key.slice(6)) ? storyVoteReward(stars) : null;
+  const ev = eventByKey(key);
+  return ev && rewardFor(ev, stars);
+}
+
 export function claimEntry(key: string): Claim | null {
   const e = entryFor(key);
-  const ev = eventByKey(key);
-  if (!e || !ev || e.claimed || e.resultAt > Date.now()) return null;
-  const reward = rewardFor(ev, e.score.stars);
+  const reward = entryReward(key, e?.score.stars ?? 0);
+  if (!e || !reward || e.claimed || e.resultAt > Date.now()) return null;
   const prize = reward.item && ITEM_BY_ID[reward.item];
   const dup = !!prize && state.owned.includes(prize.id);
   const dupGems = dup ? DUP_PRIZE_GEMS[prize.rarity] : 0;
@@ -530,7 +554,8 @@ export function claimEntry(key: string): Claim | null {
     // forget claimed entries a day after their event closed
     entries: state.entries
       .map((x) => (x.key === key ? { ...x, claimed: true } : x))
-      .filter((x) => !x.claimed || (eventByKey(x.key)?.end ?? 0) > now - 24 * 3600 * 1000),
+      // (story looks stay: one per scene)
+      .filter((x) => !x.claimed || isStoryKey(x.key) || (eventByKey(x.key)?.end ?? 0) > now - 24 * 3600 * 1000),
   };
   let levelUp: LevelUp | null;
   [next, levelUp] = withXp(next, reward.xp);
