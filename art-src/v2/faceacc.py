@@ -132,6 +132,9 @@ def main():
         # pieces close to the frame (a nose pad, the far temple) belong to it
         near = ndi.binary_dilation(frame, iterations=6)
         frame |= np.isin(lab, [i + 1 for i, s in enumerate(sizes) if s >= 40 and (near & (lab == i + 1)).any()])
+        # a thin gold bridge can be lost with the skin colours: the other lens is then a
+        # piece of its own, nearly as big as the first one
+        frame |= np.isin(lab, [i + 1 for i, s in enumerate(sizes) if s >= sizes.max() * 0.4])
         # lenses: a hole in the frame is a lens; only a dark (tinted) one is drawn,
         # through a clear one her own eye shows
         holes = ndi.binary_fill_holes(frame) & ~frame

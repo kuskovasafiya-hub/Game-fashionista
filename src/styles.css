@@ -943,20 +943,7 @@ button:disabled { cursor: default; }
 }
 .undress:disabled { opacity: 0.45; }
 
-/* Tutorial: the assistant's hint above the bottom menu, and a pulsing ring on what to tap */
-.coach {
-  position: absolute; left: 12px; right: 12px; bottom: 10px; z-index: 6; display: flex; align-items: center; gap: 10px;
-  padding: 10px 34px 10px 10px; border-radius: 22px; background: #fff; animation: coach-in 0.35s;
-  box-shadow: 0 6px 22px rgba(80, 55, 150, 0.28), 0 0 0 2px var(--accent);
-}
-.coach-face {
-  flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%;
-  background: var(--tint, #efe7fd); font-size: 24px;
-}
-.coach-text { font-size: 14px; font-weight: 700; line-height: 1.3; text-align: left; }
-.coach-text small { display: block; margin-top: 2px; color: var(--muted); font-weight: 700; }
-.coach-x { position: absolute; top: 6px; right: 8px; padding: 4px; color: var(--muted); font-size: 13px; }
-@keyframes coach-in { from { transform: translateY(16px); opacity: 0; } }
+/* Tutorial: a hand taps what to press next (CoachHand); a pulsing ring on the target itself */
 .coach-pulse { position: relative; animation: coach-pulse 1.3s infinite; }
 @keyframes coach-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(150, 110, 230, 0.55); }
@@ -965,7 +952,17 @@ button:disabled { cursor: default; }
 .nav-item.coach-pulse { animation: none; box-shadow: none; }
 .nav-item.coach-pulse .nav-icon { color: var(--accent); animation: coach-bounce 1s infinite; }
 @keyframes coach-bounce { 50% { transform: translateY(-5px); } }
-.gift-list { list-style: none; padding: 0; margin: 10px 0 14px; display: grid; gap: 6px; font-size: 18px; font-weight: 800; }
+.gift-list { list-style: none; padding: 0; margin: 8px 0 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.gift-list li {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px 8px; border-radius: 18px;
+  background: var(--tint, #efe7fd); font-size: 18px; font-weight: 900; animation: pop 0.45s backwards;
+}
+.gift-list li:nth-child(2) { animation-delay: 0.12s; }
+.gift-list li:nth-child(3) { animation-delay: 0.24s; }
+.gift-list li b { font-size: 30px; line-height: 1.1; }
+.gift-list li small { font-size: 10px; font-weight: 800; color: var(--muted); }
+.gift-burst { display: inline-block; animation: pop 0.5s, gift-wiggle 1.6s 0.5s infinite; }
+@keyframes gift-wiggle { 0%, 60%, 100% { transform: rotate(0); } 70% { transform: rotate(-10deg) scale(1.08); } 85% { transform: rotate(9deg) scale(1.08); } }
 .tab-label { margin: -2px 0 8px; text-align: center; font-size: 13px; font-weight: 800; color: var(--muted); }
 .name-hint { margin: 0 0 6px; text-align: center; font-size: 12px; color: var(--muted); }
 .fx-name {
@@ -975,7 +972,6 @@ button:disabled { cursor: default; }
 }
 .reveal-item .doll { height: 100%; width: auto; }
 .tryon { margin: 6px auto 0; }
-.coach.top { top: 6px; bottom: auto; }
 /* story result: its own screen on the scene picture — title card on top, the model in the scene,
    buttons at the bottom; the model takes whatever height is left */
 .screen.scene-result {
@@ -1133,4 +1129,101 @@ button:disabled { cursor: default; }
 .coin::after {
   content: ''; position: absolute; inset: 30%; border-radius: 50%;
   border: 0.06em solid rgba(176, 112, 0, 0.55); border-top-color: rgba(255, 246, 200, 0.8);
+}
+
+/* ---------- tutorial hand (CoachHand) ---------- */
+.coach-layer { position: absolute; inset: 0; z-index: 8; pointer-events: none; }
+.coach-spot {
+  position: absolute; border-radius: 20px; box-shadow: 0 0 0 200vmax rgba(36, 20, 66, 0.42);
+  animation: spot-in 0.4s ease-out both;
+}
+@keyframes spot-in { from { box-shadow: 0 0 0 200vmax rgba(36, 20, 66, 0); transform: scale(1.4); } }
+.coach-ring {
+  position: absolute; border-radius: 18px; border: 3px solid #fff;
+  box-shadow: 0 0 0 3px var(--accent), 0 0 18px 4px rgba(150, 110, 230, 0.6); animation: ring 1.1s ease-out infinite;
+}
+@keyframes ring { 0% { opacity: 0.9; transform: scale(0.96); } 100% { opacity: 0; transform: scale(1.12); } }
+.coach-hand {
+  position: absolute; font-size: 44px; line-height: 1; transform: translateX(-35%);
+  filter: drop-shadow(0 3px 4px rgba(40, 20, 80, 0.4)); animation: hand-in 0.3s ease-out, tap 1.1s 0.3s ease-in-out infinite;
+}
+.coach-hand.down { animation: hand-in 0.3s ease-out, tap-down 1.1s 0.3s ease-in-out infinite; }
+@keyframes hand-in { from { opacity: 0; } }
+@keyframes tap { 0%, 100% { transform: translateX(-35%) translateY(14px); } 45% { transform: translateX(-35%) translateY(0) scale(0.92); } }
+@keyframes tap-down { 0%, 100% { transform: translateX(-35%) translateY(-14px); } 45% { transform: translateX(-35%) translateY(0) scale(0.92); } }
+.coach-label {
+  position: absolute; transform: translateX(-50%); padding: 5px 12px; border-radius: 999px; white-space: nowrap;
+  background: #fff; color: var(--ink); font-size: 20px; font-weight: 900; line-height: 1.1;
+  box-shadow: 0 4px 14px rgba(60, 35, 120, 0.3), 0 0 0 2px var(--accent); animation: pop 0.35s 0.15s backwards;
+}
+.coach-label.above { transform: translate(-50%, -100%); }
+.dots { display: inline-flex; align-items: center; gap: 5px; }
+.dots i { width: 11px; height: 11px; border-radius: 50%; background: #e4dcf3; box-shadow: inset 0 0 0 2px #cfc2ea; }
+.dots i.on { background: var(--accent); box-shadow: none; animation: dot-on 0.4s; }
+@keyframes dot-on { 0% { transform: scale(0.3); } 60% { transform: scale(1.5); } }
+
+/* ---------- flying rewards and purchases (fx.ts) ---------- */
+.flyer { position: absolute; z-index: 30; pointer-events: none; will-change: transform; }
+.flyer-coin { width: 22px; height: 22px; font-size: 22px; }
+.flyer-emoji { font-size: 24px; line-height: 1; }
+.flyer-pic {
+  width: 84px; height: 84px; object-fit: contain; padding: 6px; border-radius: 20px; background: #fff;
+  box-shadow: 0 6px 18px rgba(60, 35, 120, 0.35);
+}
+.bump { animation: bump 0.35s ease-out; }
+@keyframes bump { 40% { transform: scale(1.3); } }
+.plus-pop {
+  position: absolute; z-index: 31; transform: translate(-50%, -50%); pointer-events: none;
+  padding: 2px 8px; border-radius: 999px; background: var(--rose, #ff6f91); color: #fff; font-size: 14px; font-weight: 900;
+  animation: plus-pop 1s ease-out forwards;
+}
+@keyframes plus-pop { 0% { opacity: 0; transform: translate(-50%, -20%) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -60%) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -180%); } }
+
+/* ---------- dress code: fitting pieces get a tick; the first scene's chips pulse ---------- */
+.card.fits { border-color: #7fd6a4; }
+.fit-mark {
+  position: absolute; top: 4px; left: 4px; z-index: 2; display: grid; place-items: center; width: 20px; height: 20px;
+  border-radius: 50%; background: #3fbf7f; color: #fff; font-size: 12px; font-weight: 900; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  animation: pop 0.3s;
+}
+.pulse-chips .chip { animation: chip-pulse 1.2s ease-in-out infinite; }
+.pulse-chips .chip:nth-of-type(2) { animation-delay: 0.2s; }
+.pulse-chips .chip:nth-of-type(3) { animation-delay: 0.4s; }
+@keyframes chip-pulse { 50% { transform: scale(1.05); box-shadow: 0 0 0 3px #fff, 0 0 12px 3px rgba(255, 255, 255, 0.9); } }
+
+/* ---------- events unlocked: the lock shakes, pops, the crown rises ---------- */
+.unlock-burst { position: relative; height: 76px; display: grid; place-items: center; }
+.unlock-burst > span { grid-area: 1 / 1; font-size: 56px; line-height: 1; }
+.ub-lock { animation: lock-shake 0.7s ease-in-out, lock-pop 0.35s 0.7s ease-in forwards; }
+.ub-crown { opacity: 0; animation: crown-in 0.5s 0.95s ease-out forwards, float 2.4s 1.5s ease-in-out infinite; }
+.ub-rays {
+  width: 130px; height: 130px; border-radius: 50%; opacity: 0;
+  background: repeating-conic-gradient(rgba(255, 205, 60, 0.45) 0 12deg, transparent 12deg 30deg);
+  -webkit-mask: radial-gradient(circle, #000 30%, transparent 70%); mask: radial-gradient(circle, #000 30%, transparent 70%);
+  animation: rays-in 0.5s 0.9s forwards, spin 9s linear infinite;
+}
+@keyframes lock-shake { 20%, 60% { transform: rotate(-14deg); } 40%, 80% { transform: rotate(14deg); } }
+@keyframes lock-pop { to { transform: scale(1.8); opacity: 0; } }
+@keyframes crown-in { from { opacity: 0; transform: scale(0.3) translateY(20px); } 70% { opacity: 1; transform: scale(1.2); } to { opacity: 1; } }
+@keyframes rays-in { to { opacity: 1; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+.how-row { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 6px 0 2px; font-size: 30px; }
+.how-row span { animation: pop 0.4s backwards; }
+.how-row span:nth-of-type(2) { animation-delay: 1.2s; }
+.how-row span:nth-of-type(3) { animation-delay: 1.35s; }
+.how-row span:nth-of-type(4) { animation-delay: 1.5s; }
+.how-row span:nth-of-type(1) { animation-delay: 1.05s; }
+.how-row i { font-style: normal; font-size: 22px; color: var(--muted); }
+
+/* nav: a tab that just unlocked */
+.nav-lock.breaking { animation: lock-fly 0.9s ease-in forwards; }
+@keyframes lock-fly { 30% { transform: scale(1.4) rotate(-15deg); } 100% { transform: translate(14px, -40px) rotate(40deg); opacity: 0; } }
+.nav-item.just-opened .nav-icon svg { animation: opened-glow 1s ease-in-out infinite alternate; }
+@keyframes opened-glow { to { filter: drop-shadow(0 0 8px #ffcf3f) drop-shadow(0 0 2px #ffcf3f); } }
+
+/* the newcomer's top-up of cups */
+.cup-burst { display: inline-block; animation: pop 0.5s, float 2s 0.5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .coach-hand, .coach-ring, .pulse-chips .chip, .ub-rays, .gift-burst { animation: none !important; }
 }

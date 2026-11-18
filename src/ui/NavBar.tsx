@@ -1,4 +1,5 @@
 import type { ComponentChildren } from 'preact';
+import { useEffect, useRef, useState } from 'preact/hooks';
 
 export type Tab = 'shops' | 'vote' | 'home' | 'events';
 
@@ -19,13 +20,27 @@ export function NavBar({ active, go, badges, locked = [], pulse }: {
   /** Tutorial: the tab to tap next bounces. */
   pulse?: Tab;
 }) {
+  // a tab that just unlocked: its lock springs open and flies off, the tab glows for a while
+  const was = useRef(locked);
+  const [opened, setOpened] = useState<Tab[]>([]);
+  const key = locked.join();
+  useEffect(() => {
+    const fresh = was.current.filter((t) => !locked.includes(t));
+    was.current = locked;
+    if (!fresh.length) return;
+    setOpened(fresh);
+    const t = setTimeout(() => setOpened([]), 4000);
+    return () => clearTimeout(t);
+  }, [key]);
   const item = (t: Tab, icon: ComponentChildren) => (
     <button
-      class={'nav-item' + (active === t ? ' active' : '') + (locked.includes(t) ? ' locked' : '') + (pulse === t ? ' coach-pulse' : '')}
-      onClick={() => go(t)} aria-label={LABELS[t]}
+      class={'nav-item' + (active === t ? ' active' : '') + (locked.includes(t) ? ' locked' : '') + (pulse === t ? ' coach-pulse' : '')
+        + (opened.includes(t) ? ' just-opened' : '')}
+      data-tab={t} onClick={() => go(t)} aria-label={LABELS[t]}
     >
       <span class="nav-icon">
         {icon}
+        {opened.includes(t) && <span class="nav-lock breaking" aria-hidden="true">🔓</span>}
         {locked.includes(t) ? <span class="nav-lock">🔒</span>
           : badges[t] !== undefined && badges[t] !== false && <span class="nav-badge">{badges[t]}</span>}
       </span>

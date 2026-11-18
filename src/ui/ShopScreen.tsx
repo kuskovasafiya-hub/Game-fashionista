@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { Doll, FIGURE_VIEW, ItemThumb } from '../art/Doll';
+import { Doll, FIGURE_VIEW, ItemThumb, thumbSrc } from '../art/Doll';
 import { RARITY, SHOPS, shopFixtures, shopItems, type Fixture, type Item, type Shop, type Slot } from '../game/catalog';
 import {
-  SHELF_RUSH_GEMS, allBought, buy, canAfford, rushShelf, withItem, search, searchCost, shelfLeft, shelfReadyAt, toggleWish, useGame,
+  NEWBIE_REFILL, SHELF_RUSH_GEMS, allBought, buy, canNewbieRefill, newbieRefill, canAfford, rushShelf, withItem, search, searchCost, shelfLeft, shelfReadyAt, toggleWish, useGame,
   type BuyResult, type LevelUp, type SearchResult,
 } from '../game/store';
 import { createPortal } from 'preact/compat';
 import { useNow } from './EventsScreen';
 import { rng, seedOf } from '../game/events';
 import { Coin, ItemCard, Modal, Price, RarityTag, fmt, plural } from './common';
+import { flyRewards, flyTo, picture } from './fx';
 
 /** Shop window order: the big pieces first, then shoes and accessories. */
 const WINDOW_ORDER: Slot[] = ['dress', 'top', 'bottom', 'shoes', 'bag', 'necklace', 'earrings', 'bracelet', 'glasses'];
@@ -97,7 +98,7 @@ function Lot({ shop, index, found, level, open }: {
   const done = allBought(shop.id);
   const goods = useMemo(() => windowItems(shop.id), [shop.id]);
   return (
-    <div class={'lot' + (locked ? ' locked' : '')} style={{ '--sc': shop.color }}>
+    <div class={'lot' + (locked ? ' locked' : '')} data-shop={shop.id} style={{ '--sc': shop.color }}>
       <span class="lot-stage">
       <span class="lamp" />
       <button class={'house ' + (index % 2 ? 'gable' : 'flat')} disabled={locked} onClick={open} aria-label={shop.name}>
@@ -386,6 +387,7 @@ export function ShopScreen({ shopId, onNoEnergy, onLevelUp }: {
   const [shaking, setShaking] = useState<string | null>(null);
   const [resting, setResting] = useState<Fixture | null>(null);
   const [collection, setCollection] = useState(false);
+  const [refill, setRefill] = useState(false);
   const cost = searchCost(shopId);
   const all = shopItems(shopId);
   const found = all.filter((i) => g.discovered.includes(i.id)).length;
@@ -395,7 +397,7 @@ export function ShopScreen({ shopId, onNoEnergy, onLevelUp }: {
     if (shaking) return;
     if (!shelfLeft(shopId, fx.id, g).length) return;
     if (g.freeSearches <= 0 && shelfReadyAt(shopId, fx.id, g) > Date.now()) return setResting(fx);
-    if (g.energy < cost) return onNoEnergy();
+    if (g.energy < cost) return canNewbieRefill(g) ? setRefill(true) : onNoEnergy();
     setShaking(fx.id);
     setTimeout(() => {
       setShaking(null);
@@ -447,6 +449,21 @@ export function ShopScreen({ shopId, onNoEnergy, onLevelUp }: {
         })}
       </div>
 
+      {refill && (
+        <Modal>
+          <div class="burst cup-burst">☕</div>
+          <h2>Ещё чашечки!</h2>
+          <p class="big">+{NEWBIE_REFILL} ☕</p>
+          <button
+            class="btn primary"
+            onClick={(e) => {
+              flyTo(e.currentTarget, '[data-cur="energy"] i', () => Object.assign(document.createElement('span'), { className: 'flyer-emoji', textContent: '☕' }), { count: 5 });
+              newbieRefill();
+              setRefill(false);
+            }}
+          >Забрать</button>
+        </Modal>
+      )}
       {resting && (
         <Modal onClose={() => setResting(null)}>
           <div class="burst">⏳</div>
@@ -529,7 +546,10 @@ function FindScreen({ r, fx, shopId, onClose }: {
   const afford = canAfford(item, g);
   const short = g.coins < item.price ? 'Не хватает монет' : 'Не хватает алмазиков';
   const purchase = () => {
+    const from = document.querySelector('.find-item');
     const b = buy(item.id);
+    // the piece flies down to the wardrobe (behind «Главная»), which hops and shows +1
+    if (b.ok) flyTo(from, '.navbar [data-tab="home"] .nav-icon', picture(thumbSrc(item), item.filter), { plus: '+1' });
     if (b.ok && b.shelfGems) setBought(b);
     else onClose(b.levelUp ?? r.levelUp);
   };
@@ -547,8 +567,8 @@ function FindScreen({ r, fx, shopId, onClose }: {
         <div class="burst">🏆</div>
         <h2>Полка собрана!</h2>
         <p>Ты купила все вещи с этой полки.</p>
-        <ul class="rewards inline"><li>💎 +{bought.shelfGems}</li></ul>
-        <button class="btn primary" onClick={() => onClose(bought.levelUp ?? r.levelUp)}>Забрать</button>
+        <ul class="rewards inline"><li data-reward="gems">💎 +{bought.shelfGems}</li></ul>
+        <button class="btn primary" onClick={() => { flyRewards(); onClose(bought.levelUp ?? r.levelUp); }}>Забрать</button>
       </div>
     );
   } else if (phase !== 'reveal') {

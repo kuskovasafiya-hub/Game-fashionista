@@ -82,7 +82,7 @@ export function WardrobeScreen({ event, footer }: { event?: Theme; footer?: Comp
           </div>
           {slots && <p class="muted small center">
             {event
-              ? 'Подходит вещь хотя бы с одной иконкой ивента — такие стоят первыми.'
+              ? '✓ — вещь подходит под дресс-код'
               : 'Нажми на вещь, чтобы надеть или снять.'}
           </p>}
         </div>
@@ -124,7 +124,7 @@ function FitHead({ event }: { event: Theme }) {
         <b>{event.name}</b>
         <b class="fit-pct" title="Соответствие теме">{pct}%</b>
       </div>
-      <DressCode tags={event.tags} label />
+      <DressCode tags={event.tags} label pulse={g.tut === 'story'} />
       <span class="match-bar"><i style={{ width: `${pct}%` }} /></span>
       <small>{missing.length ? `Добавь под тему: ${missing.join(', ')}` : 'Образ полностью в теме!'}</small>
     </div>

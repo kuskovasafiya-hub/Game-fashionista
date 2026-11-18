@@ -81,6 +81,8 @@ export interface Save {
   tut: TutStage;
   /** Searches left that skip the shelf cooldown (newcomer's gift). */
   freeSearches: number;
+  /** The newcomer's one extra handful of cups (when she runs dry while still searching for free) is spent. */
+  tutRefill?: boolean;
 }
 
 /** A look sent to an event. The score is rolled on submission and revealed at resultAt. */
@@ -243,6 +245,15 @@ export function claimGift() {
     ...state, tut: 'shop',
     coins: state.coins + GIFT_COINS, energy: state.energy + GIFT_ENERGY, freeSearches: NEWBIE_SEARCHES,
   });
+}
+
+/** Cups in the newcomer's one top-up. */
+export const NEWBIE_REFILL = 20;
+/** She ran out of cups while still on her free searches: one top-up, once. */
+export const canNewbieRefill = (s: Save = state) => !s.tutRefill && s.freeSearches > 0;
+export function newbieRefill() {
+  if (!canNewbieRefill()) return;
+  commit({ ...state, energy: state.energy + NEWBIE_REFILL, tutRefill: true });
 }
 
 /** Bought pieces (the starter set does not count). */

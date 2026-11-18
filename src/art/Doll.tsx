@@ -190,12 +190,14 @@ export function Doll({ look, outfit, class: cls, view }: {
 }
 
 /** Shop picture of an item: a separate product shot if there is one, else its layer. */
+/** The picture an item's card shows: its product shot when there is one. */
+export const thumbSrc = (item: Item) => artUrl(LAYERS[`product-${item.art}`] ? `product-${item.art}` : item.art);
+
 export function ItemThumb({ item, silhouette }: { item: Item; silhouette?: boolean }) {
-  const product = `product-${item.art}`;
   return (
     <img
       class={`thumb slot-${item.slot}` + (silhouette ? ' silhouette' : '')}
-      src={artUrl(LAYERS[product] ? product : item.art)}
+      src={thumbSrc(item)}
       style={{ filter: silhouette ? undefined : item.filter }}
       alt=""
       draggable={false}

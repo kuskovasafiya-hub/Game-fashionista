@@ -1,4 +1,3 @@
-import type { ComponentChildren } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { EVENTS_LEVEL } from '../game/events';
 import {
@@ -12,8 +11,9 @@ import { CreateScreen } from './CreateScreen';
 import { DEBUG_ENABLED, DebugPanel } from './DebugPanel';
 import { ShopScreen, ShopsScreen } from './ShopScreen';
 import { WardrobeScreen } from './WardrobeScreen';
-import { Coach, Coin, EnergyModal, Hud, LevelUpModal, Modal, fmt } from './common';
+import { CoachHand, Coin, Dots, EnergyModal, Hud, LevelUpModal, Modal, fmt, type CoachHint } from './common';
 import { HomeScreen } from './HomeScreen';
+import { flyRewards } from './fx';
 import { NavBar, type Tab } from './NavBar';
 
 type Route =
@@ -30,6 +30,8 @@ export function App() {
   const [ticketsOpen, setTicketsOpen] = useState(false);
   const [voteLocked, setVoteLocked] = useState(false);
   const [eventsLocked, setEventsLocked] = useState(false);
+  /** «Позже» on the events-unlocked card: the hand then points at the tab instead. */
+  const [unlockSeen, setUnlockSeen] = useState(false);
   const now = useNow(5000);
 
   // tutorial: opening the wardrobe moves her on to the story; visiting events ends it
@@ -59,6 +61,11 @@ export function App() {
     : route.name === 'story' || route.name === 'scene' || route.name === 'wardrobe' ? 'home' : route.name;
   const sub = ['shop', 'event', 'voting', 'story', 'scene', 'wardrobe'].includes(route.name);
   const eventsOpen = eventsOpenFor(g);
+  // the events tab keeps its lock until she has seen the «events are open» card, so the lock springs open in view
+  const holdLock = g.tut === 'events' && !unlockSeen && route.name !== 'events';
+  const showUnlock = g.tut === 'events' && eventsOpen && !unlockSeen && !levelUp && route.name !== 'scene' && route.name !== 'events';
+  // the hand waits while a card is open on top
+  const modalUp = showUnlock || !!levelUp || energyOpen || ticketsOpen || voteLocked || eventsLocked;
   const coach = coachFor(g, route.name);
   const play = (id: string) => setRoute({ name: 'scene', id });
   const voteOpen = canVote(g);
@@ -121,15 +128,15 @@ export function App() {
           )}
         </main>
         {sub && <button class="back" onClick={back} aria-label="Назад">←</button>}
-        {coach && <Coach key={g.tut + route.name} top={route.name === 'shops'}>{coach.text}</Coach>}
       </div>
       <NavBar
         active={tab}
         go={go}
         pulse={coach?.nav}
         badges={{ vote: ready > 0 && ready }}
-        locked={[...(voteOpen ? [] : ['vote' as Tab]), ...(eventsOpen ? [] : ['events' as Tab])]}
+        locked={[...(voteOpen ? [] : ['vote' as Tab]), ...(eventsOpen && !holdLock ? [] : ['events' as Tab])]}
       />
+      {coach && !modalUp && <CoachHand key={g.tut + route.name + coach.target} {...coach} />}
       {energyOpen && <EnergyModal onClose={() => setEnergyOpen(false)} />}
       {ticketsOpen && <TicketModal onClose={() => setTicketsOpen(false)} onVote={() => go('vote')} />}
       {eventsLocked && (
@@ -151,27 +158,27 @@ export function App() {
       )}
       {g.tut === 'gift' && (
         <Modal>
-          <div class="burst">🎁</div>
-          <h2>Добро пожаловать в город, {g.name}!</h2>
-          <p class="muted">Подарок на новоселье — пройдись по магазинам и собери свой первый гардероб.</p>
+          <div class="burst gift-burst">🎁</div>
+          <h2>Привет, {g.name}!</h2>
+          <p class="muted">Подарок на новоселье:</p>
           <ul class="gift-list">
-            <li>☕ +{GIFT_ENERGY} чашечек — на поиск вещей</li>
-            <li><Coin /> +{fmt(GIFT_COINS)} монет — на покупки</li>
-            <li>🔍 {NEWBIE_SEARCHES} поисков без ожидания</li>
+            <li data-reward="energy"><b>☕</b>+{GIFT_ENERGY}<small>на поиск</small></li>
+            <li data-reward="coins"><b><Coin /></b>+{fmt(GIFT_COINS)}<small>на покупки</small></li>
+            <li><b>🔍</b>{NEWBIE_SEARCHES}<small>без ожидания</small></li>
           </ul>
-          <button class="btn primary" onClick={() => { claimGift(); setRoute({ name: 'shops' }); }}>В магазины!</button>
+          <button class="btn primary" onClick={() => { flyRewards(); claimGift(); setRoute({ name: 'shops' }); }}>В магазины!</button>
         </Modal>
       )}
-      {g.tut === 'events' && eventsOpen && !levelUp && route.name !== 'scene' && route.name !== 'events' && (
+      {showUnlock && (
         <Modal>
-          <div class="burst">👑</div>
+          <div class="unlock-burst" aria-hidden="true"><span class="ub-rays" /><span class="ub-lock">🔒</span><span class="ub-crown">👑</span></div>
           <h2>Открылись ивенты!</h2>
-          <p class="muted">
-            Модные конкурсы с дресс-кодом: собери образ, отправь его за билетик 🎟 — и другие модницы проголосуют.
-            Чем больше звёзд, тем лучше награда, а за 5 ★ — главный приз.
+          <p class="how-row" aria-label="Собери образ, отправь за билетик, другие проголосуют, получи приз">
+            <span>👗</span><i>›</i><span>🎟</span><i>›</i><span>❤️</span><i>›</i><span>🎁</span>
           </p>
+          <p class="muted small">Конкурсы образов: чем больше ★, тем лучше приз</p>
           <button class="btn primary" onClick={() => { reachTut('done'); setRoute({ name: 'events' }); }}>Смотреть ивенты</button>
-          <button class="btn" onClick={() => reachTut('done')}>Позже</button>
+          <button class="btn" onClick={() => setUnlockSeen(true)}>Позже</button>
         </Modal>
       )}
       {levelUp && <LevelUpModal lu={levelUp} onClose={() => setLevelUp(null)} />}
@@ -180,30 +187,38 @@ export function App() {
   );
 }
 
-interface CoachHint { text: ComponentChildren; nav?: Tab; home?: 'wardrobe' | 'story' }
+type Hint = CoachHint & { nav?: Tab; home?: 'wardrobe' | 'story' };
 
-/** Which tutorial hint to show on this screen (none on scenes, events and voting). */
-function coachFor(g: Save, route: Route['name']): CoachHint | null {
+const NAV = (t: Tab) => `.navbar [data-tab="${t}"] .nav-icon`;
+
+/** The tutorial hand on this screen: what to tap next, with an icon or two (none on scenes and voting). */
+function coachFor(g: Save, route: Route['name']): Hint | null {
   const bought = boughtCount(g);
   switch (g.tut) {
     case 'shop':
-      if (route === 'shops') return { text: <>Нажми на домик «Городской», чтобы зайти.<small>Листай улицу — магазинов много, часть откроется позже</small></> };
+      if (route === 'shops') return { target: '.lot[data-shop="city"] .house', label: '🛍️' };
       if (route === 'shop') {
-        return { text: <>Нажми на сверкающую полку — на ней найдётся вещь. Понравится — покупай!<small>Купи {TUT_BUYS} вещи: {Math.min(bought, TUT_BUYS)} из {TUT_BUYS}</small></> };
+        return { target: '.fixture.ready', label: <Dots n={Math.min(bought, TUT_BUYS)} of={TUT_BUYS} icon="🛍️" /> };
       }
-      if (route === 'home' || route === 'wardrobe') return { text: 'Загляни в «Магазины» — там ждут обновки!', nav: 'shops' };
+      if (route === 'home' || route === 'wardrobe') return { target: NAV('shops'), label: '🛍️', nav: 'shops' };
       return null;
     case 'wardrobe':
-      if (route === 'shops' || route === 'shop') return { text: <>Отлично! Теперь примерь обновки.<small>«Главная» → «Гардероб»</small></>, nav: 'home' };
-      if (route === 'home') return { text: 'Открой «Гардероб» и примерь обновки.', home: 'wardrobe' };
+      if (route === 'shops' || route === 'shop') return { target: NAV('home'), label: '👗', nav: 'home' };
+      if (route === 'home') return { target: '[data-coach="wardrobe"]', label: '👗', home: 'wardrobe' };
       return null;
     case 'story':
-      if (route === 'wardrobe') return { text: <>Красота! Покупки сразу лежат здесь.<small>Теперь вернись на главную и сыграй историю</small></> };
-      if (route === 'home') return { text: <>Сыграй первую сцену истории: образ оценят сразу.<small>Смотри на дресс-код — значки под вещами подскажут, что подходит</small></>, home: 'story' };
-      if (route === 'shops' || route === 'shop') return { text: 'Пора в историю: «Главная» → «Играть».', nav: 'home' };
+      // in the wardrobe she first looks at her new things; the hand to the story comes a bit later
+      if (route === 'wardrobe') return { target: '.back', label: '🎬', wait: 6000 };
+      if (route === 'home') return { target: '[data-coach="story"]', label: '🎬', home: 'story' };
+      if (route === 'shops' || route === 'shop') return { target: NAV('home'), label: '🎬', nav: 'home' };
       return null;
     case 'events':
-      if (g.level < EVENTS_LEVEL && route === 'home') return { text: `Проходи историю дальше — на ${EVENTS_LEVEL} уровне откроются ивенты.`, home: 'story' };
+      if (eventsOpenFor(g)) {
+        return route === 'events' || route === 'scene' ? null : { target: NAV('events'), label: '👑', nav: 'events' };
+      }
+      if (g.level < EVENTS_LEVEL && route === 'home') {
+        return { target: '[data-coach="story"]', label: <>🎬 › 👑</>, home: 'story', wait: 3000 };
+      }
       return null;
     default:
       return null;

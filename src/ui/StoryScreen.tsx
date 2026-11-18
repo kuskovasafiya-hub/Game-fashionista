@@ -5,6 +5,7 @@ import { CHAPTERS, STORY_STEPS, chapterOf, stepById, type StoryStep } from '../g
 import { eventsOpen, playStory, storyNext, storyOpen, useGame, type LevelUp, type StoryResult } from '../game/store';
 import { Coin, DressCode, Modal, fmt } from './common';
 import { Stars, eventBg } from './EventsScreen';
+import { flyRewards } from './fx';
 import { WardrobeScreen, useSceneBackground } from './WardrobeScreen';
 
 const sceneNo = (st: StoryStep) => Number(st.id.split('.')[1]);
@@ -42,7 +43,10 @@ export function StoryCard({ play, toMap, pulse }: { play: (id: string) => void; 
         <b class="feature-name">{step.name}</b>
         <small class="muted story-text">{step.text}</small>
         <DressCode tags={step.tags} label />
-        <button class={'btn primary' + (pulse && open ? ' coach-pulse' : '')} disabled={!open} onClick={() => play(step.id)}>
+        <button
+          class={'btn primary' + (pulse && open ? ' coach-pulse' : '')} data-coach={open ? 'story' : undefined}
+          disabled={!open} onClick={() => play(step.id)}
+        >
           {open ? 'Играть' : `Глава откроется на ${ch.level} уровне`}
         </button>
         <button class="link" onClick={toMap}>Все главы</button>
@@ -117,7 +121,9 @@ export function StoryScene({ stepId, play, toMap, toShops, toEvents, onLevelUp }
     if (r === 'clothes') return flash('Надень платье или верх с низом');
     if (r === 'locked') return flash('Эта сцена пока закрыта');
     setResult(r);
-    if (r.levelUp) onLevelUp(r.levelUp);
+    // a level-up waits until the stars have landed and the rewards have flown into the wallet
+    const lu = r.levelUp;
+    if (lu) setTimeout(() => onLevelUp(lu), 1900);
   };
 
   return (
@@ -161,6 +167,8 @@ function SceneResult({ step, result, after, play, toMap, toShops, toEvents, retr
 }) {
   const g = useGame();
   useSceneBackground(step.bg);
+  // the rewards fly into the wallet once the stars have landed
+  useEffect(() => { if (result.stars > 0) flyRewards(700); }, []);
   return (
     <div class="screen scene-result">
       {result.stars > 0 ? (
@@ -172,10 +180,10 @@ function SceneResult({ step, result, after, play, toMap, toShops, toEvents, retr
             </div>
             <ul class="rewards inline">
               <li>Дресс-код <b>{Math.round(result.match * 100)}%</b></li>
-              {result.reward.coins > 0 && <li><Coin /> +{fmt(result.reward.coins)}</li>}
-              {result.reward.xp > 0 && <li>⭐ +{result.reward.xp}</li>}
-              {result.reward.gems > 0 && <li>💎 +{result.reward.gems}</li>}
-              {result.reward.energy > 0 && <li>☕ +{result.reward.energy}</li>}
+              {result.reward.coins > 0 && <li data-reward="coins"><Coin /> +{fmt(result.reward.coins)}</li>}
+              {result.reward.xp > 0 && <li data-reward="xp">⭐ +{result.reward.xp}</li>}
+              {result.reward.gems > 0 && <li data-reward="gems">💎 +{result.reward.gems}</li>}
+              {result.reward.energy > 0 && <li data-reward="energy">☕ +{result.reward.energy}</li>}
             </ul>
             {result.stars < 5 && <p class="muted small">Попади в дресс-код на 100% — будет 5 звёзд и бонус 💎</p>}
           </div>

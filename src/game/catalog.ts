@@ -319,7 +319,7 @@ add('city', [
   ['acc-bag-straw', 'Корзинка «Солома»', 'common'],
   ['acc-bag-straw', 'Корзинка «Шоколад»', 'common', 'sepia(0.30) saturate(2.41) hue-rotate(-42deg) brightness(0.36)'],
   ['acc-bag-saddle', 'Сумка-седло «Вишня»', 'common'],
-  ['acc-bag-saddle', 'Сумка-седло «Карамель»', 'rare', 'TBD'],
+  ['acc-bag-saddle', 'Сумка-седло «Карамель»', 'rare', 'sepia(0.71) saturate(1.16) hue-rotate(29deg) brightness(1.74)'],
   ['acc-bag-canvas', 'Шопер «Ромашка»', 'common'],
   ['acc-bag-canvas', 'Шопер «Шалфей»', 'common', 'grayscale(1) brightness(0.72) sepia(1) saturate(0.61) hue-rotate(58deg) brightness(0.85)'],
   ['acc-bag-hobo', 'Хобо «Шоколад»', 'common'],

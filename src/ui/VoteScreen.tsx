@@ -10,6 +10,7 @@ import {
 } from '../game/store';
 import { voteTargetByKey, voteTargetFor, voteTargets, type VoteTarget } from '../game/vote';
 import { Coin, DressCode, Modal, fmt, plural } from './common';
+import { flyRewards } from './fx';
 import { HEAD_VIEW, Stars, eventBg, timeLeft, useNow } from './EventsScreen';
 import { useSceneBackground } from './WardrobeScreen';
 
@@ -165,7 +166,10 @@ function EventResult({ entryKey, onClose }: { entryKey: string; onClose: (lu: Le
   const reward = rewardFor(ev, score.stars);
   const prize = reward.item ? ITEM_BY_ID[reward.item] : undefined;
   const dup = !!prize && g.owned.includes(prize.id) && !e.claimed;
-  const claim = () => onClose(e.claimed ? null : claimEntry(entryKey)?.levelUp ?? null);
+  const claim = () => {
+    if (!e.claimed) flyRewards();
+    onClose(e.claimed ? null : claimEntry(entryKey)?.levelUp ?? null);
+  };
   const verdict = ['', '', 'Неплохо!', 'Хорошо!', 'Отлично!', 'Звезда вечера!'][starTier(score.stars)];
 
   return (
@@ -186,11 +190,11 @@ function EventResult({ entryKey, onClose }: { entryKey: string; onClose: (lu: Le
       <div class="sr-foot">
         {e.claimed && <p class="muted small">Награда получена:</p>}
         <ul class="rewards inline">
-          {reward.coins > 0 && <li><Coin /> +{fmt(reward.coins)}</li>}
-          {reward.energy > 0 && <li>☕ +{reward.energy}</li>}
-          {reward.tickets > 0 && <li>🎟 +{reward.tickets}</li>}
-          {reward.gems > 0 && <li>💎 +{reward.gems}</li>}
-          <li>⭐ +{reward.xp}</li>
+          {reward.coins > 0 && <li data-reward="coins"><Coin /> +{fmt(reward.coins)}</li>}
+          {reward.energy > 0 && <li data-reward="energy">☕ +{reward.energy}</li>}
+          {reward.tickets > 0 && <li data-reward="tickets">🎟 +{reward.tickets}</li>}
+          {reward.gems > 0 && <li data-reward="gems">💎 +{reward.gems}</li>}
+          <li data-reward="xp">⭐ +{reward.xp}</li>
         </ul>
         {prize && (
           <div class="prize">

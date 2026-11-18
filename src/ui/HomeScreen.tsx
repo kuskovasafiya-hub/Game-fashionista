@@ -35,7 +35,7 @@ export function HomeScreen({ pulse, toWardrobe, toEvents, toVote, openEvent, pla
           <span class="me-level">Уровень {g.level}</span>
           <span class="xpbar"><i style={{ width: `${(g.xp / need) * 100}%` }} /></span>
           <small class="muted">{g.xp} / {need} опыта</small>
-          <button class={'btn teal' + (pulse === 'wardrobe' ? ' coach-pulse' : '')} onClick={toWardrobe}>Гардероб</button>
+          <button class={'btn teal' + (pulse === 'wardrobe' ? ' coach-pulse' : '')} data-coach="wardrobe" onClick={toWardrobe}>Гардероб</button>
         </div>
       </section>
 
