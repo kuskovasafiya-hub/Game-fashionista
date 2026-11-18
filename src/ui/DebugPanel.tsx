@@ -4,7 +4,7 @@ import {
   ENERGY_MAX, PITY_EPIC, PITY_RARE, VOTES_PER_TICKET, debugExport, debugImport, debugPatch, debugXp, resetGame,
   useGame, xpLeft, xpToNext, type LevelUp,
 } from '../game/store';
-import { fmt } from './common';
+import { Coin, fmt } from './common';
 
 /** Shown in `npm run dev` always; in a production build only with `?debug` in the URL. */
 export const DEBUG_ENABLED =
@@ -70,7 +70,7 @@ export function DebugPanel({ onClose, onLevelUp }: { onClose: () => void; onLeve
         </div>
 
         <section>
-          <h3>🪙 Монеты: {fmt(g.coins)}</h3>
+          <h3><Coin /> Монеты: {fmt(g.coins)}</h3>
           <div class="dbg-btns">
             <Btn onClick={() => debugPatch((s) => ({ coins: s.coins + 1000 }))}>+1 000</Btn>
             <Btn onClick={() => debugPatch((s) => ({ coins: s.coins + 10000 }))}>+10 000</Btn>
@@ -81,7 +81,7 @@ export function DebugPanel({ onClose, onLevelUp }: { onClose: () => void; onLeve
         </section>
 
         <section>
-          <h3>💎 Кристаллы: {g.gems}</h3>
+          <h3>💎 Алмазики: {g.gems}</h3>
           <div class="dbg-btns">
             <Btn onClick={() => debugPatch((s) => ({ gems: s.gems + 10 }))}>+10</Btn>
             <Btn onClick={() => debugPatch((s) => ({ gems: s.gems + 100 }))}>+100</Btn>
@@ -111,7 +111,7 @@ export function DebugPanel({ onClose, onLevelUp }: { onClose: () => void; onLeve
             <Btn onClick={() => setLevel(MAX_SHOP_LEVEL)}>{`Все магазины (ур. ${MAX_SHOP_LEVEL})`}</Btn>
           </div>
           <NumSet label="Перейти на" value={g.level} min={1} onSet={setLevel} />
-          <p class="dbg-hint">«±1» и «Перейти» меняют уровень без наград. «Level up с наградой» — как в игре: монеты, кристаллы, энергия и попап.</p>
+          <p class="dbg-hint">«±1» и «Перейти» меняют уровень без наград. «Level up с наградой» — как в игре: монеты, алмазики, энергия и попап.</p>
         </section>
 
         <section>

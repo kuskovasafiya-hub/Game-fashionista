@@ -1,27 +1,20 @@
 import { useEffect, useState } from 'preact/hooks';
 import { Doll, FIGURE_VIEW } from '../art/Doll';
-import { dressCodeMatch, type Theme } from '../game/events';
+import { dressCodeMatch, starTier, type Theme } from '../game/events';
 import { CHAPTERS, STORY_STEPS, chapterOf, stepById, type StoryStep } from '../game/story';
-import { playStory, storyNext, storyOpen, useGame, type LevelUp, type StoryResult } from '../game/store';
-import { DressCode, Modal, fmt } from './common';
-import { eventBg } from './EventsScreen';
-import { WardrobeScreen } from './WardrobeScreen';
+import { eventsOpen, playStory, storyNext, storyOpen, useGame, type LevelUp, type StoryResult } from '../game/store';
+import { Coin, DressCode, Modal, fmt } from './common';
+import { Stars, eventBg } from './EventsScreen';
+import { WardrobeScreen, useSceneBackground } from './WardrobeScreen';
 
 const sceneNo = (st: StoryStep) => Number(st.id.split('.')[1]);
 const chapterNo = (st: StoryStep) => Number(st.id.split('.')[0]);
 const theme = (st: StoryStep): Theme => ({ id: st.bg, name: st.name, emoji: st.emoji, color: st.color, tags: st.tags });
 
-function Stars3({ n, animate }: { n: number; animate?: boolean }) {
-  return (
-    <span class={'stars' + (animate ? ' animate' : '')}>
-      {[1, 2, 3].map((k) => <i class={k <= n ? 'on' : ''} style={{ animationDelay: `${0.25 + k * 0.2}s` }}>★</i>)}
-    </span>
-  );
-}
 
 /* ---------- home card: the next scene ---------- */
 
-export function StoryCard({ play, toMap }: { play: (id: string) => void; toMap: () => void }) {
+export function StoryCard({ play, toMap, pulse }: { play: (id: string) => void; toMap: () => void; pulse?: boolean }) {
   const g = useGame();
   const step = storyNext(g);
   if (!step) {
@@ -49,7 +42,7 @@ export function StoryCard({ play, toMap }: { play: (id: string) => void; toMap: 
         <b class="feature-name">{step.name}</b>
         <small class="muted story-text">{step.text}</small>
         <DressCode tags={step.tags} label />
-        <button class="btn primary" disabled={!open} onClick={() => play(step.id)}>
+        <button class={'btn primary' + (pulse && open ? ' coach-pulse' : '')} disabled={!open} onClick={() => play(step.id)}>
           {open ? 'Играть' : `Глава откроется на ${ch.level} уровне`}
         </button>
         <button class="link" onClick={toMap}>Все главы</button>
@@ -67,14 +60,14 @@ export function StoryMap({ play }: { play: (id: string) => void }) {
     <div class="screen list story-map">
       <h1 class="title">История</h1>
       {CHAPTERS.map((ch, ci) => {
-        const stars = ch.steps.reduce((a, st) => a + (g.story[st.id] ?? 0), 0);
+        const stars = Math.round(ch.steps.reduce((a, st) => a + (g.story[st.id] ?? 0), 0) * 10) / 10;
         const locked = g.level < ch.level;
         return (
           <section class={'panel chapter' + (locked ? ' locked' : '')}>
             <p class="chapter-no">Глава {ci + 1}</p>
             <h2 class="panel-title">{ch.name}</h2>
             <p class="chapter-meta">
-              {locked ? <>🔒 Откроется на {ch.level} уровне</> : <>★ {stars} / {ch.steps.length * 3}</>}
+              {locked ? <>🔒 Откроется на {ch.level} уровне</> : <>★ {String(stars).replace('.', ',')} / {ch.steps.length * 5}</>}
             </p>
             {ch.steps.map((st) => {
               const best = g.story[st.id] ?? 0;
@@ -90,7 +83,7 @@ export function StoryMap({ play }: { play: (id: string) => void }) {
                     <b>{st.name}</b>
                     <DressCode tags={st.tags} />
                   </span>
-                  {best ? <Stars3 n={best} /> : current ? <span class="btn primary mini">Играть</span> : null}
+                  {best ? <Stars n={best} label /> : current ? <span class="btn primary mini">Играть</span> : null}
                 </button>
               );
             })}
@@ -129,15 +122,20 @@ export function StoryScene({ stepId, play, toMap, toShops, toEvents, onLevelUp }
 
   return (
     <>
-      <WardrobeScreen
+      {result ? (
+        <SceneResult
+          step={step} result={result} after={after} play={play} toMap={toMap} toShops={toShops} toEvents={toEvents}
+          retry={() => setResult(null)}
+        />
+      ) : <WardrobeScreen
         event={theme(step)}
         footer={
           <div class="fit-footer">
             {hint && <div class="toast">{hint}</div>}
-            <button class="btn primary" onClick={show}>Показать образ <span class="cost">{pct}%</span></button>
+            <button class="btn primary" onClick={show}>Отправить образ <span class="cost">{pct}%</span></button>
           </div>
         }
-      />
+      />}
       {intro && (
         <Modal onClose={() => setIntro(false)}>
           <div class="scene-pic" style={{ '--bg': eventBg(step.bg) }}><span>{step.emoji}</span></div>
@@ -149,46 +147,65 @@ export function StoryScene({ stepId, play, toMap, toShops, toEvents, onLevelUp }
           <button class="btn primary" onClick={() => setIntro(false)}>Собрать образ</button>
         </Modal>
       )}
-      {result && (
-        <Modal>
-          {result.stars > 0 ? (
-            <>
-              <h2>{['', 'Неплохо!', 'Отлично!', 'Идеально!'][result.stars]}</h2>
-              <Stars3 n={result.stars} animate />
-              <p>Дресс-код: <b>{Math.round(result.match * 100)}%</b></p>
-              <div class="confirm-doll"><Doll class="doll" look={g.look} outfit={g.outfit} /></div>
-              {(result.reward.coins > 0 || result.reward.gems > 0) && (
-                <ul class="rewards inline">
-                  {result.reward.coins > 0 && <li>🪙 +{fmt(result.reward.coins)}</li>}
-                  {result.reward.xp > 0 && <li>⭐ +{result.reward.xp} опыта</li>}
-                  {result.reward.gems > 0 && <li>💎 +{result.reward.gems}</li>}
-                  {result.reward.energy > 0 && <li>☕ +{result.reward.energy}</li>}
-                </ul>
-              )}
-              {result.stars < 3 && <p class="muted small">Дресс-код на 100% — три звезды и бонус 💎</p>}
-              {after && storyOpen(after.id)
-                ? <button class="btn primary" onClick={() => play(after.id)}>Дальше: {after.name}</button>
-                : after
-                  ? <>
-                      <p class="muted small">Глава «{chapterOf(after.id).name}» откроется на {chapterOf(after.id).level} уровне. Опыт дают ивенты и покупки.</p>
-                      <button class="btn primary" onClick={g.level >= 2 ? toEvents : toShops}>{g.level >= 2 ? 'К ивентам' : 'В магазины'}</button>
-                    </>
-                  : <p><b>Ты прошла всю историю! 🌟</b></p>}
-              {result.stars < 3 && <button class="btn" onClick={() => setResult(null)}>Улучшить образ</button>}
-              <button class="btn" onClick={toMap}>Все главы</button>
-            </>
-          ) : (
-            <>
-              <div class="burst">🤔</div>
-              <h2>Не совсем в тему</h2>
-              <p>Дресс-код: <b>{Math.round(result.match * 100)}%</b>, нужно от {Math.round(step.need * 100)}%</p>
-              <p class="muted small">Подходят вещи с иконками дресс-кода. Не хватает — загляни в магазины.</p>
-              <button class="btn primary" onClick={() => setResult(null)}>Попробовать ещё</button>
-              <button class="btn" onClick={toShops}>В магазины</button>
-            </>
-          )}
-        </Modal>
-      )}
     </>
+  );
+}
+
+/**
+ * The scene result: its own screen (the fitting room is gone) on the scene picture —
+ * a title card, the model in the scene and the buttons at the bottom.
+ */
+function SceneResult({ step, result, after, play, toMap, toShops, toEvents, retry }: {
+  step: StoryStep; result: StoryResult; after?: StoryStep; play: (id: string) => void; toMap: () => void;
+  toShops: () => void; toEvents: () => void; retry: () => void;
+}) {
+  const g = useGame();
+  useSceneBackground(step.bg);
+  return (
+    <div class="screen scene-result">
+      {result.stars > 0 ? (
+        <>
+          <div class="sr-head">
+            <div class="sr-title">
+              <h2>{['', '', 'Неплохо!', 'Хорошо!', 'Отлично!', 'Идеально!'][starTier(result.stars)]}</h2>
+              <Stars n={result.stars} animate label />
+            </div>
+            <ul class="rewards inline">
+              <li>Дресс-код <b>{Math.round(result.match * 100)}%</b></li>
+              {result.reward.coins > 0 && <li><Coin /> +{fmt(result.reward.coins)}</li>}
+              {result.reward.xp > 0 && <li>⭐ +{result.reward.xp}</li>}
+              {result.reward.gems > 0 && <li>💎 +{result.reward.gems}</li>}
+              {result.reward.energy > 0 && <li>☕ +{result.reward.energy}</li>}
+            </ul>
+            {result.stars < 5 && <p class="muted small">Попади в дресс-код на 100% — будет 5 звёзд и бонус 💎</p>}
+          </div>
+          <div class="sr-doll"><Doll class="doll" look={g.look} outfit={g.outfit} /></div>
+          <div class="sr-foot">
+            {after && storyOpen(after.id)
+              ? <button class="btn primary" onClick={() => play(after.id)}>Дальше: {after.name}</button>
+              : after
+                ? <>
+                    <p class="muted small">Глава «{chapterOf(after.id).name}» откроется на {chapterOf(after.id).level} уровне. Опыт дают ивенты и покупки.</p>
+                    <button class="btn primary" onClick={eventsOpen(g) ? toEvents : toShops}>{eventsOpen(g) ? 'К ивентам' : 'В магазины'}</button>
+                  </>
+                : <p><b>Ты прошла всю историю! 🌟</b></p>}
+            <button class="btn" onClick={toMap}>Все главы</button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div class="sr-head">
+            <h2>Не совсем в тему 🤔</h2>
+            <p>Дресс-код: <b>{Math.round(result.match * 100)}%</b>, нужно от {Math.round(step.need * 100)}%</p>
+          </div>
+          <div class="sr-doll"><Doll class="doll" look={g.look} outfit={g.outfit} /></div>
+          <div class="sr-foot">
+            <p class="muted small">Подходят вещи с иконками дресс-кода. Не хватает — загляни в магазины.</p>
+            <button class="btn primary" onClick={retry}>Попробовать ещё</button>
+            <button class="btn" onClick={toShops}>В магазины</button>
+          </div>
+        </>
+      )}
+    </div>
   );
 }

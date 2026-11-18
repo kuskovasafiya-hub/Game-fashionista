@@ -1,11 +1,13 @@
 import { Doll, FIGURE_VIEW } from '../art/Doll';
-import { EVENTS_LEVEL, activeEvents, eventByKey } from '../game/events';
+import { activeEvents, eventByKey } from '../game/events';
 import { StoryCard } from './StoryScreen';
-import { useGame, xpToNext } from '../game/store';
+import { eventsOpen as eventsOpenFor, useGame, xpToNext } from '../game/store';
 import { EventCard, HEAD_VIEW, Stars, timeLeft, useNow } from './EventsScreen';
 
 /** Home: the player's model, her sent looks, and the event worth entering now. */
-export function HomeScreen({ toWardrobe, toEvents, toVote, openEvent, play, toStory }: {
+export function HomeScreen({ pulse, toWardrobe, toEvents, toVote, openEvent, play, toStory }: {
+  /** Tutorial: what to tap next pulses. */
+  pulse?: 'wardrobe' | 'story';
   toWardrobe: () => void; toEvents: () => void; toVote: () => void; openEvent: (key: string) => void;
   play: (id: string) => void; toStory: () => void;
 }) {
@@ -20,7 +22,7 @@ export function HomeScreen({ toWardrobe, toEvents, toVote, openEvent, play, toSt
     .sort((a, b) => Number(!!a.claimed) - Number(!!b.claimed) || b.resultAt - a.resultAt)
     .slice(0, 6);
   const empty = Math.max(0, 3 - looks.length);
-  const eventsOpen = g.level >= EVENTS_LEVEL;
+  const eventsOpen = eventsOpenFor(g);
 
   return (
     <div class="screen home">
@@ -33,13 +35,13 @@ export function HomeScreen({ toWardrobe, toEvents, toVote, openEvent, play, toSt
           <span class="me-level">Уровень {g.level}</span>
           <span class="xpbar"><i style={{ width: `${(g.xp / need) * 100}%` }} /></span>
           <small class="muted">{g.xp} / {need} опыта</small>
-          <button class="btn teal" onClick={toWardrobe}>Гардероб</button>
+          <button class={'btn teal' + (pulse === 'wardrobe' ? ' coach-pulse' : '')} onClick={toWardrobe}>Гардероб</button>
         </div>
       </section>
 
       <section class="panel">
         <h2 class="panel-title">История</h2>
-        <StoryCard play={play} toMap={toStory} />
+        <StoryCard play={play} toMap={toStory} pulse={pulse === 'story'} />
       </section>
 
       {eventsOpen && <section class="panel">
@@ -52,7 +54,7 @@ export function HomeScreen({ toWardrobe, toEvents, toVote, openEvent, play, toSt
               <button class={'look-slot' + (ready ? ' ready' : '')} onClick={toVote}>
                 <Doll class="look-head" look={e.look} outfit={e.outfit} view={HEAD_VIEW} />
                 <span class="look-name">{ev ? `${ev.emoji} ${ev.name}` : 'Ивент'}</span>
-                {e.claimed ? <Stars n={e.score.stars} />
+                {e.claimed ? <Stars n={e.score.stars} label />
                   : ready ? <span class="look-ready">Результат!</span>
                   : <small class="look-wait">⏱ {timeLeft(e.resultAt - now)}</small>}
               </button>

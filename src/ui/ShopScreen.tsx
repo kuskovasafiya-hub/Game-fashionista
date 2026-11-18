@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { ItemThumb } from '../art/Doll';
+import { Doll, FIGURE_VIEW, ItemThumb } from '../art/Doll';
 import { RARITY, SHOPS, shopFixtures, shopItems, type Fixture, type Item, type Shop, type Slot } from '../game/catalog';
 import {
-  PITY_RARE, SHELF_RUSH_GEMS, allBought, buy, rushShelf, search, searchCost, shelfLeft, shelfReadyAt, toggleWish, useGame,
-  type LevelUp, type SearchResult,
+  SHELF_RUSH_GEMS, allBought, buy, canAfford, rushShelf, withItem, search, searchCost, shelfLeft, shelfReadyAt, toggleWish, useGame,
+  type BuyResult, type LevelUp, type SearchResult,
 } from '../game/store';
+import { createPortal } from 'preact/compat';
 import { useNow } from './EventsScreen';
 import { rng, seedOf } from '../game/events';
-import { ItemCard, Modal, RarityTag, fmt, plural } from './common';
+import { Coin, ItemCard, Modal, Price, RarityTag, fmt, plural } from './common';
 
 /** Shop window order: the big pieces first, then shoes and accessories. */
 const WINDOW_ORDER: Slot[] = ['dress', 'top', 'bottom', 'shoes', 'bag', 'necklace', 'earrings', 'bracelet', 'glasses'];
@@ -380,7 +381,8 @@ export function ShopScreen({ shopId, onNoEnergy, onLevelUp }: {
   const now = useNow(1000);
   const shop = SHOPS.find((s) => s.id === shopId)!;
   const fixtures = useMemo(() => shopFixtures(shopId), [shopId]);
-  const [result, setResult] = useState<SearchResult | null>(null);
+  /** The search being shown full screen: the result is rolled at the tap, the animation reveals it. */
+  const [result, setResult] = useState<{ r: SearchResult; fx: Fixture } | null>(null);
   const [shaking, setShaking] = useState<string | null>(null);
   const [resting, setResting] = useState<Fixture | null>(null);
   const [collection, setCollection] = useState(false);
@@ -392,14 +394,14 @@ export function ShopScreen({ shopId, onNoEnergy, onLevelUp }: {
   const tap = (fx: Fixture) => {
     if (shaking) return;
     if (!shelfLeft(shopId, fx.id, g).length) return;
-    if (shelfReadyAt(shopId, fx.id, g) > Date.now()) return setResting(fx);
+    if (g.freeSearches <= 0 && shelfReadyAt(shopId, fx.id, g) > Date.now()) return setResting(fx);
     if (g.energy < cost) return onNoEnergy();
     setShaking(fx.id);
     setTimeout(() => {
       setShaking(null);
       const r = search(shopId, fx.id);
-      if (r) setResult(r);
-    }, 450);
+      if (r) setResult({ r, fx });
+    }, 250);
   };
   const close = (lu: LevelUp | null) => {
     setResult(null);
@@ -414,7 +416,9 @@ export function ShopScreen({ shopId, onNoEnergy, onLevelUp }: {
           <b>{shop.name}</b>
           <small>
             {shopDone ? '🏆 Коллекция собрана — искать больше нечего'
-              : <>Выбери полку · 🔍 ☕ {cost} · редкая не позже чем через {PITY_RARE - g.pityRare}</>}
+              : g.freeSearches > 0
+                ? <>Нажми на полку, чтобы найти вещь · ☕ {cost} за поиск · ещё {g.freeSearches} без ожидания</>
+                : <>Нажми на полку, чтобы найти вещь · ☕ {cost} за поиск · полка обновляется раз в час</>}
           </small>
         </span>
         <button class="btn mini" onClick={() => setCollection(true)}>📒 {found}/{all.length}</button>
@@ -425,7 +429,7 @@ export function ShopScreen({ shopId, onNoEnergy, onLevelUp }: {
         {fixtures.map((fx, i) => {
           const left = shelfLeft(shopId, fx.id, g);
           const readyAt = shelfReadyAt(shopId, fx.id, g);
-          const state = !left.length ? 'done' : readyAt > now ? 'wait' : 'ready';
+          const state = !left.length ? 'done' : readyAt > now && g.freeSearches <= 0 ? 'wait' : 'ready';
           const spot = SPOTS[i];
           return (
             <button
@@ -434,6 +438,7 @@ export function ShopScreen({ shopId, onNoEnergy, onLevelUp }: {
               disabled={state === 'done'} aria-label={fx.name} onClick={() => tap(fx)}
             >
               <span class="fx-art"><FixtureGoods fx={fx} shopId={shopId} /></span>
+              <span class="fx-name">{fx.name}</span>
               {state === 'ready' && <span class="fx-sparkles"><i>✦</i><i>✦</i><i>✧</i></span>}
               {state === 'wait' && <span class="fx-timer">⏱ {mmss(readyAt - now)}</span>}
               {state === 'done' && <span class="fx-done">✓ Всё найдено</span>}
@@ -486,40 +491,136 @@ export function ShopScreen({ shopId, onNoEnergy, onLevelUp }: {
           <button class="btn" onClick={() => setCollection(false)}>Закрыть</button>
         </Modal>
       )}
-      {result && <ResultModal r={result} onClose={close} />}
+      {result && <FindScreen r={result.r} fx={result.fx} shopId={shopId} onClose={close} />}
     </div>
   );
 }
 
-function ResultModal({ r, onClose }: { r: SearchResult; onClose: (lu: LevelUp | null) => void }) {
+/** How long the rummaging lasts, and when the glow hints at a rare find. */
+const DIG_MS = 2000;
+const HINT_MS = 900;
+/** Reveal colours: very rare finds glow gold. */
+const REVEAL_COLOUR: Record<string, string> = { common: '#8C9AAE', rare: '#3D8BFD', epic: '#F0B323' };
+
+/**
+ * A search, full screen (nothing scrolls, every button fits): first she rummages through the
+ * shelf — pieces fly out — and after a moment a blue or gold glow gives away a rare or very rare
+ * find; then the piece drops in with its rarity glow, price and buttons.
+ */
+function FindScreen({ r, fx, shopId, onClose }: {
+  r: SearchResult; fx: Fixture; shopId: string; onClose: (lu: LevelUp | null) => void;
+}) {
   const g = useGame();
   const { item } = r;
+  const [phase, setPhase] = useState<'dig' | 'hint' | 'reveal'>('dig');
+  const [tryOn, setTryOn] = useState(false);
+  /** Set when this purchase completed the shelf: the screen then shows the diamond bonus. */
+  const [bought, setBought] = useState<BuyResult | null>(null);
+  const rc = REVEAL_COLOUR[item.rarity];
+  const special = item.rarity !== 'common';
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase((p) => (p === 'dig' && special ? 'hint' : p)), HINT_MS);
+    const t2 = setTimeout(() => setPhase('reveal'), DIG_MS);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
   const owned = g.owned.includes(item.id);
-  const canAfford = g.coins >= item.price;
-  return (
-    <Modal onClose={() => onClose(r.levelUp)}>
-      <div class={'reveal ' + item.rarity} style={{ '--rc': RARITY[item.rarity].color }}>
-        <RarityTag item={item} />
-        {r.pity && <span class="pity">Гарант!</span>}
-        <div class="reveal-item">
-          <ItemThumb item={item} />
-        </div>
-        <h2>{item.name}</h2>
-        <p class="price">🪙 {fmt(item.price)}</p>
+  const afford = canAfford(item, g);
+  const short = g.coins < item.price ? 'Не хватает монет' : 'Не хватает алмазиков';
+  const purchase = () => {
+    const b = buy(item.id);
+    if (b.ok && b.shelfGems) setBought(b);
+    else onClose(b.levelUp ?? r.levelUp);
+  };
+  // the pieces that fly out while she rummages: a few from this shelf
+  // (never the found piece itself, so the surprise holds)
+  const flying = useMemo(() => {
+    const others = fx.items.filter((i) => i.id !== item.id);
+    return Array.from({ length: 6 }, (_, i) => others[(i * 3) % Math.max(1, others.length)]).filter(Boolean);
+  }, [fx.id, item.id]);
+
+  let body;
+  if (bought) {
+    body = (
+      <div class="find-done">
+        <div class="burst">🏆</div>
+        <h2>Полка собрана!</h2>
+        <p>Ты купила все вещи с этой полки.</p>
+        <ul class="rewards inline"><li>💎 +{bought.shelfGems}</li></ul>
+        <button class="btn primary" onClick={() => onClose(bought.levelUp ?? r.levelUp)}>Забрать</button>
       </div>
-      {owned ? (
-        <>
-          <p class="muted">Уже есть в гардеробе</p>
-          <button class="btn primary" onClick={() => onClose(r.levelUp)}>Дальше</button>
-        </>
-      ) : (
-        <>
-          <button class="btn primary" disabled={!canAfford} onClick={() => { const b = buy(item.id); onClose(b.levelUp ?? r.levelUp); }}>
-            {canAfford ? `Купить за ${fmt(item.price)} 🪙` : 'Не хватает монет'}
-          </button>
-          <button class="btn" onClick={() => onClose(r.levelUp)}>Пропустить</button>
-        </>
-      )}
-    </Modal>
+    );
+  } else if (phase !== 'reveal') {
+    body = (
+      <button class={'find-dig ' + phase} onClick={() => setPhase('reveal')} aria-label="Пропустить анимацию">
+        <span class="find-glow" aria-hidden="true" />
+        <span class={`find-shelf fixture ${fx.look}`}><span class="fx-art"><FixtureGoods fx={fx} shopId={shopId} /></span></span>
+        <span class="find-fly" aria-hidden="true">
+          {flying.map((it, i) => <span class="fly" style={{ '--i': i, '--x': `${(i - 2.5) * 110}%`, '--r': `${(i - 2.5) * 16}deg` }}><ItemThumb item={it} /></span>)}
+        </span>
+        <b class="find-caption">
+          {phase === 'hint'
+            ? (item.rarity === 'epic' ? 'Ого! Тут что-то очень редкое…' : 'Кажется, тут что-то редкое…')
+            : `Роемся: ${fx.name.toLowerCase()}…`}
+        </b>
+      </button>
+    );
+  } else {
+    body = (
+      <>
+        <div class="find-top">
+          {special
+            ? <p class="reveal-banner">✨ {item.rarity === 'epic' ? 'Очень редкая находка!' : 'Редкая находка!'} ✨</p>
+            : <p class="find-plain">Нашлось!</p>}
+          <span class="find-tags">
+            <span class="rarity" style={{ background: rc }}>{RARITY[item.rarity].name}</span>
+            {r.pity && <span class="pity">Гарант!</span>}
+          </span>
+        </div>
+        <div class="find-stage">
+          {special && <span class="reveal-rays" aria-hidden="true" />}
+          {special && <span class="reveal-sparks" aria-hidden="true"><i>✦</i><i>✧</i><i>✦</i><i>✧</i><i>✦</i><i>✧</i></span>}
+          <div class="find-item">
+            {tryOn
+              ? <Doll class="doll" look={g.look} outfit={withItem(g.outfit, item)} view={FIGURE_VIEW} />
+              : <ItemThumb item={item} />}
+          </div>
+        </div>
+        <div class="find-info">
+          <h2>{item.name}</h2>
+          {r.lucky && <p class="muted small lucky">Такие вещи попадаются нечасто — а тебе повезло в первый же день!</p>}
+          <p class="price"><Price item={item} /></p>
+        </div>
+        <div class="find-actions">
+          {owned ? (
+            <>
+              <p class="muted">Уже есть в гардеробе</p>
+              <button class="btn primary" onClick={() => onClose(r.levelUp)}>Дальше</button>
+            </>
+          ) : (
+            <>
+              <div class="btn-row">
+                <button class="btn" onClick={() => setTryOn(!tryOn)}>{tryOn ? '👗 Вещь' : '🪞 Примерить'}</button>
+                <button class="btn" onClick={() => onClose(r.levelUp)}>Пропустить</button>
+              </div>
+              <button class="btn primary" disabled={!afford} onClick={purchase}>
+                {afford ? <>Купить за <Price item={item} /></> : short}
+              </button>
+            </>
+          )}
+        </div>
+      </>
+    );
+  }
+
+  const app = document.querySelector('.app');
+  if (!app) return null;
+  return createPortal(
+    <div class={`find ${item.rarity} ${phase}`} style={{ '--rc': rc, '--sc': SHOPS.find((sh) => sh.id === shopId)?.color }}>
+      <span class="find-wallet"><Coin /> {fmt(g.coins)}{g.gems > 0 && <> · 💎 {g.gems}</>}</span>
+      {body}
+    </div>,
+    app,
   );
 }

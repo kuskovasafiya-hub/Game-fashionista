@@ -173,7 +173,31 @@ export interface Score {
   players: number;
 }
 
-export const STAR_THRESHOLDS = [0.3, 0.5, 0.68, 0.8];
+/**
+ * Stars are fractional, from MIN_STARS (the weakest look) to 5: piecewise linear in the
+ * total score through these points, so 4 / 4.5 / 5 stars sit where the old 3 / 4 / 5 did.
+ */
+export const MIN_STARS = 3.35;
+const STAR_CURVE: [total: number, stars: number][] = [[0.3, MIN_STARS], [0.5, 4], [0.68, 4.5], [0.8, 5]];
+
+export function starsFor(total: number): number {
+  if (total <= STAR_CURVE[0][0]) return MIN_STARS;
+  for (let i = 1; i < STAR_CURVE.length; i++) {
+    const [t1, s1] = STAR_CURVE[i];
+    const [t0, s0] = STAR_CURVE[i - 1];
+    if (total < t1) return Math.round((s0 + ((total - t0) / (t1 - t0)) * (s1 - s0)) * 100) / 100;
+  }
+  return 5;
+}
+
+/**
+ * Reward tier 2..5 for fractional stars: below 4 — tier 2, from 4 — 3 (a ticket back),
+ * from 4.5 — 4, a full 5 — the main prize.
+ */
+export const starTier = (stars: number) => (stars >= 5 ? 5 : stars >= 4.5 ? 4 : stars >= 4 ? 3 : 2);
+
+/** "3,35" / "5" for showing fractional stars. */
+export const starsText = (stars: number) => (Number.isInteger(stars) ? String(stars) : stars.toFixed(2).replace('.', ','));
 
 export function scoreLook(outfit: Outfit, ev: EventTemplate, seed: number): Score {
   const r = rng(seed);
@@ -186,7 +210,7 @@ export function scoreLook(outfit: Outfit, ev: EventTemplate, seed: number): Scor
     if (r() < sigmoid((mine - rival) / 0.1)) votes++;
   }
   const total = 0.4 * match + 0.6 * (votes / voters);
-  const stars = 1 + STAR_THRESHOLDS.filter((t) => total >= t).length;
+  const stars = starsFor(total);
   const players = 120 + Math.floor(r() * 260);
   const place = Math.max(1, Math.round(1 + Math.pow(1 - total, 1.6) * (players - 1) * (0.85 + r() * 0.3)));
   return { match, votes, voters, total, stars, place: Math.min(place, players), players };
@@ -194,12 +218,16 @@ export function scoreLook(outfit: Outfit, ev: EventTemplate, seed: number): Scor
 
 /* ---------- rewards ---------- */
 
+/** Crystals instead of a main prize the player already has. */
+export const DUP_PRIZE_GEMS: Record<Rarity, number> = { common: 1, rare: 3, epic: 8 };
+
 export interface Reward { coins: number; energy: number; tickets: number; gems: number; xp: number; item?: string }
 
-const STAR_COINS = [0, 60, 150, 300, 500, 800];
+const STAR_COINS = [0, 100, 250, 450, 700, 1100];
 const STAR_ENERGY = [0, 0, 2, 3, 5, 5];
 
-export function rewardFor(ev: GameEvent, stars: number): Reward {
+export function rewardFor(ev: GameEvent, starsOrTier: number): Reward {
+  const stars = starTier(starsOrTier);
   const mult = 1 + 0.5 * (ev.cost - 1);
   return {
     coins: Math.round((STAR_COINS[stars] * mult) / 10) * 10,

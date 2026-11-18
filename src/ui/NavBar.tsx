@@ -14,12 +14,14 @@ const LABELS: Record<Tab, string> = {
 };
 
 /** The bottom menu: four icon tabs. The wardrobe opens from the home screen. */
-export function NavBar({ active, go, badges, locked = [] }: {
+export function NavBar({ active, go, badges, locked = [], pulse }: {
   active: Tab; go: (t: Tab) => void; badges: Partial<Record<Tab, ComponentChildren>>; locked?: Tab[];
+  /** Tutorial: the tab to tap next bounces. */
+  pulse?: Tab;
 }) {
   const item = (t: Tab, icon: ComponentChildren) => (
     <button
-      class={'nav-item' + (active === t ? ' active' : '') + (locked.includes(t) ? ' locked' : '')}
+      class={'nav-item' + (active === t ? ' active' : '') + (locked.includes(t) ? ' locked' : '') + (pulse === t ? ' coach-pulse' : '')}
       onClick={() => go(t)} aria-label={LABELS[t]}
     >
       <span class="nav-icon">

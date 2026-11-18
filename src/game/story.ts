@@ -1,4 +1,5 @@
 import type { Tag } from './catalog';
+import { MIN_STARS } from './events';
 
 /**
  * The story: a long chain of scenes played one after another, always available,
@@ -122,21 +123,29 @@ export const STORY_STEPS: StoryStep[] = CHAPTERS.flatMap((c) => c.steps);
 export const chapterOf = (stepId: string) => CHAPTERS[Number(stepId.split('.')[0]) - 1];
 export const stepById = (id: string) => STORY_STEPS.find((s) => s.id === id);
 
-/** Stars for a dress code match: pass, 80%, all of it. */
+/**
+ * Stars for a dress code match, fractional like in events: not passed — 0; a pass starts at
+ * MIN_STARS (3,35) and grows evenly to 5 at a 100% match.
+ */
 export function storyStars(step: StoryStep, match: number): number {
   if (match < step.need - 1e-9) return 0;
-  return match >= 0.999 ? 3 : match >= 0.8 ? 2 : 1;
+  if (match >= 0.999) return 5;
+  const k = (match - step.need) / Math.max(0.01, 1 - step.need);
+  return Math.min(4.99, Math.round((MIN_STARS + k * (5 - MIN_STARS)) * 100) / 100);
 }
+
+/** Saves from the 3-star story: 1 / 2 / 3 → 3,35 / 4,2 / 5 (new values are never 1–3). */
+export const migrateStoryStars = (n: number) => (n > 0 && n <= 3 ? [0, MIN_STARS, 4.2, 5][Math.round(n)] : n);
 
 export interface StoryReward { coins: number; xp: number; gems: number; energy: number }
 
-/** First pass pays coins and XP, growing with the chapter; the first three stars add a crystal and coffee. */
-export function storyReward(step: StoryStep, firstPass: boolean, firstThree: boolean): StoryReward {
+/** First pass pays coins and XP, growing with the chapter; the first five stars add a diamond and coffee. */
+export function storyReward(step: StoryStep, firstPass: boolean, firstFive: boolean): StoryReward {
   const ch = Number(step.id.split('.')[0]);
   return {
     coins: firstPass ? 60 + 40 * ch : 0,
     xp: firstPass ? 20 + 8 * ch : 0,
-    gems: firstThree ? 1 : 0,
-    energy: firstThree ? 2 : 0,
+    gems: firstFive ? 1 : 0,
+    energy: firstFive ? 2 : 0,
   };
 }

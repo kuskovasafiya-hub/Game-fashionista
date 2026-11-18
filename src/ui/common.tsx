@@ -43,7 +43,7 @@ export function Hud({ onEnergy, onTickets }: { onEnergy: () => void; onTickets: 
           <i>☕<b>+</b></i>{g.energy}/{ENERGY_MAX}
           {left > 0 && <small>{mmss(left)}</small>}
         </button>
-        <span class="cur"><i>🪙</i>{fmt(g.coins)}</span>
+        <span class="cur"><i><Coin /></i>{fmt(g.coins)}</span>
         <span class="cur"><i>💎</i>{g.gems}</span>
         <button class="cur" onClick={onTickets}><i>🎟<b>+</b></i>{g.tickets}</button>
       </div>
@@ -84,7 +84,7 @@ export function LevelUpModal({ lu, onClose }: { lu: LevelUp; onClose: () => void
       <div class="burst">⭐</div>
       <h2>Уровень {lu.level}!</h2>
       <ul class="rewards">
-        <li>🪙 +{fmt(lu.coins)}</li>
+        <li><Coin /> +{fmt(lu.coins)}</li>
         <li>💎 +{lu.gems}</li>
         <li>☕ Энергия восстановлена, +5 сверху</li>
         {lu.shops.map((s) => <li>🛍️ Открыт магазин «{s}»</li>)}
@@ -144,5 +144,31 @@ export function DressCode({ tags, label }: { tags: Tag[]; label?: boolean }) {
       {label && <span class="chips-label">Подходят:</span>}
       {tags.map((t) => <span class={'chip tag-' + t}><TagIcon tag={t} />{TAG_NAMES[t]}</span>)}
     </span>
+  );
+}
+
+/** The coin: a small gold disc drawn in CSS (the 🪙 emoji is silver on most phones). */
+export function Coin() {
+  return <i class="coin" role="img" aria-label="монеты" />;
+}
+
+/** Price of an item: coins, plus diamonds for the rarest Premium pieces. */
+export function Price({ item }: { item: Item }) {
+  return <><Coin /> {fmt(item.price)}{item.gems ? <> + 💎 {item.gems}</> : null}</>;
+}
+
+/**
+ * A tutorial hint: a speech bubble from the shop assistant above the bottom menu.
+ * It can be hidden for this screen with the cross; the highlighted target pulses on its own.
+ */
+export function Coach({ children, top }: { children: ComponentChildren; top?: boolean }) {
+  const [hidden, setHidden] = useState(false);
+  if (hidden) return null;
+  return (
+    <div class={'coach' + (top ? ' top' : '')} role="status">
+      <span class="coach-face">💁‍♀️</span>
+      <div class="coach-text">{children}</div>
+      <button class="coach-x" onClick={() => setHidden(true)} aria-label="Скрыть подсказку">✕</button>
+    </div>
   );
 }

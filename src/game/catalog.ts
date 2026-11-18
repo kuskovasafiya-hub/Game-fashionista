@@ -1,3 +1,5 @@
+import layers from '../art/layers.json';
+
 export type Slot = 'top' | 'bottom' | 'dress' | 'shoes' | 'necklace' | 'earrings' | 'glasses' | 'bracelet' | 'bag';
 export type Rarity = 'common' | 'rare' | 'epic';
 export type Dept = 'clothes' | 'shoes' | 'accessories';
@@ -13,6 +15,8 @@ export interface Item {
   slot: Slot;
   rarity: Rarity;
   price: number;
+  /** Diamonds paid on top of the coin price (the rarest Premium pieces). */
+  gems?: number;
   shop: string;
   tags: Tag[];
 }
@@ -29,9 +33,9 @@ export interface Shop {
 }
 
 export const RARITY: Record<Rarity, { name: string; color: string; chance: number; price: [number, number]; xp: number }> = {
-  common: { name: 'Обычная', color: '#8C9AAE', chance: 0.75, price: [100, 300], xp: 5 },
-  rare: { name: 'Редкая', color: '#3D8BFD', chance: 0.2, price: [600, 1200], xp: 15 },
-  epic: { name: 'Очень редкая', color: '#B04CE0', chance: 0.05, price: [2500, 5000], xp: 40 },
+  common: { name: 'Обычная', color: '#8C9AAE', chance: 0.75, price: [60, 180], xp: 5 },
+  rare: { name: 'Редкая', color: '#3D8BFD', chance: 0.2, price: [350, 700], xp: 15 },
+  epic: { name: 'Очень редкая', color: '#B04CE0', chance: 0.05, price: [1500, 3000], xp: 40 },
 };
 
 export const DEPT_SLOTS: Record<Dept, Slot[]> = {
@@ -97,6 +101,9 @@ const ART_SLOT: Record<string, Slot> = {
   'acc-bracelet-charm': 'bracelet', 'top-halter': 'top', 'top-babytee': 'top',
   'acc-bag-baguette': 'bag', 'dress-chiffon': 'dress', 'top-oneshoulder': 'top',
   'shoes-glitter': 'shoes', 'dress-tshirt': 'dress', 'top-polo': 'top',
+  // city batches (art-src/v2/batches/city-a.tsv, city-b.tsv): many everyday pieces for the newbie shop
+  'dress-tiered': 'dress', 'dress-knit': 'dress', 'dress-floral': 'dress', 'dress-polka': 'dress', 'top-tank': 'top', 'top-flannel': 'top', 'top-sweatshirt': 'top', 'top-peasant': 'top', 'top-bomber': 'top', 'top-breton': 'top', 'bottom-wide': 'bottom', 'bottom-denimskirt': 'bottom', 'bottom-flare': 'bottom', 'bottom-bermuda': 'bottom', 'bottom-tiered': 'bottom', 'bottom-cords': 'bottom',
+  'shoes-canvas': 'shoes', 'shoes-flatsandals': 'shoes', 'shoes-chunky': 'shoes', 'shoes-boots-rain': 'shoes', 'shoes-boots-cozy': 'shoes', 'acc-bag-straw': 'bag', 'acc-bag-saddle': 'bag', 'acc-bag-canvas': 'bag', 'acc-bag-hobo': 'bag', 'acc-round': 'glasses', 'acc-retro': 'glasses',
 };
 
 /** Style tags of each piece of art: what dress codes it fits. */
@@ -141,12 +148,14 @@ const ART_TAGS: Record<string, Tag[]> = {
   'acc-bracelet-charm': ['casual', 'party'], 'top-halter': ['party', 'beach'], 'top-babytee': ['casual', 'party'],
   'acc-bag-baguette': ['party'], 'dress-chiffon': ['evening', 'party'], 'top-oneshoulder': ['evening', 'party'],
   'shoes-glitter': ['party', 'evening'], 'dress-tshirt': ['sport', 'casual'], 'top-polo': ['sport', 'casual'],
+  'dress-tiered': ['casual', 'beach'], 'dress-knit': ['casual', 'winter'], 'dress-floral': ['casual', 'party'], 'dress-polka': ['casual', 'party'], 'top-tank': ['casual', 'beach', 'sport'], 'top-flannel': ['casual', 'winter'], 'top-sweatshirt': ['casual', 'sport', 'winter'], 'top-peasant': ['casual', 'beach'], 'top-bomber': ['casual', 'party'], 'top-breton': ['casual'], 'bottom-wide': ['casual', 'beach'], 'bottom-denimskirt': ['casual', 'party'], 'bottom-flare': ['casual', 'party'], 'bottom-bermuda': ['casual', 'beach'], 'bottom-tiered': ['casual', 'beach'], 'bottom-cords': ['casual', 'winter'],
+  'shoes-canvas': ['casual', 'sport'], 'shoes-flatsandals': ['casual', 'beach'], 'shoes-chunky': ['casual', 'sport'], 'shoes-boots-rain': ['casual', 'winter'], 'shoes-boots-cozy': ['casual', 'winter'], 'acc-bag-straw': ['casual', 'beach'], 'acc-bag-saddle': ['casual'], 'acc-bag-canvas': ['casual'], 'acc-bag-hobo': ['casual', 'party'], 'acc-round': ['casual', 'beach'], 'acc-retro': ['casual', 'beach', 'party'],
 };
 /** A shop adds its own style to everything it sells. */
 const SHOP_TAGS: Record<string, Tag[]> = { glam: ['party'], evening: ['evening'], office: ['office'], sport: ['sport'], y2k: ['party'] };
 
 export const TAG_ICONS: Record<Tag, string> = {
-  casual: '☕', office: '💼', party: '🎉', evening: '🥂', sport: '🏃‍♀️', beach: '🌴', winter: '❄️',
+  casual: '🌼', office: '💼', party: '🎉', evening: '🥂', sport: '🏃‍♀️', beach: '🌴', winter: '❄️',
 };
 
 export const TAG_NAMES: Record<Tag, string> = {
@@ -187,16 +196,27 @@ const gone = (spec: Spec): Retired => ({ retired: spec });
 /** Every piece of art comes in at most this many colours across all shops. */
 export const MAX_COLOURS = 2;
 
+/**
+ * A piece goes on sale only once its art is built (a layer in layers.json): a batch whose catalog lines
+ * are written before build.py has run stays hidden instead of showing empty pictures and a bare doll.
+ */
+const BUILT = new Set(Object.keys(layers));
+export const artBuilt = (art: string) => BUILT.has(art) || BUILT.has(`${art}-front`) || BUILT.has(`${art}-back`);
+
 function add(shop: string, specs: (Spec | Retired)[]) {
   const seen: Record<string, number> = {};
   specs.forEach((entry) => {
     const [art, name, rarity = 'common', filter] = 'retired' in entry ? entry.retired : entry;
     seen[art] = (seen[art] ?? 0) + 1;
     if ('retired' in entry) return;
+    // ids are counted above, so a hidden piece keeps its id for when its art arrives
+    if (!artBuilt(art)) return;
     const id = `${shop}-${art}-${seen[art]}`;
     const [lo, hi] = RARITY[rarity].price;
     const price = shop === 'starter' ? 0 : Math.round((lo + (hi - lo) * hash(id)) / 10) * 10;
-    const item: Item = { id, name, art, filter, slot: ART_SLOT[art], rarity, price, shop, tags: [...new Set([...(ART_TAGS[art] ?? []), ...(SHOP_TAGS[shop] ?? [])])] };
+    // about half of the very rare Premium pieces cost coins + diamonds: 1 500 → 6 💎, 3 000 → 12 💎
+    const gems = shop === 'premium' && rarity === 'epic' && hash(`${id}:gems`) < 0.5 ? Math.round(price / 250) : undefined;
+    const item: Item = { id, name, art, filter, slot: ART_SLOT[art], rarity, price, gems, shop, tags: [...new Set([...(ART_TAGS[art] ?? []), ...(SHOP_TAGS[shop] ?? [])])] };
     ITEMS.push(item);
     ITEM_BY_ID[id] = item;
   });
@@ -245,29 +265,84 @@ add('city', [
   ['shoes-flats', 'Балетки «Мята»', 'common', TINT.mint],
   ['shoes-slipons', 'Слипоны «Облако»', 'common'],
   ['shoes-slipons', 'Слипоны «Олива»', 'common', 'sepia(0.6) saturate(1.6) hue-rotate(40deg) brightness(0.8)'],
-  ['dress-wrap', 'Платье «Терракота»', 'rare'],
-  ['dress-wrap', 'Платье «Шалфей»', 'rare', 'sepia(0.69) saturate(0.39) hue-rotate(76deg) brightness(1.37)'],
+  // common, so the dress rack follows the 75/20/5 drop chances (it used to hold only rare dresses)
+  ['dress-wrap', 'Платье «Терракота»', 'common'],
+  ['dress-wrap', 'Платье «Шалфей»', 'common', 'sepia(0.69) saturate(0.39) hue-rotate(76deg) brightness(1.37)'],
   ['top-denim', 'Джинсовка «Голубая»', 'rare'],
   ['top-denim', 'Джинсовка «Чёрная»', 'rare', TINT.noir],
   ['bottom-cargo', 'Карго «Олива»', 'common'],
   ['bottom-cargo', 'Карго «Песок»', 'common', 'sepia(0.8) saturate(1.2) brightness(1.3)'],
   ['acc-bag-bucket', 'Сумка-мешок «Карамель»', 'common', 'sepia(0.35) saturate(0.89) hue-rotate(348deg) brightness(0.80)'],
-  ['acc-bag-bucket', 'Сумка-мешок «Олива»', 'common', 'sepia(0.50) saturate(0.61) hue-rotate(20deg) brightness(0.62)'],
+  ['acc-bag-bucket', 'Сумка-мешок «Олива»', 'common', 'sepia(0.50) saturate(0.61) hue-rotate(20deg) brightness(0.62)'],  // the newbie shop: many everyday pieces, mostly common, so the first searches last (city-a/city-b batches)
+  ['dress-tiered', 'Платье «Ярусы-роза»', 'common'],
+  ['dress-tiered', 'Платье «Ярусы-небо»', 'common', 'sepia(0.40) saturate(0.70) hue-rotate(-143deg) brightness(1.16)'],
+  ['dress-knit', 'Платье-свитер «Крем»', 'common'],
+  ['dress-knit', 'Платье-свитер «Шоколад»', 'rare', 'grayscale(1) brightness(0.72) sepia(1) saturate(3.11) hue-rotate(-38deg) brightness(0.36)'],
+  ['dress-floral', 'Платье «Васильки»', 'common'],
+  ['dress-floral', 'Платье «Мятный сад»', 'rare', 'saturate(1.54) hue-rotate(116deg)'],
+  ['dress-polka', 'Платье «Горошек-вишня»', 'common'],
+  ['dress-polka', 'Платье «Горошек-нэви»', 'epic', 'sepia(0.35) saturate(0.75) hue-rotate(-117deg) brightness(0.57)'],
+  ['top-tank', 'Майка «Молоко»', 'common'],
+  ['top-tank', 'Майка «Графит»', 'common', 'grayscale(1) brightness(0.72) sepia(1) saturate(0.36) hue-rotate(-144deg) brightness(0.32)'],
+  ['top-flannel', 'Рубашка «Клетка-вишня»', 'common'],
+  ['top-flannel', 'Рубашка «Клетка-олива»', 'common', 'sepia(0.97) saturate(1.25) hue-rotate(27deg) brightness(1.03)'],
+  ['top-sweatshirt', 'Свитшот «Меланж»', 'common'],
+  ['top-sweatshirt', 'Свитшот «Лаванда»', 'common', 'grayscale(1) brightness(0.72) sepia(1) saturate(1.58) hue-rotate(-150deg) brightness(1.35)'],
+  ['top-peasant', 'Блузка «Деревенская»', 'common'],
+  ['top-peasant', 'Блузка «Небо»', 'common', 'grayscale(1) brightness(0.72) sepia(1) saturate(0.95) hue-rotate(-192deg) brightness(0.95)'],
+  ['top-bomber', 'Бомбер «Олива»', 'common'],
+  ['top-bomber', 'Бомбер «Нэви»', 'rare', 'sepia(0.37) saturate(2.59) hue-rotate(-182deg) brightness(0.40)'],
+  ['top-breton', 'Лонгслив «Тельняшка»', 'common'],
+  ['top-breton', 'Лонгслив «Полоска-вино»', 'common', 'saturate(2.34) hue-rotate(101deg)'],
+  ['bottom-wide', 'Брюки «Лён-шалфей»', 'common'],
+  ['bottom-wide', 'Брюки «Лён-терракота»', 'common', 'sepia(1) saturate(4.37) hue-rotate(-45deg) brightness(0.76)'],
+  ['bottom-denimskirt', 'Юбка «Деним»', 'common'],
+  ['bottom-denimskirt', 'Юбка «Чёрный деним»', 'common', TINT.noir],
+  ['bottom-flare', 'Клёш «Индиго»', 'common'],
+  ['bottom-flare', 'Клёш «Молоко»', 'rare', 'grayscale(1) brightness(0.72) sepia(1) saturate(0.12) hue-rotate(0deg) brightness(2.60)'],
+  ['bottom-bermuda', 'Бермуды «Молоко»', 'common'],
+  ['bottom-bermuda', 'Бермуды «Шалфей»', 'common', 'grayscale(1) brightness(0.72) sepia(1) saturate(0.61) hue-rotate(58deg) brightness(0.86)'],
+  ['bottom-tiered', 'Юбка «Ярусы-лаванда»', 'common'],
+  ['bottom-tiered', 'Юбка «Ярусы-масло»', 'rare', 'sepia(0.91) saturate(1.76) hue-rotate(10deg) brightness(1.00)'],
+  ['bottom-cords', 'Вельвет «Шоколад»', 'common'],
+  ['bottom-cords', 'Вельвет «Бордо»', 'rare', 'sepia(0.13) saturate(3.25) hue-rotate(-30deg) brightness(0.95)'],
+  ['shoes-canvas', 'Кеды «Молоко»', 'common'],
+  ['shoes-canvas', 'Кеды «Пудра»', 'common', 'grayscale(1) brightness(0.72) sepia(1) saturate(1.53) hue-rotate(-55deg) brightness(1.10)'],
+  ['shoes-flatsandals', 'Сандалии «Шоколад»', 'common'],
+  ['shoes-flatsandals', 'Сандалии «Чёрные»', 'common', TINT.noir],
+  ['shoes-chunky', 'Кроссовки «Лаванда»', 'common'],
+  ['shoes-chunky', 'Кроссовки «Мята»', 'rare', 'saturate(0.85) hue-rotate(-124deg)'],
+  ['shoes-boots-rain', 'Резиновые сапоги «Вишня»', 'common'],
+  ['shoes-boots-rain', 'Резиновые сапоги «Нэви»', 'rare', 'sepia(0.36) saturate(0.78) hue-rotate(-116deg) brightness(0.64)'],
+  ['shoes-boots-cozy', 'Угги «Крем»', 'common'],
+  ['shoes-boots-cozy', 'Угги «Графит»', 'common', 'grayscale(1) brightness(0.72) sepia(1) saturate(0.36) hue-rotate(-144deg) brightness(0.35)'],
+  ['acc-bag-straw', 'Корзинка «Солома»', 'common'],
+  ['acc-bag-straw', 'Корзинка «Шоколад»', 'common', 'sepia(0.30) saturate(2.41) hue-rotate(-42deg) brightness(0.36)'],
+  ['acc-bag-saddle', 'Сумка-седло «Вишня»', 'common'],
+  ['acc-bag-saddle', 'Сумка-седло «Карамель»', 'rare', 'TBD'],
+  ['acc-bag-canvas', 'Шопер «Ромашка»', 'common'],
+  ['acc-bag-canvas', 'Шопер «Шалфей»', 'common', 'grayscale(1) brightness(0.72) sepia(1) saturate(0.61) hue-rotate(58deg) brightness(0.85)'],
+  ['acc-bag-hobo', 'Хобо «Шоколад»', 'common'],
+  ['acc-bag-hobo', 'Хобо «Олива»', 'rare', 'sepia(0.89) saturate(1.22) hue-rotate(26deg) brightness(1.45)'],
+  ['acc-round', 'Очки «Круглые-золото»', 'common'],
+  ['acc-round', 'Очки «Круглые-серебро»', 'common', TINT.silver],
+  ['acc-retro', 'Очки «Ретро-молоко»', 'common'],
+  ['acc-retro', 'Очки «Ретро-роза»', 'rare', 'grayscale(1) brightness(0.72) sepia(1) saturate(3.19) hue-rotate(-64deg) brightness(0.90)'],
 ]);
 
 add('y2k', [
   ['top-y2k', 'Топ «Бабочка»', 'rare'],
   ['top-y2k', 'Топ «Бабочка-мята»', 'rare', 'sepia(0.61) saturate(0.84) hue-rotate(134deg) brightness(0.96)'],
   ['top-cardigan', 'Кардиган «Облачко»'],
-  ['top-cardigan', 'Кардиган «Облачко-роза»', 'rare', 'hue-rotate(130deg)'],
+  ['top-cardigan', 'Кардиган «Облачко-роза»', 'common', 'hue-rotate(130deg)'],
   ['bottom-y2k', 'Мини «Звёздный ремень»'],
-  ['bottom-y2k', 'Мини «Звёздный ремень-нуар»', 'rare', TINT.noir],
+  ['bottom-y2k', 'Мини «Звёздный ремень-нуар»', 'common', TINT.noir],
   ['bottom-plaid', 'Мини «Клетка-роза»'],
-  ['bottom-plaid', 'Мини «Клетка-лаванда»', 'rare', 'hue-rotate(300deg)'],
-  ['bottom-velour', 'Брюки «Велюр-зефир»', 'rare'],
-  ['bottom-velour', 'Брюки «Велюр-лаванда»', 'rare', 'sepia(0.58) saturate(1.02) hue-rotate(256deg) brightness(0.95)'],
-  ['dress-y2k', 'Платье «Голограмма»', 'epic'],
-  ['dress-y2k', 'Платье «Голограмма-небо»', 'epic', 'sepia(0.97) saturate(1.19) hue-rotate(171deg) brightness(0.93)'],
+  ['bottom-plaid', 'Мини «Клетка-лаванда»', 'common', 'hue-rotate(300deg)'],
+  ['bottom-velour', 'Брюки «Велюр-зефир»', 'common'],
+  ['bottom-velour', 'Брюки «Велюр-лаванда»', 'common', 'sepia(0.58) saturate(1.02) hue-rotate(256deg) brightness(0.95)'],
+  ['dress-y2k', 'Платье «Голограмма»', 'rare'],
+  ['dress-y2k', 'Платье «Голограмма-небо»', 'rare', 'sepia(0.97) saturate(1.19) hue-rotate(171deg) brightness(0.93)'],
   ['shoes-platform', 'Туфли «Платформа-зефир»', 'rare'],
   ['shoes-platform', 'Туфли «Платформа-лаванда»', 'rare', 'hue-rotate(300deg)'],
   ['shoes-whiteboots', 'Сапоги «Снежок»', 'epic'],
@@ -275,35 +350,35 @@ add('y2k', [
   ['acc-shield', 'Очки «Футуризм»'],
   ['acc-shield', 'Очки «Футуризм-голубые»', 'common', 'hue-rotate(200deg)'],
   ['acc-choker', 'Чокер «Сердечко»'],
-  ['acc-choker', 'Чокер «Сердечко-золото»', 'rare', TINT.gold],
+  ['acc-choker', 'Чокер «Сердечко-золото»', 'common', TINT.gold],
   ['acc-bracelet', 'Браслет «Бабочка»'],
   ['acc-bracelet', 'Браслет «Бабочка-роза»', 'common', TINT.tintPink],
   ['acc-studs', 'Серьги «Бабочки»'],
-  ['acc-studs', 'Серьги «Бабочки-золото»', 'rare', TINT.gold],
-  ['top-halter', 'Топ «Халтер-зефир»', 'rare'],
-  ['top-halter', 'Топ «Халтер-лаванда»', 'rare', 'hue-rotate(300deg)'],
+  ['acc-studs', 'Серьги «Бабочки-золото»', 'common', TINT.gold],
+  ['top-halter', 'Топ «Халтер-зефир»', 'common'],
+  ['top-halter', 'Топ «Халтер-лаванда»', 'common', 'hue-rotate(300deg)'],
   ['top-babytee', 'Бэби-ти «Сердечко»', 'common'],
   ['top-babytee', 'Бэби-ти «Сердечко-мятное»', 'common', 'hue-rotate(200deg)'],
-  ['acc-bag-baguette', 'Багет «Сиреневые пайетки»', 'rare'],
-  ['acc-bag-baguette', 'Багет «Розовые пайетки»', 'rare', 'hue-rotate(60deg)'],
+  ['acc-bag-baguette', 'Багет «Сиреневые пайетки»', 'common'],
+  ['acc-bag-baguette', 'Багет «Розовые пайетки»', 'common', 'hue-rotate(60deg)'],
 ]);
 
 add('step', [
   gone(['shoes-sneakers', 'Кроссовки «Небо»', 'common', TINT.sky]),
   gone(['shoes-sneakers', 'Кроссовки «Лаванда»', 'common', TINT.lilac]),
-  ['shoes-sneakers', 'Кроссовки «Ночь»', 'rare', TINT.noir],
+  ['shoes-sneakers', 'Кроссовки «Ночь»', 'common', TINT.noir],
   ['shoes-heels', 'Туфли «Бордо»', 'common', 'sepia(1) saturate(4) hue-rotate(310deg) brightness(0.9)'],
   gone(['shoes-heels', 'Туфли «Нюд»', 'rare', 'invert(0.75) sepia(0.6) saturate(1.5)']),
   gone(['shoes-heels', 'Туфли «Серебро»', 'epic', 'invert(0.8) grayscale(1) brightness(1.1)']),
-  ['shoes-boots', 'Сапоги «Нуар»', 'rare'],
+  ['shoes-boots', 'Сапоги «Нуар»', 'common'],
   ['shoes-sandals', 'Босоножки «Золото»', 'common'],
   ['shoes-loafers', 'Лоферы «Коньяк»', 'common'],
   ['shoes-hightops', 'Кеды «Классика»'],
   ['shoes-maryjanes', 'Туфли «Мэри Джейн»', 'rare'],
   ['shoes-maryjanes', 'Туфли «Мэри Джейн нуар»', 'epic', 'grayscale(1) brightness(0.55) contrast(1.3)'],
-  ['shoes-runners', 'Кроссовки «Кобальт»', 'rare'],
-  ['shoes-runners', 'Кроссовки «Коралл»', 'rare', 'hue-rotate(150deg) saturate(1.4) brightness(1.3)'],
-  ['shoes-boots-chelsea', 'Челси «Шоколад»', 'rare'],
+  ['shoes-runners', 'Кроссовки «Кобальт»', 'common'],
+  ['shoes-runners', 'Кроссовки «Коралл»', 'common', 'hue-rotate(150deg) saturate(1.4) brightness(1.3)'],
+  ['shoes-boots-chelsea', 'Челси «Шоколад»', 'common'],
   ['shoes-boots-chelsea', 'Челси «Нуар»', 'rare', 'grayscale(1) brightness(0.8) contrast(1.15)'],
   ['shoes-slides', 'Слайды «Белые»', 'common'],
   ['shoes-slides', 'Слайды «Розовые»', 'common', TINT.tintPink],
@@ -315,61 +390,61 @@ add('glam', [
   gone(['acc-hoops', 'Серьги-кольца «Розовое золото»', 'rare', 'hue-rotate(320deg) saturate(1.2)']),
   gone(['acc-bag', 'Сумка «Пудра»', 'common', TINT.tintPink]),
   gone(['acc-bag', 'Сумка «Мята»', 'rare', TINT.tintMint]),
-  ['acc-bag', 'Сумка «Нуар»', 'epic', TINT.noir],
+  ['acc-bag', 'Сумка «Нуар»', 'rare', TINT.noir],
   ['acc-chain', 'Цепочка «Золото»'],
   ['acc-chain', 'Цепочка «Серебро»', 'common', TINT.silver],
   gone(['acc-pearls', 'Жемчуг «Белый»', 'rare']),
   ['acc-pearls', 'Жемчуг «Розовый»', 'epic', TINT.tintPink],
-  ['acc-ear-drops', 'Серьги «Капли»', 'rare'],
-  ['acc-ear-drops', 'Серьги «Капли-серебро»', 'rare', TINT.silver],
-  ['acc-bracelet-tennis', 'Браслет «Теннисный»', 'epic'],
-  ['acc-bracelet-tennis', 'Браслет «Теннисный-золото»', 'epic', TINT.gold],
-  ['acc-bag-clutch', 'Клатч «Золото»', 'epic'],
-  ['acc-bag-clutch', 'Клатч «Серебро»', 'epic', TINT.silver],
-  ['acc-neck-pendant', 'Кулон «Солнце»', 'rare'],
-  ['acc-neck-pendant', 'Кулон «Луна»', 'rare', TINT.silver],
+  ['acc-ear-drops', 'Серьги «Капли»', 'common'],
+  ['acc-ear-drops', 'Серьги «Капли-серебро»', 'common', TINT.silver],
+  ['acc-bracelet-tennis', 'Браслет «Теннисный»', 'rare'],
+  ['acc-bracelet-tennis', 'Браслет «Теннисный-золото»', 'rare', TINT.gold],
+  ['acc-bag-clutch', 'Клатч «Золото»', 'rare'],
+  ['acc-bag-clutch', 'Клатч «Серебро»', 'rare', TINT.silver],
+  ['acc-neck-pendant', 'Кулон «Солнце»', 'common'],
+  ['acc-neck-pendant', 'Кулон «Луна»', 'common', TINT.silver],
   ['acc-bracelet-bangles', 'Браслеты «Золотые кольца»', 'common'],
   ['acc-bracelet-bangles', 'Браслеты «Серебряные кольца»', 'common', TINT.silver],
   ['acc-studs-star', 'Серьги «Звёздочки»', 'common'],
   ['acc-studs-star', 'Серьги «Звёздочки-серебро»', 'common', TINT.silver],
-  ['acc-neck-pearl', 'Кулон «Жемчужная капля»', 'rare'],
-  ['acc-neck-pearl', 'Кулон «Жемчужная капля-серебро»', 'rare', TINT.silver],
-  ['acc-bag-mini', 'Мини-сумка «Лак-белый»', 'rare'],
-  ['acc-bag-mini', 'Мини-сумка «Лак-роза»', 'rare', 'grayscale(1) brightness(0.72) sepia(1) saturate(2.94) hue-rotate(298deg) brightness(0.9)'],
+  ['acc-neck-pearl', 'Кулон «Жемчужная капля»', 'common'],
+  ['acc-neck-pearl', 'Кулон «Жемчужная капля-серебро»', 'common', TINT.silver],
+  ['acc-bag-mini', 'Мини-сумка «Лак-белый»', 'common'],
+  ['acc-bag-mini', 'Мини-сумка «Лак-роза»', 'common', 'grayscale(1) brightness(0.72) sepia(1) saturate(2.94) hue-rotate(298deg) brightness(0.9)'],
   ['acc-bracelet-charm', 'Браслет «Шармы»', 'common'],
   ['acc-bracelet-charm', 'Браслет «Шармы-серебро»', 'common', TINT.silver],
 ]);
 
 add('evening', [
-  ['dress-red', 'Платье «Алый шёлк»', 'rare'],
-  ['dress-red', 'Платье «Сапфир»', 'rare', 'hue-rotate(220deg)'],
+  ['dress-red', 'Платье «Алый шёлк»', 'common'],
+  ['dress-red', 'Платье «Сапфир»', 'common', 'hue-rotate(220deg)'],
   gone(['dress-red', 'Платье «Аметист»', 'epic', 'hue-rotate(270deg)']),
   ['dress-black', 'Платье «Полночь»', 'common', 'sepia(1) hue-rotate(190deg) saturate(3) brightness(1.4)'],
   gone(['shoes-heels', 'Туфли «Классика»', 'common']),
-  ['dress-gown', 'Платье «Изумрудный блеск»', 'epic'],
-  ['dress-gown', 'Платье «Сапфировый блеск»', 'epic', 'hue-rotate(100deg) saturate(1.3)'],
+  ['dress-gown', 'Платье «Изумрудный блеск»', 'rare'],
+  ['dress-gown', 'Платье «Сапфировый блеск»', 'rare', 'hue-rotate(100deg) saturate(1.3)'],
   gone(['dress-gown', 'Платье «Рубиновый блеск»', 'rare', 'hue-rotate(200deg) saturate(1.8) brightness(1.25)']),
   ['bottom-midi', 'Юбка-миди «Шампань»'],
   gone(['top-blouse', 'Блузка «Шёлк»']),
-  ['shoes-sandals', 'Босоножки «Серебро»', 'rare', TINT.silver],
-  ['top-bustier', 'Топ-бюстье «Нуар»', 'rare'],
-  ['top-bustier', 'Топ-бюстье «Бордо»', 'rare', 'sepia(1) saturate(4) hue-rotate(300deg) brightness(0.6)'],
-  ['top-sequin', 'Топ «Пайетки-серебро»', 'epic'],
-  ['top-sequin', 'Топ «Пайетки-шампань»', 'epic', 'sepia(0.7) saturate(1.4) brightness(1.05)'],
-  ['bottom-satin', 'Брюки «Изумрудный атлас»', 'rare'],
-  ['bottom-satin', 'Брюки «Ночной атлас»', 'rare', TINT.noir],
+  ['shoes-sandals', 'Босоножки «Серебро»', 'common', TINT.silver],
+  ['top-bustier', 'Топ-бюстье «Нуар»', 'common'],
+  ['top-bustier', 'Топ-бюстье «Бордо»', 'common', 'sepia(1) saturate(4) hue-rotate(300deg) brightness(0.6)'],
+  ['top-sequin', 'Топ «Пайетки-серебро»', 'rare'],
+  ['top-sequin', 'Топ «Пайетки-шампань»', 'rare', 'sepia(0.7) saturate(1.4) brightness(1.05)'],
+  ['bottom-satin', 'Брюки «Изумрудный атлас»', 'common'],
+  ['bottom-satin', 'Брюки «Ночной атлас»', 'common', TINT.noir],
   ['shoes-mules', 'Мюли «Изумруд»', 'epic'],
-  ['shoes-mules', 'Мюли «Сапфир»', 'epic', 'hue-rotate(80deg)'],
-  ['dress-cocktail', 'Коктейль «Ягода»', 'rare', 'sepia(0.88) saturate(2.97) hue-rotate(316deg) brightness(1.12)'],
-  ['dress-cocktail', 'Коктейль «Изумруд»', 'rare', 'sepia(0.77) saturate(1.42) hue-rotate(162deg) brightness(1.04)'],
-  ['bottom-tulle', 'Юбка «Фатин-лаванда»', 'rare'],
-  ['bottom-tulle', 'Юбка «Фатин-нуар»', 'rare', TINT.noir],
-  ['dress-chiffon', 'Платье «Шифон-небо»', 'rare'],
-  ['dress-chiffon', 'Платье «Шифон-слива»', 'rare', 'sepia(0.97) saturate(2.67) hue-rotate(244deg) brightness(0.58)'],
-  ['top-oneshoulder', 'Топ «Изумрудное плечо»', 'rare'],
-  ['top-oneshoulder', 'Топ «Сапфировое плечо»', 'rare', 'hue-rotate(80deg)'],
-  ['shoes-glitter', 'Балетки «Блёстки-серебро»', 'rare'],
-  ['shoes-glitter', 'Балетки «Блёстки-золото»', 'rare', TINT.gold],
+  ['shoes-mules', 'Мюли «Сапфир»', 'rare', 'hue-rotate(80deg)'],
+  ['dress-cocktail', 'Коктейль «Ягода»', 'common', 'sepia(0.88) saturate(2.97) hue-rotate(316deg) brightness(1.12)'],
+  ['dress-cocktail', 'Коктейль «Изумруд»', 'common', 'sepia(0.77) saturate(1.42) hue-rotate(162deg) brightness(1.04)'],
+  ['bottom-tulle', 'Юбка «Фатин-лаванда»', 'common'],
+  ['bottom-tulle', 'Юбка «Фатин-нуар»', 'common', TINT.noir],
+  ['dress-chiffon', 'Платье «Шифон-небо»', 'common'],
+  ['dress-chiffon', 'Платье «Шифон-слива»', 'common', 'sepia(0.97) saturate(2.67) hue-rotate(244deg) brightness(0.58)'],
+  ['top-oneshoulder', 'Топ «Изумрудное плечо»', 'common'],
+  ['top-oneshoulder', 'Топ «Сапфировое плечо»', 'common', 'hue-rotate(80deg)'],
+  ['shoes-glitter', 'Балетки «Блёстки-серебро»', 'common'],
+  ['shoes-glitter', 'Балетки «Блёстки-золото»', 'common', TINT.gold],
 ]);
 
 add('office', [
@@ -389,7 +464,7 @@ add('office', [
   ['acc-pearls', 'Жемчуг «Чёрный»', 'rare', TINT.noir],
   ['acc-tote', 'Сумка-тоут «Нуар»'],
   ['acc-tote', 'Сумка-тоут «Карамель»', 'rare', 'brightness(1.6) sepia(1) saturate(2.26) hue-rotate(348deg) brightness(1.36)'],
-  ['dress-sheath', 'Платье-футляр «Нэви»', 'rare'],
+  ['dress-sheath', 'Платье-футляр «Нэви»', 'epic'],
   ['dress-sheath', 'Платье-футляр «Вино»', 'rare', 'sepia(0.03) saturate(1.28) hue-rotate(102deg) brightness(1.27)'],
   ['dress-shirt', 'Платье-рубашка «Небо»', 'common'],
   ['dress-shirt', 'Платье-рубашка «Песок»', 'common', 'sepia(0.8) saturate(0.9) brightness(1.05)'],
@@ -425,7 +500,7 @@ add('sport', [
   ['bottom-joggers', 'Джоггеры «Графит»', 'common', 'brightness(0.55)'],
   ['bottom-bikers', 'Велосипедки «Чёрные»', 'common'],
   ['bottom-bikers', 'Велосипедки «Графит»', 'common', 'brightness(2.2)'],
-  ['bottom-tennis', 'Юбка «Теннис»', 'rare'],
+  ['bottom-tennis', 'Юбка «Теннис»', 'epic'],
   ['bottom-tennis', 'Юбка «Теннис-мята»', 'rare', 'sepia(0.45) saturate(2.00) hue-rotate(105deg) brightness(0.88)'],
   ['acc-bag-sport', 'Мини-сумка «Спорт-мята»', 'common'],
   ['acc-bag-sport', 'Мини-сумка «Спорт-ваниль»', 'common', 'sepia(1.00) saturate(1.79) hue-rotate(351deg) brightness(0.95)'],
@@ -511,6 +586,12 @@ const ART_NAMES: Record<string, string> = {
   'bottom-velour': 'Велюр', 'dress-y2k': 'Платья', 'shoes-platform': 'Платформы', 'shoes-whiteboots': 'Сапоги',
   'shoes-hightops': 'Кеды', 'shoes-maryjanes': 'Мэри Джейн',
   'acc-shield': 'Очки', 'acc-choker': 'Чокеры', 'acc-bracelet': 'Браслеты', 'acc-studs': 'Серьги',
+  'dress-tiered': 'Платья с ярусами', 'dress-knit': 'Платья-свитеры', 'dress-floral': 'Платья в цветочек', 'dress-polka': 'Платья в горошек', 'top-tank': 'Майки',
+  'top-flannel': 'Рубашки в клетку', 'top-sweatshirt': 'Свитшоты', 'top-peasant': 'Блузки', 'top-bomber': 'Бомберы', 'top-breton': 'Лонгсливы',
+  'bottom-wide': 'Широкие брюки', 'bottom-denimskirt': 'Джинсовые юбки', 'bottom-flare': 'Клёш', 'bottom-bermuda': 'Бермуды', 'bottom-tiered': 'Юбки с ярусами',
+  'bottom-cords': 'Вельвет', 'shoes-canvas': 'Кеды', 'shoes-flatsandals': 'Сандалии', 'shoes-chunky': 'Кроссовки', 'shoes-boots-rain': 'Резиновые сапоги',
+  'shoes-boots-cozy': 'Угги', 'acc-bag-straw': 'Корзинки', 'acc-bag-saddle': 'Сумки-сёдла', 'acc-bag-canvas': 'Шоперы', 'acc-bag-hobo': 'Хобо',
+  'acc-round': 'Круглые очки', 'acc-retro': 'Ретро-очки',
 };
 
 export interface Fixture { id: string; name: string; kind: FixtureKind; look: FixtureLook; items: Item[] }

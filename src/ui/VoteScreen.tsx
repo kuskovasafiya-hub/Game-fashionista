@@ -2,15 +2,16 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Doll, FIGURE_VIEW, ItemThumb, artUrl } from '../art/Doll';
 import { ITEM_BY_ID } from '../game/catalog';
 import {
-  botLook, eventByKey, rewardFor, rng, seedOf, votePair, type VotePair,
+  DUP_PRIZE_GEMS, botLook, eventByKey, rewardFor, starTier, starsText, rng, seedOf, votePair, type VotePair,
 } from '../game/events';
 import {
   MAJORITY_COINS, RUSH_GEMS, TICKET_GEMS, VOTES_PER_TICKET, buyTicket, canVote, castVote, claimEntry,
   rushEntry, useGame, type Entry, type LevelUp,
 } from '../game/store';
 import { voteTargetByKey, voteTargetFor, voteTargets, type VoteTarget } from '../game/vote';
-import { DressCode, Modal, fmt, plural } from './common';
+import { Coin, DressCode, Modal, fmt, plural } from './common';
 import { HEAD_VIEW, Stars, eventBg, timeLeft, useNow } from './EventsScreen';
+import { useSceneBackground } from './WardrobeScreen';
 
 const HEART = 'M12 21.4l-1.5-1.3C5.4 15.4 2 12.3 2 8.5 2 5.4 4.4 3 7.5 3c1.7 0 3.4.8 4.5 2.1C13.1 3.8 14.8 3 16.5 3 19.6 3 22 5.4 22 8.5c0 3.8-3.4 6.9-8.5 11.5L12 21.4z';
 
@@ -29,6 +30,12 @@ export function VoteLobby({ vote, toEvents, onLevelUp }: {
   const list = voteTargets(g.entries.map((e) => e.key), g.story, now);
   const on = voteTargetFor(list, Math.floor(g.votes / VOTES_PER_TICKET));
   const mine = [...g.entries].sort((a, b) => Number(!!a.claimed) - Number(!!b.claimed) || b.at - a.at);
+  const openEntry = open ? g.entries.find((e) => e.key === open) : undefined;
+
+  // a ready result is its own screen on the event picture, like a story scene result
+  if (open && openEntry && openEntry.resultAt <= now) {
+    return <EventResult entryKey={open} onClose={(lu) => { setOpen(null); if (lu) onLevelUp(lu); }} />;
+  }
 
   return (
     <div class="screen list vote-lobby">
@@ -48,9 +55,7 @@ export function VoteLobby({ vote, toEvents, onLevelUp }: {
         )}
       </section>
 
-      {open && (g.entries.find((e) => e.key === open)?.resultAt ?? 0) > Date.now()
-        ? <WaitModal entryKey={open} now={now} onClose={() => setOpen(null)} />
-        : open && <ResultModal entryKey={open} onClose={(lu) => { setOpen(null); if (lu) onLevelUp(lu); }} />}
+      {open && openEntry && <WaitModal entryKey={open} now={now} onClose={() => setOpen(null)} />}
     </div>
   );
 }
@@ -115,7 +120,7 @@ function LookStories({ entries, now, onOpen, toEvents }: {
               <span class="story-emoji">{ev.emoji}</span>
             </span>
             <span class="story-status">
-              {e.claimed ? <span class="story-stars">★ {e.score.stars}</span> : ready ? 'Итоги!' : timeLeft(e.resultAt - now)}
+              {e.claimed ? <span class="story-stars">★ {starsText(e.score.stars)}</span> : ready ? 'Итоги!' : timeLeft(e.resultAt - now)}
             </span>
             <span class="story-name">{ev.name}</span>
           </button>
@@ -149,50 +154,54 @@ function WaitModal({ entryKey, now, onClose }: { entryKey: string; now: number; 
 
 /* ---------- result of the player's look ---------- */
 
-function ResultModal({ entryKey, onClose }: { entryKey: string; onClose: (lu: LevelUp | null) => void }) {
+/** The result of the player's look: title card, the model in the scene, rewards and the button at the bottom. */
+function EventResult({ entryKey, onClose }: { entryKey: string; onClose: (lu: LevelUp | null) => void }) {
   const g = useGame();
   const e = g.entries.find((x) => x.key === entryKey);
   const ev = eventByKey(entryKey);
+  useSceneBackground(ev?.id);
   if (!e || !ev) return null;
   const { score } = e;
   const reward = rewardFor(ev, score.stars);
   const prize = reward.item ? ITEM_BY_ID[reward.item] : undefined;
   const dup = !!prize && g.owned.includes(prize.id) && !e.claimed;
   const claim = () => onClose(e.claimed ? null : claimEntry(entryKey)?.levelUp ?? null);
-  const verdict = ['', 'Не в тему', 'Неплохо', 'Хорошо!', 'Отлично!', 'Звезда вечера!'][score.stars];
+  const verdict = ['', '', 'Неплохо!', 'Хорошо!', 'Отлично!', 'Звезда вечера!'][starTier(score.stars)];
 
   return (
-    <Modal onClose={e.claimed ? () => onClose(null) : undefined}>
-      <p class="muted">{ev.emoji} {ev.name}</p>
-      <h2>{verdict}</h2>
-      <Stars n={score.stars} animate={!e.claimed} />
-      <div class="result-body">
-        <div class="result-doll"><Doll class="doll" look={e.look} outfit={e.outfit} /></div>
-        <ul class="result-stats">
-          <li><small>Дресс-код</small><b>{Math.round(score.match * 100)}%</b></li>
-          <li><small>Голоса</small><b>{score.votes} из {score.voters}</b></li>
-          <li><small>Место</small><b>{score.place} из {score.players}</b></li>
+    <div class="screen scene-result">
+      <div class="sr-head">
+        <p class="muted small">{ev.emoji} {ev.name}</p>
+        <div class="sr-title">
+          <h2>{verdict}</h2>
+          <Stars n={score.stars} animate={!e.claimed} label />
+        </div>
+        <ul class="rewards inline">
+          <li>Дресс-код <b>{Math.round(score.match * 100)}%</b></li>
+          <li>❤️ <b>{score.votes}/{score.voters}</b></li>
+          <li>Место <b>{score.place}</b></li>
         </ul>
       </div>
-      {e.claimed && <p class="muted small">Награда получена:</p>}
-      <ul class="rewards inline">
-        {reward.coins > 0 && <li>🪙 +{fmt(reward.coins)}</li>}
-        {reward.energy > 0 && <li>☕ +{reward.energy}</li>}
-        {reward.tickets > 0 && <li>🎟 +{reward.tickets}</li>}
-        {reward.gems > 0 && <li>💎 +{reward.gems}</li>}
-        <li>⭐ +{reward.xp} опыта</li>
-      </ul>
-      {prize && (
-        <div class="prize">
-          <ItemThumb item={prize} />
-          <span>Главный приз: <b>{prize.name}</b>{dup && <><br /><small>уже есть — вместо неё 🪙 +{fmt(prize.price)}</small></>}</span>
-        </div>
-      )}
-      {score.stars < 5 && !prize && (
-        <p class="muted small">За 5 звёзд — главный приз: {ITEM_BY_ID[ev.prize]?.name}</p>
-      )}
-      <button class="btn primary" onClick={claim}>{e.claimed ? 'Закрыть' : 'Забрать'}</button>
-    </Modal>
+      <div class="sr-doll"><Doll class="doll" look={e.look} outfit={e.outfit} /></div>
+      <div class="sr-foot">
+        {e.claimed && <p class="muted small">Награда получена:</p>}
+        <ul class="rewards inline">
+          {reward.coins > 0 && <li><Coin /> +{fmt(reward.coins)}</li>}
+          {reward.energy > 0 && <li>☕ +{reward.energy}</li>}
+          {reward.tickets > 0 && <li>🎟 +{reward.tickets}</li>}
+          {reward.gems > 0 && <li>💎 +{reward.gems}</li>}
+          <li>⭐ +{reward.xp}</li>
+        </ul>
+        {prize && (
+          <div class="prize">
+            <ItemThumb item={prize} />
+            <span>Главный приз: <b>{prize.name}</b>{dup && <><br /><small>уже есть — вместо неё 💎 +{DUP_PRIZE_GEMS[prize.rarity]}</small></>}</span>
+          </div>
+        )}
+        {score.stars < 5 && !prize && <p class="muted small">За 5 звёзд — главный приз: {ITEM_BY_ID[ev.prize]?.name}</p>}
+        <button class="btn primary" onClick={claim}>{e.claimed ? 'Закрыть' : 'Забрать'}</button>
+      </div>
+    </div>
   );
 }
 
@@ -268,7 +277,7 @@ export function VoteScreen({ targetKey, onLevelUp, onDone, onNext }: {
       <div class="vote-foot">
         {picked
           ? <p class="center vote-verdict">
-              {mine >= 50 ? <>Ты с большинством! 🪙 +{MAJORITY_COINS}</> : <>Смелый выбор!</>}
+              {mine >= 50 ? <>Ты с большинством! <Coin /> +{MAJORITY_COINS}</> : <>Смелый выбор!</>}
             </p>
           : <p class="center muted small">Голос <b>{shownVote}</b> из {VOTES_PER_TICKET} — в конце раунда 🎟</p>}
         <span class="vote-progress wide">
@@ -285,7 +294,7 @@ export function VoteScreen({ targetKey, onLevelUp, onDone, onNext }: {
           </p>
           <ul class="rewards inline">
             <li>🎟 +1</li>
-            {stats.majority > 0 && <li>🪙 +{stats.majority * MAJORITY_COINS}</li>}
+            {stats.majority > 0 && <li><Coin /> +{stats.majority * MAJORITY_COINS}</li>}
             <li>⭐ +5 опыта</li>
           </ul>
           <p class="muted small">Следующий раунд: <b>{nextEvent.emoji} {nextEvent.name}</b></p>

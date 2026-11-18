@@ -1,10 +1,10 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { Doll, FIGURE_VIEW, PORTRAIT_VIEW, artUrl } from '../art/Doll';
-import { ITEM_BY_ID, type Slot } from '../game/catalog';
+import type { Slot } from '../game/catalog';
 import { dressCodeMatch, fits, type Theme } from '../game/events';
-import { equip, ownedInSlot, sell, sellPrice, setLook, undressAll, useGame } from '../game/store';
-import { DressCode, ItemCard, Modal, RarityTag, UndressButton, fmt } from './common';
+import { equip, ownedInSlot, setLook, undressAll, useGame } from '../game/store';
+import { DressCode, ItemCard, UndressButton } from './common';
 import { Icon, type IconName } from './icons';
 import { LookGrid, type LookPart } from './LookEditor';
 
@@ -33,12 +33,10 @@ export function WardrobeScreen({ event, footer }: { event?: Theme; footer?: Comp
   /** In the hair tab: hair colours instead of hairstyles, behind the colour wheel button. */
   const [dye, setDye] = useState(false);
   useSceneBackground(event?.id);
-  const [selling, setSelling] = useState<string | null>(null);
   const { look, slots } = TABS[tab];
   // choosing makeup: zoom in to her face and shoulders
   const view = look === 'makeup' ? PORTRAIT_VIEW : FIGURE_VIEW;
   const items = slots ? ownedIn(slots) : [];
-  const sellItem = selling ? ITEM_BY_ID[selling] : null;
   const shown = event ? [...items].sort((a, b) => Number(fits(b, event.tags)) - Number(fits(a, event.tags))) : items;
 
   return (
@@ -79,29 +77,17 @@ export function WardrobeScreen({ event, footer }: { event?: Theme; footer?: Comp
                   item={i} selected={g.outfit[i.slot] === i.id} onClick={() => equip(i.id)}
                   dressCode={event?.tags}
                 />
-                {!event && <button class="sell" title="Продать" onClick={() => setSelling(i.id)}>🪙</button>}
               </div>
             ))}
           </div>
           {slots && <p class="muted small center">
             {event
               ? 'Подходит вещь хотя бы с одной иконкой ивента — такие стоят первыми.'
-              : 'Нажми на вещь, чтобы надеть или снять. 🪙 — продать за 40% цены.'}
+              : 'Нажми на вещь, чтобы надеть или снять.'}
           </p>}
         </div>
       </div>
       {footer}
-      {sellItem && (
-        <Modal onClose={() => setSelling(null)}>
-          <h2>Продать?</h2>
-          <RarityTag item={sellItem} />
-          <p>{sellItem.name}</p>
-          <button class="btn primary" onClick={() => { sell(sellItem.id); setSelling(null); }}>
-            Продать за {fmt(sellPrice(sellItem))} 🪙
-          </button>
-          <button class="btn" onClick={() => setSelling(null)}>Оставить</button>
-        </Modal>
-      )}
     </div>
   );
 }
@@ -110,7 +96,7 @@ export function WardrobeScreen({ event, footer }: { event?: Theme; footer?: Comp
  * In the fitting room the event's or scene's picture fills the whole game screen, behind
  * the HUD too (the bottom menu stays white): set on .app while the fitting room is open.
  */
-function useSceneBackground(bg?: string) {
+export function useSceneBackground(bg?: string) {
   useEffect(() => {
     const app = document.querySelector<HTMLElement>('.app');
     if (!bg || !app) return;

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Doll, FIGURE_VIEW, ItemThumb, artUrl } from '../art/Doll';
 import { ITEM_BY_ID } from '../game/catalog';
-import { activeEvents, dressCodeMatch, eventByKey, hasClothes, showcaseLook, type GameEvent } from '../game/events';
+import { activeEvents, dressCodeMatch, starsText, eventByKey, hasClothes, showcaseLook, type GameEvent } from '../game/events';
 import { enterEvent, entryFor, useGame } from '../game/store';
 import { DressCode, Modal, plural } from './common';
-import { WardrobeScreen } from './WardrobeScreen';
+import { WardrobeScreen, useSceneBackground } from './WardrobeScreen';
 
 /** Themed scene behind the dolls; the event colour shows until the picture loads. */
 export const eventBg = (id: string) => `url(${artUrl('bg-' + id)})`;
@@ -30,10 +30,17 @@ export function timeLeft(ms: number) {
   return h ? `${h} ч ${m % 60} мин` : `${m} мин`;
 }
 
-export function Stars({ n, animate }: { n: number; animate?: boolean }) {
+/** Five stars, filled fractionally (3,35 → three full stars and a third of the fourth), with the number. */
+export function Stars({ n, animate, label }: { n: number; animate?: boolean; label?: boolean }) {
   return (
-    <span class={'stars' + (animate ? ' animate' : '')}>
-      {[1, 2, 3, 4, 5].map((k) => <i class={k <= n ? 'on' : ''} style={{ animationDelay: `${0.25 + k * 0.18}s` }}>★</i>)}
+    <span class={'stars' + (animate ? ' animate' : '')} title={starsText(n)}>
+      {[1, 2, 3, 4, 5].map((k) => {
+        const fill = Math.max(0, Math.min(1, n - (k - 1)));
+        return (
+          <i class={fill >= 1 ? 'on' : fill > 0 ? 'on part' : ''} style={{ animationDelay: `${0.25 + k * 0.18}s`, '--fill': `${fill * 100}%` }}>★</i>
+        );
+      })}
+      {label && <b class="stars-num">{starsText(n)}</b>}
     </span>
   );
 }
@@ -101,7 +108,9 @@ export function EventCard({ ev, now, onOpen }: { ev: GameEvent; now: number; onO
 
 /* ---------- one event: fitting room or the sent look ---------- */
 
-export function EventScreen({ eventKey, onDone, onTickets }: { eventKey: string; onDone: () => void; onTickets: () => void }) {
+export function EventScreen({ eventKey, onDone, onTickets, toVote }: {
+  eventKey: string; onDone: () => void; onTickets: () => void; toVote: () => void;
+}) {
   const g = useGame();
   const now = useNow();
   const [confirm, setConfirm] = useState(false);
@@ -112,20 +121,8 @@ export function EventScreen({ eventKey, onDone, onTickets }: { eventKey: string;
 
   if (!ev) return <div class="screen"><p class="muted center">Ивент не найден</p></div>;
 
-  if (entry && !sent) {
-    return (
-      <div class="screen sent" style={{ '--ec': ev.color }}>
-        <h1 class="title center">{ev.emoji} {ev.name}</h1>
-        <DressCode tags={ev.tags} label />
-        <div class="stage small scene" style={{ '--bg': eventBg(ev.id) }}><Doll class="doll" look={entry.look} outfit={entry.outfit} /></div>
-        <p class="center">
-          {entry.claimed ? <Stars n={entry.score.stars} />
-            : entry.resultAt > now ? <>Образ отправлен. Результат через <b>{timeLeft(entry.resultAt - now)}</b></>
-            : <b>Результат готов — загляни во вкладку «Голосование»</b>}
-        </p>
-      </div>
-    );
-  }
+  // the sent look is its own screen, like a story scene result (the fitting room is gone)
+  if (entry) return <EventSent ev={ev} justSent={sent} onDone={onDone} toVote={toVote} />;
 
   const closed = ev.end <= now;
   const submit = () => {
@@ -167,14 +164,39 @@ export function EventScreen({ eventKey, onDone, onTickets }: { eventKey: string;
           <button class="btn" onClick={() => setConfirm(false)}>Ещё подумаю</button>
         </Modal>
       )}
-      {sent && (
-        <Modal onClose={onDone}>
-          <div class="burst">📸</div>
-          <h2>Образ отправлен!</h2>
-          <p class="muted">Модницы голосуют. Результат будет через 30 минут во вкладке «Голосование». А пока голосуй сама — теперь это можно и в этом ивенте!</p>
-          <button class="btn primary" onClick={onDone}>К ивентам</button>
-        </Modal>
-      )}
     </>
+  );
+}
+
+/**
+ * A look sent to an event, on the event picture: title card with the status, the model in
+ * the scene, buttons at the bottom. Shown right after sending and whenever the event is reopened.
+ */
+function EventSent({ ev, justSent, onDone, toVote }: { ev: GameEvent; justSent: boolean; onDone: () => void; toVote: () => void }) {
+  const now = useNow();
+  useSceneBackground(ev.id);
+  const entry = entryFor(ev.key);
+  if (!entry) return null;
+  const ready = !entry.claimed && entry.resultAt <= now;
+  return (
+    <div class="screen scene-result">
+      <div class="sr-head">
+        <p class="muted small">{ev.emoji} {ev.name}</p>
+        <h2>{entry.claimed ? 'Итоги ивента' : justSent ? 'Образ отправлен! 📸' : ready ? 'Результат готов!' : 'Образ на голосовании'}</h2>
+        <ul class="rewards inline">
+          <li>Дресс-код <b>{Math.round(entry.score.match * 100)}%</b></li>
+          {entry.claimed ? <li><Stars n={entry.score.stars} label /></li>
+            : !ready && <li>⏱ {timeLeft(entry.resultAt - now)}</li>}
+        </ul>
+        {justSent && <p class="muted small">Модницы голосуют. А пока голосуй сама — теперь можно и в этом ивенте!</p>}
+      </div>
+      <div class="sr-doll"><Doll class="doll" look={entry.look} outfit={entry.outfit} /></div>
+      <div class="sr-foot">
+        {ready
+          ? <button class="btn primary" onClick={toVote}>Узнать результат</button>
+          : <button class="btn primary" onClick={toVote}>Голосовать</button>}
+        <button class="btn" onClick={onDone}>К ивентам</button>
+      </div>
+    </div>
   );
 }

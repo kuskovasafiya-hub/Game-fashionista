@@ -62,6 +62,7 @@ export function CreateScreen() {
           </button>
         ))}
       </nav>
+      <p class="tab-label">{TABS[tab].label}</p>
       <div class="split">
         <div class="split-left">
           <div class={'split-doll' + (part === 'makeup' ? ' portrait' : '')} style={{ '--fig-ratio': view[2] / view[3] }}>
@@ -91,6 +92,7 @@ export function CreateScreen() {
           )}
         </div>
       </div>
+      {!done && <p class="name-hint">Придумай имя модницы — и можно начинать</p>}
       <div class="create-footer">
         <input class="input" maxLength={16} placeholder="Имя модницы" value={name} onInput={(e) => setName(e.currentTarget.value)} />
         <button class="btn primary" disabled={!done} onClick={() => createCharacter(name.trim(), look, outfit)}>

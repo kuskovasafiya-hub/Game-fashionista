@@ -163,10 +163,6 @@ button:disabled { cursor: default; }
 .card.dim .badge { color: var(--muted); }
 .card-wrap { position: relative; }
 .card-wrap .card { width: 100%; }
-.sell {
-  position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%;
-  background: #fff; font-size: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-}
 .rarity { display: inline-block; padding: 3px 10px; border-radius: 999px; color: #fff; font-size: 12px; font-weight: 800; }
 
 /* Create & wardrobe */
@@ -217,7 +213,7 @@ button:disabled { cursor: default; }
 .reveal { position: relative; padding: 10px; border-radius: 24px; background: radial-gradient(circle at 50% 40%, #fff, #efe7fd); }
 .reveal.rare { background: radial-gradient(circle at 50% 40%, #fff, #dbeaff); }
 .reveal.epic { background: radial-gradient(circle at 50% 40%, #fff, #efd9fb); animation: glow 1.6s infinite alternate; }
-@keyframes glow { to { box-shadow: 0 0 24px var(--rc); } }
+@keyframes glow { from { box-shadow: 0 0 8px var(--rc); } to { box-shadow: 0 0 28px 4px var(--rc); } }
 .reveal-item {
   height: 34dvh; min-height: 220px; display: flex; align-items: center; justify-content: center;
   padding: 16px; filter: drop-shadow(0 6px 10px rgba(70, 50, 120, 0.18));
@@ -946,3 +942,195 @@ button:disabled { cursor: default; }
   border: 1px solid var(--line);
 }
 .undress:disabled { opacity: 0.45; }
+
+/* Tutorial: the assistant's hint above the bottom menu, and a pulsing ring on what to tap */
+.coach {
+  position: absolute; left: 12px; right: 12px; bottom: 10px; z-index: 6; display: flex; align-items: center; gap: 10px;
+  padding: 10px 34px 10px 10px; border-radius: 22px; background: #fff; animation: coach-in 0.35s;
+  box-shadow: 0 6px 22px rgba(80, 55, 150, 0.28), 0 0 0 2px var(--accent);
+}
+.coach-face {
+  flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%;
+  background: var(--tint, #efe7fd); font-size: 24px;
+}
+.coach-text { font-size: 14px; font-weight: 700; line-height: 1.3; text-align: left; }
+.coach-text small { display: block; margin-top: 2px; color: var(--muted); font-weight: 700; }
+.coach-x { position: absolute; top: 6px; right: 8px; padding: 4px; color: var(--muted); font-size: 13px; }
+@keyframes coach-in { from { transform: translateY(16px); opacity: 0; } }
+.coach-pulse { position: relative; animation: coach-pulse 1.3s infinite; }
+@keyframes coach-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(150, 110, 230, 0.55); }
+  60% { box-shadow: 0 0 0 10px rgba(150, 110, 230, 0); }
+}
+.nav-item.coach-pulse { animation: none; box-shadow: none; }
+.nav-item.coach-pulse .nav-icon { color: var(--accent); animation: coach-bounce 1s infinite; }
+@keyframes coach-bounce { 50% { transform: translateY(-5px); } }
+.gift-list { list-style: none; padding: 0; margin: 10px 0 14px; display: grid; gap: 6px; font-size: 18px; font-weight: 800; }
+.tab-label { margin: -2px 0 8px; text-align: center; font-size: 13px; font-weight: 800; color: var(--muted); }
+.name-hint { margin: 0 0 6px; text-align: center; font-size: 12px; color: var(--muted); }
+.fx-name {
+  position: absolute; left: 50%; top: -9px; z-index: 3; transform: translateX(-50%); padding: 1px 8px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95); color: var(--ink, #3a2f55); font-size: 10px; font-weight: 900; white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(70, 50, 120, 0.2);
+}
+.reveal-item .doll { height: 100%; width: auto; }
+.tryon { margin: 6px auto 0; }
+.coach.top { top: 6px; bottom: auto; }
+/* story result: its own screen on the scene picture — title card on top, the model in the scene,
+   buttons at the bottom; the model takes whatever height is left */
+.screen.scene-result {
+  height: 100%; display: flex; flex-direction: column; gap: 10px; padding: 8px 14px 14px; animation: fade 0.25s;
+}
+.sr-head, .sr-foot {
+  flex: none; padding: 8px 12px; border-radius: 26px; text-align: center;
+  background: rgba(255, 255, 255, 0.94); box-shadow: 0 6px 20px rgba(80, 55, 150, 0.2);
+}
+.sr-title { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.sr-head h2 { margin: 0; }
+.sr-head .rewards { margin: 6px 0 0; }
+.sr-head p, .sr-foot p { margin: 4px 0; }
+.sr-head .stars { font-size: 28px; }
+.sr-head .sr-title .stars:has(i:nth-child(4)) { font-size: 20px; }
+.sr-head > p.muted:first-child { margin: 0 0 2px; }
+.sr-foot .prize { margin: 4px 0; }
+.sr-doll { flex: 1; min-height: 0; display: flex; justify-content: center; animation: pop 0.35s; }
+.sr-doll .doll { height: 100%; filter: drop-shadow(0 8px 14px rgba(40, 25, 80, 0.3)); }
+.btn-row { display: flex; gap: 8px; }
+.btn-row .btn { flex: 1; min-width: 0; padding-left: 8px; padding-right: 8px; white-space: nowrap; font-size: 15px; }
+.sr-foot > .btn:first-child { margin-top: 0; }
+/* the result screen has its own buttons: no round back button over them */
+.view:has(.scene-result) .back { display: none; }
+/* a partly filled star: gold up to --fill, the rest pale */
+.stars i.part {
+  color: transparent; text-shadow: none;
+  background: linear-gradient(90deg, #ffb400 var(--fill), #e6dff3 var(--fill));
+  -webkit-background-clip: text; background-clip: text;
+}
+.stars-num { margin-left: 4px; align-self: center; font-size: 0.6em; color: var(--ink); }
+
+/* Rare finds glow: slow light rays behind the piece, twinkling sparks, a pulsing coloured halo */
+.reveal.rare, .reveal.epic { overflow: hidden; animation: glow 1.4s infinite alternate; }
+.reveal.rare { background: radial-gradient(circle at 50% 42%, #fff 0 30%, #d6e7ff 75%, #b9d5ff); }
+.reveal.epic { background: radial-gradient(circle at 50% 42%, #fff 0 30%, #f0dcfb 75%, #dfb8f5); }
+.reveal > :not(.reveal-rays):not(.reveal-sparks) { position: relative; z-index: 2; }
+.reveal-rays {
+  position: absolute; left: 50%; top: 42%; z-index: 0; width: 180%; aspect-ratio: 1; transform: translate(-50%, -50%);
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--rc) 30%, transparent) 0deg 9deg, transparent 9deg 24deg);
+  -webkit-mask: radial-gradient(circle, #000 0 22%, transparent 62%); mask: radial-gradient(circle, #000 0 22%, transparent 62%);
+  animation: rays 9s linear infinite;
+}
+@keyframes rays { to { transform: translate(-50%, -50%) rotate(360deg); } }
+.reveal.rare .reveal-item, .reveal.epic .reveal-item {
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--rc) 70%, #fff)) drop-shadow(0 6px 10px rgba(70, 50, 120, 0.2));
+  animation: float 2.4s ease-in-out infinite;
+}
+@keyframes float { 50% { transform: translateY(-6px); } }
+.reveal-sparks { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.reveal-sparks i {
+  position: absolute; font-style: normal; color: #fff; font-size: 18px;
+  text-shadow: 0 0 6px var(--rc), 0 0 12px var(--rc); animation: twinkle 1.8s ease-in-out infinite;
+}
+.reveal-sparks i:nth-child(1) { left: 12%; top: 18%; }
+.reveal-sparks i:nth-child(2) { right: 14%; top: 12%; font-size: 14px; animation-delay: 0.3s; }
+.reveal-sparks i:nth-child(3) { right: 9%; top: 48%; animation-delay: 0.6s; }
+.reveal-sparks i:nth-child(4) { left: 8%; top: 56%; font-size: 14px; animation-delay: 0.9s; }
+.reveal-sparks i:nth-child(5) { left: 22%; top: 78%; font-size: 12px; animation-delay: 1.2s; }
+.reveal-sparks i:nth-child(6) { right: 22%; top: 74%; animation-delay: 1.5s; }
+@keyframes twinkle { 0%, 100% { opacity: 0.15; transform: scale(0.6); } 50% { opacity: 1; transform: scale(1.15) rotate(20deg); } }
+.reveal-banner {
+  margin: 0 0 8px; font-size: 18px; font-weight: 900; color: var(--rc);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--rc) 45%, transparent); animation: pop 0.4s both, banner 1.4s 0.4s ease-in-out infinite;
+}
+@keyframes banner { 50% { transform: scale(1.06); } }
+.lucky { margin: 0 0 4px; color: var(--ink); font-weight: 700; }
+
+/* ---------- Search, full screen: rummaging → hint → the find drops in ---------- */
+.find {
+  --wood: #b98a62; --wood-dark: #a1734d;
+  position: absolute; inset: 0; z-index: 20; display: flex; flex-direction: column; align-items: stretch;
+  padding: calc(10px + env(safe-area-inset-top)) 16px calc(14px + env(safe-area-inset-bottom));
+  background: radial-gradient(circle at 50% 42%, #fff 0 25%, #f1ebfc 70%, #e6dcf8); animation: fade 0.2s; overflow: hidden;
+}
+.find.rare.reveal, .find.rare.hint { background: radial-gradient(circle at 50% 42%, #fff 0 22%, #d9e8ff 65%, #b5d1ff); }
+.find.epic.reveal, .find.epic.hint { background: radial-gradient(circle at 50% 42%, #fffbea 0 22%, #ffecb0 62%, #f6cf62); }
+.find-wallet {
+  align-self: center; flex: none; padding: 5px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.85);
+  font-size: 14px; font-weight: 800; box-shadow: var(--soft);
+}
+
+/* rummaging: the shelf shakes, pieces fly out of it */
+.find-dig {
+  position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+}
+.find-glow {
+  position: absolute; left: 50%; top: 45%; width: 90%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--rc) 55%, transparent), transparent 65%); opacity: 0; transition: opacity 0.5s;
+}
+.find-dig.hint .find-glow { opacity: 1; animation: hint-pulse 0.55s ease-in-out infinite alternate; }
+@keyframes hint-pulse { to { transform: translate(-50%, -50%) scale(1.15); } }
+.find-shelf.fixture {
+  position: relative; width: min(62vw, 260px); height: auto; aspect-ratio: 1 / 1.1; z-index: 1;
+  animation: dig 0.32s ease-in-out infinite;
+}
+.find-dig.hint .find-shelf { animation-duration: 0.2s; }
+@keyframes dig {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  25% { transform: rotate(-3deg) translateY(-3px); }
+  75% { transform: rotate(3deg) translateY(2px); }
+}
+.find-fly { position: absolute; left: 50%; top: 40%; z-index: 2; width: 0; height: 0; }
+.fly {
+  position: absolute; left: -36px; top: -36px; width: 72px; height: 72px; opacity: 0;
+  animation: fly 1.1s ease-out infinite; animation-delay: calc(var(--i) * 0.17s);
+}
+.fly .thumb { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(70, 50, 120, 0.25)); }
+@keyframes fly {
+  0% { opacity: 0; transform: translate(0, 30px) scale(0.4) rotate(0); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--x), -150px) scale(0.9) rotate(var(--r)); }
+}
+.find-caption { position: relative; z-index: 3; font-size: 18px; font-weight: 900; text-align: center; }
+.find-dig.hint .find-caption { color: color-mix(in srgb, var(--rc) 80%, #3d3155); animation: banner 0.7s ease-in-out infinite; }
+
+/* the find: top banner, the piece in the middle (takes what height is left), info, buttons at the bottom */
+.find-top { flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 8px; }
+.find-top .reveal-banner { margin: 0; color: color-mix(in srgb, var(--rc) 85%, #3d3155); }
+.find-plain { margin: 0; font-size: 18px; font-weight: 900; }
+.find-tags { display: flex; gap: 6px; align-items: center; }
+.find-tags .pity { margin: 0; }
+.find-stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.find-stage .reveal-rays { top: 50%; width: 150%; }
+.find-stage .reveal-sparks { z-index: 2; }
+.find-item {
+  position: relative; z-index: 1; height: 100%; max-height: 360px; width: 100%; display: flex; align-items: center; justify-content: center;
+  padding: 8px; animation: drop 0.65s cubic-bezier(0.3, 1.5, 0.6, 1) both;
+}
+.find-item .thumb { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 8px 12px rgba(70, 50, 120, 0.22)); }
+.find-item .doll { height: 100%; width: auto; }
+.find.rare .find-item .thumb, .find.epic .find-item .thumb {
+  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--rc) 75%, #fff)) drop-shadow(0 8px 12px rgba(70, 50, 120, 0.2));
+  animation: float 2.4s 0.7s ease-in-out infinite;
+}
+@keyframes drop { from { transform: translateY(-110%) scale(0.6) rotate(-8deg); opacity: 0; } 60% { opacity: 1; } }
+.find-info { flex: none; text-align: center; }
+.find-info h2 { margin: 4px 0 0; font-size: 22px; }
+.find-info .price { margin: 2px 0; }
+.find-actions { flex: none; }
+.find-actions .btn-row .btn { margin-top: 6px; }
+.find-actions > .btn.primary { margin-top: 8px; }
+.find-done { margin: auto 0; text-align: center; }
+/* very rare: gold everywhere */
+.find.epic .reveal-banner { color: #b07800; text-shadow: 0 0 12px rgba(255, 196, 0, 0.7); }
+.find.epic .reveal-sparks i { color: #fff8d6; }
+
+/* the gold coin (replaces the silver 🪙 emoji) */
+.coin {
+  position: relative; display: inline-block; width: 1em; height: 1em; flex: none; border-radius: 50%; font-style: normal;
+  vertical-align: -0.14em;
+  background: radial-gradient(circle at 34% 30%, #fff7cf 0 12%, #ffd64a 34%, #f0a90f 72%, #c98200);
+  box-shadow: inset 0 0 0 0.07em #b97700, inset 0 0 0 0.15em #ffe27a, 0 0.05em 0.08em rgba(120, 80, 0, 0.35);
+}
+.coin::after {
+  content: ''; position: absolute; inset: 30%; border-radius: 50%;
+  border: 0.06em solid rgba(176, 112, 0, 0.55); border-top-color: rgba(255, 246, 200, 0.8);
+}

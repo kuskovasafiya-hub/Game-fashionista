@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'preact/hooks';
 import { DEFAULT_LOOK, type Look, type Outfit } from '../art/Doll';
-import { DEPT_SLOTS, ITEM_BY_ID, RARITY, SHOPS, shopFixtures, shopItems, type Dept, type Item, type Rarity, type Slot } from './catalog';
-import { RESULT_DELAY_MS, activeEvents, dressCodeMatch, eventByKey, hasClothes, rewardFor, scoreLook, seedOf, type Reward, type Score } from './events';
-import { STORY_STEPS, chapterOf, stepById, storyReward, storyStars, type StoryReward } from './story';
+import { DEPT_SLOTS, ITEM_BY_ID, RARITY, SHOPS, STARTER, shopFixtures, shopItems, type Dept, type Item, type Rarity, type Slot } from './catalog';
+import { DUP_PRIZE_GEMS, EVENTS_LEVEL, RESULT_DELAY_MS, activeEvents, starsFor, dressCodeMatch, eventByKey, hasClothes, rewardFor, scoreLook, seedOf, type Reward, type Score } from './events';
+import { STORY_STEPS, chapterOf, migrateStoryStars, stepById, storyReward, storyStars, type StoryReward } from './story';
 
 export const ENERGY_MAX = 20;
 export const ENERGY_REGEN_MS = 6 * 60 * 1000;
@@ -14,14 +14,39 @@ export const SHELF_COOLDOWN_MS = 60 * 60 * 1000;
 /** Crystals to restock a fixture right away. */
 export const SHELF_RUSH_GEMS = 1;
 export const PITY_EPIC = 60;
-const SELL_SHARE = 0.4;
 export const START_TICKETS = 3;
 export const VOTES_PER_TICKET = 10;
 export const MAJORITY_COINS = 5;
 /** Crystals to see an event result right away. */
 export const RUSH_GEMS = 2;
 export const TICKET_GEMS = 3;
+/** Crystals for buying the last piece of a shop fixture. */
+export const SHELF_DONE_GEMS = 2;
 const SAVE_KEY = 'modshop-save-v2';
+
+/* ---------- first steps (tutorial) ---------- */
+
+/**
+ * The newcomer's path: a housewarming gift → shopping → trying it on in the wardrobe →
+ * the first story scene → events (from level 2). Each stage only shows hints; nothing is forced.
+ */
+export const TUT_STAGES = ['gift', 'shop', 'wardrobe', 'story', 'events', 'done'] as const;
+export type TutStage = typeof TUT_STAGES[number];
+/** The housewarming gift right after creating the character. */
+export const GIFT_COINS = 3000;
+export const GIFT_ENERGY = 30;
+/** The first searches ignore the shelf cooldown, so the gift can be spent at once. */
+export const NEWBIE_SEARCHES = 40;
+/** …and the very first ones find the cheapest common pieces of the shelf. */
+export const NEWBIE_COMMON = 6;
+/**
+ * The newcomer's lucky find: on her 3rd search in «Городской» a rare sundress always turns up
+ * (it also fits the beach scene of chapter 1). Shown with the rare glow and its own line.
+ */
+export const TUT_RARE_ID = 'city-dress-sundress-1';
+export const TUT_RARE_AT = 3;
+/** Purchases before the tutorial sends her to the wardrobe. */
+export const TUT_BUYS = 3;
 
 export interface Save {
   v: 1;
@@ -48,10 +73,14 @@ export interface Save {
   entries: Entry[];
   /** Has sent a look to an event at least once: voting opens after that. */
   voteUnlocked: boolean;
-  /** Best stars per story scene (story.ts step id); a scene is passed with 1+. */
+  /** Best stars per story scene (story.ts step id), 3,35–5; a scene is passed with anything above 0. */
   story: Record<string, number>;
   /** When each shop fixture (`<shop>:<fixture>`) can be searched again. */
   shelfAt: Record<string, number>;
+  /** Tutorial stage; saves from before it count as done. */
+  tut: TutStage;
+  /** Searches left that skip the shelf cooldown (newcomer's gift). */
+  freeSearches: number;
 }
 
 /** A look sent to an event. The score is rolled on submission and revealed at resultAt. */
@@ -77,13 +106,37 @@ function fresh(): Save {
     coins: 1500, gems: 10, energy: ENERGY_MAX, energyTs: Date.now(),
     level: 1, xp: 0, pityRare: 0, pityEpic: 0, adsDay: '', adsCount: 0,
     tickets: START_TICKETS, votes: 0, entries: [], voteUnlocked: false, story: {}, shelfAt: {},
+    tut: 'gift', freeSearches: 0,
+  };
+}
+
+/** The whole starter set from character creation always stays in the wardrobe. */
+const STARTER_IDS = STARTER.map((i) => i.id);
+function withStarter(s: Save): Save {
+  if (!s.created || STARTER_IDS.every((id) => s.owned.includes(id))) return s;
+  return {
+    ...s,
+    owned: [...new Set([...STARTER_IDS, ...s.owned])],
+    discovered: [...new Set([...STARTER_IDS, ...s.discovered])],
   };
 }
 
 function load(): Save {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) return { ...fresh(), ...JSON.parse(raw) };
+    if (raw) {
+      const data = JSON.parse(raw);
+      // a save from before the tutorial: that player already knows the game
+      if (data.created && !data.tut) data.tut = 'done';
+      // looks scored before fractional stars: recount from the stored total (old 1–5 → 3,35–5)
+      if (Array.isArray(data.entries)) {
+        data.entries = data.entries.map((e: Entry) => ({ ...e, score: { ...e.score, stars: starsFor(e.score.total) } }));
+      }
+      if (data.story) {
+        data.story = Object.fromEntries(Object.entries(data.story as Record<string, number>).map(([k, n]) => [k, migrateStoryStars(n)]));
+      }
+      return withStarter({ ...fresh(), ...data });
+    }
   } catch { /* storage unavailable: start fresh */ }
   return fresh();
 }
@@ -169,24 +222,51 @@ function withXp(s: Save, amount: number): [Save, LevelUp | null] {
 /* ---------- character ---------- */
 
 export function createCharacter(name: string, look: Look, outfit: Outfit) {
-  const worn = Object.values(outfit).filter(Boolean) as string[];
-  // Keep anything already owned: the debug panel can reopen this screen mid-game.
-  const owned = [...new Set([...state.owned, ...worn])];
-  const discovered = [...new Set([...state.discovered, ...worn])];
-  commit({ ...state, created: true, name, look, outfit, owned, discovered });
+  // Keep anything already owned (the debug panel can reopen this screen mid-game) plus the whole starter set.
+  commit(withStarter({ ...state, created: true, name, look, outfit }));
+}
+
+const tutIndex = (t: TutStage) => TUT_STAGES.indexOf(t);
+/** Move the tutorial forward to `stage` (never back). */
+function reached(s: Save, stage: TutStage): Save {
+  return tutIndex(stage) > tutIndex(s.tut) ? { ...s, tut: stage } : s;
+}
+export function reachTut(stage: TutStage) {
+  const next = reached(state, stage);
+  if (next !== state) commit(next);
+}
+
+/** The housewarming gift: coins, cups and searches without waiting. */
+export function claimGift() {
+  if (state.tut !== 'gift') return;
+  commit({
+    ...state, tut: 'shop',
+    coins: state.coins + GIFT_COINS, energy: state.energy + GIFT_ENERGY, freeSearches: NEWBIE_SEARCHES,
+  });
+}
+
+/** Bought pieces (the starter set does not count). */
+export const boughtCount = (s: Save = state) => s.owned.filter((id) => ITEM_BY_ID[id]?.shop !== 'starter').length;
+
+/** Events open at level 2, and only once she has played her first story scene. */
+export const eventsOpen = (s: Save = state) => s.level >= EVENTS_LEVEL && tutIndex(s.tut) >= tutIndex('events');
+
+/** A copy of the outfit with the item put on (a dress replaces top and bottom and vice versa). */
+export function withItem(outfit: Outfit, item: Item): Outfit {
+  const next: Outfit = { ...outfit, [item.slot]: item.id };
+  if (item.slot === 'dress') { delete next.top; delete next.bottom; }
+  if (item.slot === 'top' || item.slot === 'bottom') delete next.dress;
+  return next;
 }
 
 export function equip(itemId: string) {
   const item = ITEM_BY_ID[itemId];
   if (!item || !state.owned.includes(itemId)) return;
-  const outfit: Outfit = { ...state.outfit };
-  if (outfit[item.slot] === itemId) {
+  let outfit: Outfit;
+  if (state.outfit[item.slot] === itemId) {
+    outfit = { ...state.outfit };
     delete outfit[item.slot];
-  } else {
-    outfit[item.slot] = itemId;
-    if (item.slot === 'dress') { delete outfit.top; delete outfit.bottom; }
-    if (item.slot === 'top' || item.slot === 'bottom') delete outfit.dress;
-  }
+  } else outfit = withItem(state.outfit, item);
   commit({ ...state, outfit });
 }
 
@@ -200,16 +280,6 @@ export function undressAll() {
   if (Object.keys(state.outfit).length) commit({ ...state, outfit: {} });
 }
 
-export function sellPrice(item: Item) { return Math.round((item.price * SELL_SHARE) / 10) * 10; }
-
-export function sell(itemId: string) {
-  const item = ITEM_BY_ID[itemId];
-  if (!item || !state.owned.includes(itemId)) return;
-  const outfit: Outfit = { ...state.outfit };
-  if (outfit[item.slot] === itemId) delete outfit[item.slot];
-  commit({ ...state, outfit, owned: state.owned.filter((i) => i !== itemId), coins: state.coins + sellPrice(item) });
-}
-
 export function toggleWish(itemId: string) {
   const wish = state.wish.includes(itemId) ? state.wish.filter((i) => i !== itemId) : [...state.wish, itemId];
   commit({ ...state, wish });
@@ -217,7 +287,11 @@ export function toggleWish(itemId: string) {
 
 /* ---------- shopping ---------- */
 
-export interface SearchResult { item: Item; pity: boolean; levelUp: LevelUp | null }
+export interface SearchResult {
+  item: Item; pity: boolean; levelUp: LevelUp | null;
+  /** The newcomer's guaranteed rare find (TUT_RARE_ID). */
+  lucky?: boolean;
+}
 
 function rollRarity(s: Save): { rarity: Rarity; pity: boolean } {
   if (s.pityEpic + 1 >= PITY_EPIC) return { rarity: 'epic', pity: true };
@@ -258,21 +332,43 @@ export function search(shopId: string, fixtureId: string): SearchResult | null {
   tickEnergy();
   const cost = searchCost(shopId);
   if (state.energy < cost) return null;
-  if (shelfReadyAt(shopId, fixtureId) > Date.now()) return null;
+  const free = state.freeSearches > 0;
+  if (!free && shelfReadyAt(shopId, fixtureId) > Date.now()) return null;
   const pool = shelfLeft(shopId, fixtureId);
   if (!pool.length) return null;
 
   let { rarity, pity } = rollRarity(state);
-  // A fixture may lack the rolled rarity: take the nearest one down, else up.
+  // The roll decides the rarity, so rares stay rare: take the rolled rarity from this shelf, else from
+  // another shelf of the same shop (rummaging turns up something from next door). Only when the whole
+  // shop has nothing of that rarity left: the nearest one down, else up.
+  const shopLeft = shopItems(shopId).filter((i) => !state.owned.includes(i.id));
   const order: Rarity[] = ['epic', 'rare', 'common'];
   const from = order.indexOf(rarity);
   const tries = [...order.slice(from), ...order.slice(0, from).reverse()];
   let candidates: Item[] = [];
   for (const r of tries) {
     candidates = pool.filter((i) => i.rarity === r);
+    if (!candidates.length) candidates = shopLeft.filter((i) => i.rarity === r);
     if (candidates.length) { if (r !== rarity) pity = false; rarity = r; break; }
   }
-  const item = weightedPick(candidates, state);
+  // the newcomer's first finds: the cheapest common pieces (of this shelf, else of the shop)
+  if (state.freeSearches > NEWBIE_SEARCHES - NEWBIE_COMMON) {
+    let commons = pool.filter((i) => i.rarity === 'common');
+    if (!commons.length) commons = shopLeft.filter((i) => i.rarity === 'common');
+    if (commons.length) {
+      candidates = [...commons].sort((a, b) => a.price - b.price).slice(0, 3);
+      rarity = 'common';
+      pity = false;
+    }
+  }
+  // the lucky sundress waits for its own moment (below)
+  if (candidates.length > 1) candidates = candidates.filter((i) => i.id !== TUT_RARE_ID);
+  let item = weightedPick(candidates, state);
+  // the lucky find: from her 3rd newcomer search on, the first search in «Городской» brings the rare sundress
+  const done = NEWBIE_SEARCHES - state.freeSearches;
+  const lucky = free && shopId === 'city' && done >= TUT_RARE_AT - 1
+    && !state.discovered.includes(TUT_RARE_ID) && !state.owned.includes(TUT_RARE_ID) && !!ITEM_BY_ID[TUT_RARE_ID];
+  if (lucky) { item = ITEM_BY_ID[TUT_RARE_ID]; pity = false; }
 
   const wasFull = state.energy >= ENERGY_MAX;
   let next: Save = {
@@ -282,12 +378,13 @@ export function search(shopId: string, fixtureId: string): SearchResult | null {
     pityRare: item.rarity === 'common' ? state.pityRare + 1 : 0,
     pityEpic: item.rarity === 'epic' ? 0 : state.pityEpic + 1,
     discovered: state.discovered.includes(item.id) ? state.discovered : [...state.discovered, item.id],
-    shelfAt: { ...state.shelfAt, [shelfKey(shopId, fixtureId)]: Date.now() + SHELF_COOLDOWN_MS },
+    shelfAt: free ? state.shelfAt : { ...state.shelfAt, [shelfKey(shopId, fixtureId)]: Date.now() + SHELF_COOLDOWN_MS },
+    freeSearches: free ? state.freeSearches - 1 : 0,
   };
   let levelUp: LevelUp | null;
   [next, levelUp] = withXp(next, 2);
   commit(next);
-  return { item, pity, levelUp };
+  return { item, pity, levelUp, lucky };
 }
 
 /** Pay crystals to restock a resting fixture now. */
@@ -297,19 +394,29 @@ export function rushShelf(shopId: string, fixtureId: string): boolean {
   return true;
 }
 
-export function buy(itemId: string): { ok: boolean; levelUp: LevelUp | null } {
+export const canAfford = (item: Item, s: Save = state) => s.coins >= item.price && s.gems >= (item.gems ?? 0);
+
+export interface BuyResult { ok: boolean; levelUp: LevelUp | null; /** Crystals for completing the fixture, 0 if not. */ shelfGems: number }
+
+export function buy(itemId: string): BuyResult {
   const item = ITEM_BY_ID[itemId];
-  if (!item || state.owned.includes(itemId) || state.coins < item.price) return { ok: false, levelUp: null };
+  if (!item || state.owned.includes(itemId) || !canAfford(item)) return { ok: false, levelUp: null, shelfGems: 0 };
+  const owned = [...state.owned, itemId];
+  // the last piece of its fixture: a small crystal bonus for collecting the whole shelf
+  const fx = shopFixtures(item.shop).find((f) => f.items.some((i) => i.id === itemId));
+  const shelfGems = fx && fx.items.every((i) => owned.includes(i.id)) ? SHELF_DONE_GEMS : 0;
   let next: Save = {
     ...state,
     coins: state.coins - item.price,
-    owned: [...state.owned, itemId],
+    gems: state.gems - (item.gems ?? 0) + shelfGems,
+    owned,
     wish: state.wish.filter((i) => i !== itemId),
   };
+  if (boughtCount(next) >= TUT_BUYS) next = reached(next, 'wardrobe');
   let levelUp: LevelUp | null;
   [next, levelUp] = withXp(next, RARITY[item.rarity].xp);
   commit(next);
-  return { ok: true, levelUp };
+  return { ok: true, levelUp, shelfGems };
 }
 
 export function ownedInSlot(slot: Slot) {
@@ -343,7 +450,7 @@ export function playStory(stepId: string): StoryResult | StoryError {
   const stars = storyStars(step, match);
   const before = state.story[stepId] ?? 0;
   const best = Math.max(before, stars);
-  const reward = storyReward(step, before === 0 && stars > 0, before < 3 && stars === 3);
+  const reward = storyReward(step, before === 0 && stars > 0, before < 5 && stars === 5);
   let next: Save = {
     ...state,
     story: { ...state.story, [stepId]: best },
@@ -351,6 +458,7 @@ export function playStory(stepId: string): StoryResult | StoryError {
     gems: state.gems + reward.gems,
     energy: state.energy + reward.energy,
   };
+  if (stars > 0) next = reached(next, 'events');
   let levelUp: LevelUp | null = null;
   if (reward.xp) [next, levelUp] = withXp(next, reward.xp);
   commit(next);
@@ -395,7 +503,7 @@ export function rushEntry(key: string): boolean {
   return true;
 }
 
-export interface Claim { reward: Reward; /** The prize was already owned and paid out in coins instead. */ dupCoins: number; levelUp: LevelUp | null }
+export interface Claim { reward: Reward; /** The prize was already owned and paid out in crystals instead. */ dupGems: number; levelUp: LevelUp | null }
 
 export function claimEntry(key: string): Claim | null {
   const e = entryFor(key);
@@ -404,12 +512,12 @@ export function claimEntry(key: string): Claim | null {
   const reward = rewardFor(ev, e.score.stars);
   const prize = reward.item && ITEM_BY_ID[reward.item];
   const dup = !!prize && state.owned.includes(prize.id);
-  const dupCoins = dup ? prize.price : 0;
+  const dupGems = dup ? DUP_PRIZE_GEMS[prize.rarity] : 0;
   const now = Date.now();
   let next: Save = {
     ...state,
-    coins: state.coins + reward.coins + dupCoins,
-    gems: state.gems + reward.gems,
+    coins: state.coins + reward.coins,
+    gems: state.gems + reward.gems + dupGems,
     tickets: state.tickets + reward.tickets,
     energy: state.energy + reward.energy,
     owned: prize && !dup ? [...state.owned, prize.id] : state.owned,
@@ -422,7 +530,7 @@ export function claimEntry(key: string): Claim | null {
   let levelUp: LevelUp | null;
   [next, levelUp] = withXp(next, reward.xp);
   commit(next);
-  return { reward, dupCoins, levelUp };
+  return { reward, dupGems, levelUp };
 }
 
 export interface VoteResult { majority: boolean; ticket: boolean; levelUp: LevelUp | null }
@@ -478,7 +586,8 @@ export function debugImport(json: string): boolean {
   try {
     const data = JSON.parse(json);
     if (!data || typeof data !== 'object') return false;
-    commit({ ...fresh(), ...data });
+    if (data.created && !data.tut) data.tut = 'done';
+    commit(withStarter({ ...fresh(), ...data }));
     return true;
   } catch { return false; }
 }
