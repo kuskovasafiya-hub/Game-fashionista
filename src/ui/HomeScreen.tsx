@@ -2,9 +2,12 @@ import { Doll, FIGURE_VIEW } from '../art/Doll';
 import { activeEvents, eventByKey } from '../game/events';
 import { StoryCard } from './StoryScreen';
 import { eventsOpen as eventsOpenFor, useGame, xpToNext } from '../game/store';
-import { EventCard, HEAD_VIEW, Stars, timeLeft, useNow } from './EventsScreen';
+import { HEAD_VIEW, timeLeft, useNow } from './EventsScreen';
 
-/** Home: the player's model, her sent looks, and the event worth entering now. */
+/**
+ * Home, on one screen without scrolling: the player's model (it takes whatever height is left),
+ * the next story scene in one row, and — once events are open — the current event and her sent looks side by side.
+ */
 export function HomeScreen({ pulse, toWardrobe, toEvents, toVote, openEvent, play, toStory }: {
   /** Tutorial: what to tap next pulses. */
   pulse?: 'wardrobe' | 'story';
@@ -14,14 +17,6 @@ export function HomeScreen({ pulse, toWardrobe, toEvents, toVote, openEvent, pla
   const g = useGame();
   const now = useNow();
   const need = xpToNext(g.level);
-  const events = activeEvents(now);
-  const entered = (key: string) => g.entries.some((e) => e.key === key);
-  const featured = events.find((e) => e.level <= g.level && !entered(e.key))
-    ?? events.find((e) => e.level <= g.level) ?? events[0];
-  const looks = [...g.entries]
-    .sort((a, b) => Number(!!a.claimed) - Number(!!b.claimed) || b.resultAt - a.resultAt)
-    .slice(0, 6);
-  const empty = Math.max(0, 3 - looks.length);
   const eventsOpen = eventsOpenFor(g);
 
   return (
@@ -35,48 +30,67 @@ export function HomeScreen({ pulse, toWardrobe, toEvents, toVote, openEvent, pla
           <span class="me-level">Уровень {g.level}</span>
           <span class="xpbar"><i style={{ width: `${(g.xp / need) * 100}%` }} /></span>
           <small class="muted">{g.xp} / {need} опыта</small>
-          <button class={'btn teal' + (pulse === 'wardrobe' ? ' coach-pulse' : '')} data-coach="wardrobe" onClick={toWardrobe}>Гардероб</button>
+          <button class={'btn teal' + (pulse === 'wardrobe' ? ' coach-pulse' : '')} data-coach="wardrobe" onClick={toWardrobe}>
+            Гардероб
+          </button>
         </div>
       </section>
 
-      <section class="panel">
-        <h2 class="panel-title">История</h2>
-        <StoryCard play={play} toMap={toStory} pulse={pulse === 'story'} />
-      </section>
+      <StoryCard play={play} toMap={toStory} pulse={pulse === 'story'} />
 
-      {eventsOpen && <section class="panel">
-        <h2 class="panel-title">Мои образы</h2>
-        <div class="strip">
-          {looks.map((e) => {
-            const ev = eventByKey(e.key);
-            const ready = !e.claimed && e.resultAt <= now;
-            return (
-              <button class={'look-slot' + (ready ? ' ready' : '')} onClick={toVote}>
-                <Doll class="look-head" look={e.look} outfit={e.outfit} view={HEAD_VIEW} />
-                <span class="look-name">{ev ? `${ev.emoji} ${ev.name}` : 'Ивент'}</span>
-                {e.claimed ? <Stars n={e.score.stars} label />
-                  : ready ? <span class="look-ready">Результат!</span>
-                  : <small class="look-wait">⏱ {timeLeft(e.resultAt - now)}</small>}
-              </button>
-            );
-          })}
-          {Array.from({ length: empty }, () => (
-            <button class="look-slot empty" onClick={toEvents}>Ждёт образа</button>
-          ))}
+      {eventsOpen && (
+        <div class="home-row">
+          <EventMini now={now} open={openEvent} />
+          <LooksMini now={now} toVote={toVote} toEvents={toEvents} />
         </div>
-      </section>}
-
-      {eventsOpen && featured && <Featured key={featured.key} eventKey={featured.key} now={now} open={() => openEvent(featured.key)} />}
+      )}
     </div>
   );
 }
 
-function Featured({ eventKey, now, open }: { eventKey: string; now: number; open: () => void }) {
-  const ev = eventByKey(eventKey)!;
+/** The event worth entering now, as a small card. */
+function EventMini({ now, open }: { now: number; open: (key: string) => void }) {
+  const g = useGame();
+  const events = activeEvents(now);
+  const entered = (key: string) => g.entries.some((e) => e.key === key);
+  const ev = events.find((e) => e.level <= g.level && !entered(e.key)) ?? events.find((e) => e.level <= g.level);
+  if (!ev) return <span />;
+  const mine = entered(ev.key);
   return (
-    <section class="panel">
-      <h2 class="panel-title">Сейчас идёт</h2>
-      <EventCard ev={ev} now={now} onOpen={open} />
-    </section>
+    <button class="mini-card ev" style={{ '--ec': ev.color }} onClick={() => open(ev.key)}>
+      <span class="mc-top">
+        <span class="feature-tile coral sm">{ev.emoji}</span>
+        <small>⏱ {timeLeft(ev.end - now)}</small>
+      </span>
+      <b class="mc-name">{ev.name}</b>
+      <span class="btn primary mini">{mine ? 'Мой образ' : <>Участвовать · 🎟 {ev.cost}</>}</span>
+    </button>
+  );
+}
+
+/** Her last three sent looks as little faces, with how the voting goes. */
+function LooksMini({ now, toVote, toEvents }: { now: number; toVote: () => void; toEvents: () => void }) {
+  const g = useGame();
+  const looks = [...g.entries]
+    .sort((a, b) => Number(!!a.claimed) - Number(!!b.claimed) || b.resultAt - a.resultAt)
+    .slice(0, 3);
+  const ready = g.entries.filter((e) => !e.claimed && e.resultAt <= now).length;
+  const waiting = g.entries.filter((e) => e.resultAt > now);
+  const soonest = waiting.length ? Math.min(...waiting.map((e) => e.resultAt)) : 0;
+  return (
+    <button class={'mini-card looks' + (ready ? ' ready' : '')} onClick={looks.length ? toVote : toEvents}>
+      <b class="mc-name">Мои образы</b>
+      <span class="mc-faces">
+        {looks.map((e) => (
+          <span class={'mc-face' + (!e.claimed && e.resultAt <= now ? ' ready' : '')} title={eventByKey(e.key)?.name}>
+            <Doll class="mc-face-doll" look={e.look} outfit={e.outfit} view={HEAD_VIEW} />
+          </span>
+        ))}
+        {Array.from({ length: 3 - looks.length }, () => <span class="mc-face empty">+</span>)}
+      </span>
+      <small class={ready ? 'mc-status hot' : 'mc-status'}>
+        {ready ? `Результат готов!` : soonest ? `⏱ ${timeLeft(soonest - now)}` : 'Отправь образ'}
+      </small>
+    </button>
   );
 }

@@ -335,6 +335,10 @@ export const shelfReadyAt = (shopId: string, fixtureId: string, s: Save = state)
 export const shelfLeft = (shopId: string, fixtureId: string, s: Save = state) =>
   (shopFixtures(shopId).find((f) => f.id === fixtureId)?.items ?? []).filter((i) => !s.owned.includes(i.id));
 
+/** The lucky sundress is due: her 3rd newcomer search or later, and it has not turned up yet. */
+export const luckyPending = (s: Save = state) => s.freeSearches > 0 && NEWBIE_SEARCHES - s.freeSearches >= TUT_RARE_AT - 1
+  && !s.discovered.includes(TUT_RARE_ID) && !s.owned.includes(TUT_RARE_ID) && !!ITEM_BY_ID[TUT_RARE_ID];
+
 /**
  * Search one fixture of a shop: only pieces the player does not own yet can turn up,
  * and the fixture then rests for SHELF_COOLDOWN_MS.
@@ -349,23 +353,20 @@ export function search(shopId: string, fixtureId: string): SearchResult | null {
   if (!pool.length) return null;
 
   let { rarity, pity } = rollRarity(state);
-  // The roll decides the rarity, so rares stay rare: take the rolled rarity from this shelf, else from
-  // another shelf of the same shop (rummaging turns up something from next door). Only when the whole
-  // shop has nothing of that rarity left: the nearest one down, else up.
-  const shopLeft = shopItems(shopId).filter((i) => !state.owned.includes(i.id));
+  // The find always comes from the shelf she tapped. The roll decides the rarity, so rares stay rare:
+  // if this shelf has nothing of the rolled rarity, the nearest one down, and only when nothing lower is
+  // left on it, up. (An unanswered guarantee keeps counting until she searches a shelf that has a rare.)
   const order: Rarity[] = ['epic', 'rare', 'common'];
   const from = order.indexOf(rarity);
   const tries = [...order.slice(from), ...order.slice(0, from).reverse()];
   let candidates: Item[] = [];
   for (const r of tries) {
     candidates = pool.filter((i) => i.rarity === r);
-    if (!candidates.length) candidates = shopLeft.filter((i) => i.rarity === r);
     if (candidates.length) { if (r !== rarity) pity = false; rarity = r; break; }
   }
-  // the newcomer's first finds: the cheapest common pieces (of this shelf, else of the shop)
+  // the newcomer's first finds: the cheapest common pieces of this shelf
   if (state.freeSearches > NEWBIE_SEARCHES - NEWBIE_COMMON) {
-    let commons = pool.filter((i) => i.rarity === 'common');
-    if (!commons.length) commons = shopLeft.filter((i) => i.rarity === 'common');
+    const commons = pool.filter((i) => i.rarity === 'common');
     if (commons.length) {
       candidates = [...commons].sort((a, b) => a.price - b.price).slice(0, 3);
       rarity = 'common';
@@ -375,10 +376,8 @@ export function search(shopId: string, fixtureId: string): SearchResult | null {
   // the lucky sundress waits for its own moment (below)
   if (candidates.length > 1) candidates = candidates.filter((i) => i.id !== TUT_RARE_ID);
   let item = weightedPick(candidates, state);
-  // the lucky find: from her 3rd newcomer search on, the first search in «Городской» brings the rare sundress
-  const done = NEWBIE_SEARCHES - state.freeSearches;
-  const lucky = free && shopId === 'city' && done >= TUT_RARE_AT - 1
-    && !state.discovered.includes(TUT_RARE_ID) && !state.owned.includes(TUT_RARE_ID) && !!ITEM_BY_ID[TUT_RARE_ID];
+  // the lucky find: from her 3rd newcomer search on, the first search of the sundress's own shelf brings it
+  const lucky = luckyPending() && free && shopId === 'city' && pool.some((i) => i.id === TUT_RARE_ID);
   if (lucky) { item = ITEM_BY_ID[TUT_RARE_ID]; pity = false; }
 
   const wasFull = state.energy >= ENERGY_MAX;
@@ -423,7 +422,8 @@ export function buy(itemId: string): BuyResult {
     owned,
     wish: state.wish.filter((i) => i !== itemId),
   };
-  if (boughtCount(next) >= TUT_BUYS) next = reached(next, 'wardrobe');
+  // three buys: straight on to the story (its first scene is a fitting room, so she tries the new things on there)
+  if (boughtCount(next) >= TUT_BUYS) next = reached(next, 'story');
   let levelUp: LevelUp | null;
   [next, levelUp] = withXp(next, RARITY[item.rarity].xp);
   commit(next);

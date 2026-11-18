@@ -115,17 +115,15 @@ export function RarityTag({ item }: { item: Item }) {
 export function ItemCard({ item, selected, badge, dim, onClick, dressCode }: {
   item: Item; selected?: boolean; badge?: ComponentChildren; dim?: boolean; onClick?: () => void; dressCode?: Tag[];
 }) {
-  const fits = !dim && !!dressCode && item.tags.some((t) => dressCode.includes(t));
   return (
     <button
-      class={'card' + (selected ? ' selected' : '') + (dim ? ' dim' : '') + (fits ? ' fits' : '')}
+      class={'card' + (selected ? ' selected' : '') + (dim ? ' dim' : '')}
       style={{ '--rc': RARITY[item.rarity].color }}
       title={dim ? 'Ещё не найдено' : item.name}
       onClick={onClick}
     >
       <ItemThumb item={item} silhouette={dim} />
       {badge && <span class="badge">{badge}</span>}
-      {fits && <span class="fit-mark" title="Подходит под дресс-код">✓</span>}
       {!dim && (
         <span class="item-tags">
           {(dressCode ? [...item.tags].sort((a, b) => Number(dressCode.includes(b)) - Number(dressCode.includes(a))) : item.tags)

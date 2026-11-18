@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'preact/hooks';
 import { EVENTS_LEVEL } from '../game/events';
+import { shopFixtures } from '../game/catalog';
 import {
-  GIFT_COINS, GIFT_ENERGY, NEWBIE_SEARCHES, TUT_BUYS, boughtCount, canVote, claimGift, eventsOpen as eventsOpenFor,
+  GIFT_COINS, GIFT_ENERGY, NEWBIE_SEARCHES, TUT_BUYS, TUT_RARE_ID, luckyPending, boughtCount, canVote, claimGift, eventsOpen as eventsOpenFor,
   reachTut, resultsReady, storyNext, useGame, type LevelUp, type Save,
 } from '../game/store';
 import { StoryMap, StoryScene } from './StoryScreen';
@@ -66,7 +67,7 @@ export function App() {
   const showUnlock = g.tut === 'events' && eventsOpen && !unlockSeen && !levelUp && route.name !== 'scene' && route.name !== 'events';
   // the hand waits while a card is open on top
   const modalUp = showUnlock || !!levelUp || energyOpen || ticketsOpen || voteLocked || eventsLocked;
-  const coach = coachFor(g, route.name);
+  const coach = coachFor(g, route);
   const play = (id: string) => setRoute({ name: 'scene', id });
   const voteOpen = canVote(g);
   const go = (t: Tab) => (
@@ -192,19 +193,24 @@ type Hint = CoachHint & { nav?: Tab; home?: 'wardrobe' | 'story' };
 const NAV = (t: Tab) => `.navbar [data-tab="${t}"] .nav-icon`;
 
 /** The tutorial hand on this screen: what to tap next, with an icon or two (none on scenes and voting). */
-function coachFor(g: Save, route: Route['name']): Hint | null {
+function coachFor(g: Save, at: Route): Hint | null {
+  const route = at.name;
   const bought = boughtCount(g);
   switch (g.tut) {
     case 'shop':
       if (route === 'shops') return { target: '.lot[data-shop="city"] .house', label: '🛍️' };
       if (route === 'shop') {
-        return { target: '.fixture.ready', label: <Dots n={Math.min(bought, TUT_BUYS)} of={TUT_BUYS} icon="🛍️" /> };
+        // the lucky sundress is due: the hand points at its own shelf
+        const luckyFx = at.name === 'shop' && at.id === 'city' && luckyPending(g)
+          ? shopFixtures('city').find((f) => f.items.some((i) => i.id === TUT_RARE_ID)) : undefined;
+        const target = luckyFx ? `.fixture.ready[data-fx="city:${luckyFx.id}"]` : '.fixture.ready';
+        return { target, label: <Dots n={Math.min(bought, TUT_BUYS)} of={TUT_BUYS} icon="🛍️" /> };
       }
       if (route === 'home' || route === 'wardrobe') return { target: NAV('shops'), label: '🛍️', nav: 'shops' };
       return null;
     case 'wardrobe':
-      if (route === 'shops' || route === 'shop') return { target: NAV('home'), label: '👗', nav: 'home' };
-      if (route === 'home') return { target: '[data-coach="wardrobe"]', label: '👗', home: 'wardrobe' };
+      if (route === 'shops' || route === 'shop') return { target: NAV('home'), nav: 'home' };
+      if (route === 'home') return { target: '[data-coach="wardrobe"]', home: 'wardrobe' };
       return null;
     case 'story':
       // in the wardrobe she first looks at her new things; the hand to the story comes a bit later

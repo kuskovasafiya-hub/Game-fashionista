@@ -3,7 +3,7 @@ import { Doll, FIGURE_VIEW } from '../art/Doll';
 import { dressCodeMatch, starTier, type Theme } from '../game/events';
 import { CHAPTERS, STORY_STEPS, chapterOf, stepById, type StoryStep } from '../game/story';
 import { eventsOpen, playStory, storyNext, storyOpen, useGame, type LevelUp, type StoryResult } from '../game/store';
-import { Coin, DressCode, Modal, fmt } from './common';
+import { Coin, DressCode, Modal, TagIcon, fmt } from './common';
 import { Stars, eventBg } from './EventsScreen';
 import { flyRewards } from './fx';
 import { WardrobeScreen, useSceneBackground } from './WardrobeScreen';
@@ -13,44 +13,42 @@ const chapterNo = (st: StoryStep) => Number(st.id.split('.')[0]);
 const theme = (st: StoryStep): Theme => ({ id: st.bg, name: st.name, emoji: st.emoji, color: st.color, tags: st.tags });
 
 
-/* ---------- home card: the next scene ---------- */
+/* ---------- home card: the next scene, in one compact row ---------- */
 
 export function StoryCard({ play, toMap, pulse }: { play: (id: string) => void; toMap: () => void; pulse?: boolean }) {
   const g = useGame();
   const step = storyNext(g);
   if (!step) {
     return (
-      <div class="story-done">
-        <p><b>История пройдена!</b> 🌟</p>
-        <p class="muted small">Можно переиграть любую сцену и собрать все звёзды.</p>
-        <button class="btn teal" onClick={toMap}>Все главы</button>
+      <div class="story-strip">
+        <span class="ss-pic done">🌟</span>
+        <span class="ss-info">
+          <b class="ss-name">История пройдена!</b>
+          <small class="muted">Переиграй сцены и собери все ★</small>
+        </span>
+        <button class="btn teal ss-play" onClick={toMap}>Главы</button>
       </div>
     );
   }
   const ch = chapterOf(step.id);
   const open = storyOpen(step.id, g);
   return (
-    <div class={'feature' + (open ? '' : ' locked')} style={{ '--ec': step.color }}>
-      <div class="feature-bar">
-        <span class="feature-tile coral">📖</span>
-        <b class="feature-count story-count">Глава {chapterNo(step)} · {sceneNo(step)}/{ch.steps.length}</b>
-        <span class="feature-tile gift scene-tile">{step.emoji}</span>
-      </div>
-      <div class="feature-img" style={{ '--bg': eventBg(step.bg) }} onClick={() => { if (open) play(step.id); }}>
-        <Doll class="feature-model" look={g.look} outfit={g.outfit} view={FIGURE_VIEW} />
-      </div>
-      <div class="feature-body">
-        <b class="feature-name">{step.name}</b>
-        <small class="muted story-text">{step.text}</small>
-        <DressCode tags={step.tags} label />
-        <button
-          class={'btn primary' + (pulse && open ? ' coach-pulse' : '')} data-coach={open ? 'story' : undefined}
-          disabled={!open} onClick={() => play(step.id)}
-        >
-          {open ? 'Играть' : `Глава откроется на ${ch.level} уровне`}
-        </button>
-        <button class="link" onClick={toMap}>Все главы</button>
-      </div>
+    <div class={'story-strip' + (open ? '' : ' locked')} style={{ '--ec': step.color }}>
+      <button class="ss-pic" style={{ '--bg': eventBg(step.bg) }} onClick={() => { if (open) play(step.id); }} aria-label={step.name}>
+        <span>{step.emoji}</span>
+      </button>
+      <span class="ss-info">
+        <button class="ss-chapter" onClick={toMap}>📖 Глава {chapterNo(step)} · {sceneNo(step)}/{ch.steps.length} ›</button>
+        <b class="ss-name">{step.name}</b>
+        <span class="ss-tags">{step.tags.map((t) => <TagIcon tag={t} />)}</span>
+      </span>
+      {open
+        ? (
+          <button class={'btn primary ss-play' + (pulse ? ' coach-pulse' : '')} data-coach="story" onClick={() => play(step.id)}>
+            Играть
+          </button>
+        )
+        : <span class="ss-lock">🔒<small>ур. {ch.level}</small></span>}
     </div>
   );
 }

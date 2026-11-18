@@ -437,7 +437,7 @@ export function ShopScreen({ shopId, onNoEnergy, onLevelUp }: {
             <button
               class={`fixture ${fx.look} ${state}` + (shaking === fx.id ? ' shaking' : '')}
               style={{ left: spot.left, right: spot.right, top: spot.top, width: spot.width }}
-              disabled={state === 'done'} aria-label={fx.name} onClick={() => tap(fx)}
+              disabled={state === 'done'} aria-label={fx.name} data-fx={`${shopId}:${fx.id}`} onClick={() => tap(fx)}
             >
               <span class="fx-art"><FixtureGoods fx={fx} shopId={shopId} /></span>
               <span class="fx-name">{fx.name}</span>

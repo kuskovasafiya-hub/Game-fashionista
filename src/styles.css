@@ -433,10 +433,14 @@ button:disabled { cursor: default; }
 .panel-title { margin: 2px 0 12px; text-align: center; font-size: 20px; font-weight: 800; }
 
 /* Home */
-.home { padding-top: 4px; }
-.me { display: flex; align-items: center; gap: 8px; padding: 8px 16px 8px 4px; }
+.home {
+  height: 100%; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding-top: 4px; padding-bottom: 12px;
+}
+.home > .panel { margin: 0; }
+/* the model takes whatever height is left, so the whole home fits one screen */
+.me { flex: 1 1 0; min-height: 150px; display: flex; align-items: center; gap: 8px; padding: 6px 16px 6px 4px; }
 .me-doll {
-  flex: none; display: flex; justify-content: center; width: 44%; height: 230px;
+  flex: none; display: flex; justify-content: center; width: 44%; height: 100%; max-height: 420px;
   background: radial-gradient(ellipse at 50% 88%, #fff 0 30%, transparent 62%);
 }
 .me-doll .doll { height: 100%; }
@@ -1179,13 +1183,7 @@ button:disabled { cursor: default; }
 }
 @keyframes plus-pop { 0% { opacity: 0; transform: translate(-50%, -20%) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -60%) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -180%); } }
 
-/* ---------- dress code: fitting pieces get a tick; the first scene's chips pulse ---------- */
-.card.fits { border-color: #7fd6a4; }
-.fit-mark {
-  position: absolute; top: 4px; left: 4px; z-index: 2; display: grid; place-items: center; width: 20px; height: 20px;
-  border-radius: 50%; background: #3fbf7f; color: #fff; font-size: 12px; font-weight: 900; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  animation: pop 0.3s;
-}
+/* ---------- dress code: the first scene's chips pulse ---------- */
 .pulse-chips .chip { animation: chip-pulse 1.2s ease-in-out infinite; }
 .pulse-chips .chip:nth-of-type(2) { animation-delay: 0.2s; }
 .pulse-chips .chip:nth-of-type(3) { animation-delay: 0.4s; }
@@ -1227,3 +1225,51 @@ button:disabled { cursor: default; }
 @media (prefers-reduced-motion: reduce) {
   .coach-hand, .coach-ring, .pulse-chips .chip, .ub-rays, .gift-burst { animation: none !important; }
 }
+
+/* ---------- home: the next story scene in one row ---------- */
+.story-strip {
+  flex: none; display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 28px;
+  background: #fff; border: 1.5px solid #e9e1fa; box-shadow: var(--soft);
+}
+.ss-pic {
+  flex: none; display: flex; align-items: flex-end; justify-content: flex-start; width: 76px; height: 76px; padding: 4px;
+  border-radius: 20px; background: var(--bg, none) center / cover, var(--ec, var(--tint));
+}
+.ss-pic span { padding: 2px 5px; border-radius: 10px; background: #fff; font-size: 20px; line-height: 1.2; }
+.ss-pic.done { align-items: center; justify-content: center; font-size: 38px; }
+.ss-info { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left; }
+.ss-chapter { padding: 0; font-size: 12px; font-weight: 800; color: var(--muted); }
+.ss-name {
+  max-width: 100%; font-size: 16px; font-weight: 800; line-height: 1.2; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.ss-info .muted { margin: 0; font-size: 12px; }
+.ss-tags { display: flex; gap: 4px; }
+.ss-tags .tag-icon { width: 20px; height: 20px; font-size: 14px; }
+.btn.ss-play { flex: none; width: auto; margin: 0; padding: 12px 14px; font-size: 16px; }
+.story-strip.locked .ss-pic { filter: grayscale(0.7); opacity: 0.75; }
+.ss-lock { flex: none; display: flex; flex-direction: column; align-items: center; padding: 0 8px; font-size: 22px; }
+.ss-lock small { font-size: 11px; font-weight: 800; color: var(--muted); }
+
+/* ---------- home: current event and my looks, side by side ---------- */
+.home-row { flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mini-card {
+  min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 6px;
+  padding: 10px; border-radius: 26px; background: #fff; border: 1.5px solid #e9e1fa; box-shadow: var(--soft); text-align: center;
+}
+.mini-card.ev { background: linear-gradient(180deg, #fff 50%, color-mix(in srgb, var(--ec) 22%, #fff)); }
+.mini-card.looks.ready { border-color: var(--accent); }
+.mc-top { align-self: stretch; display: flex; align-items: center; justify-content: space-between; }
+.mc-top small { font-size: 12px; font-weight: 800; color: var(--muted); }
+.feature-tile.sm { width: 36px; height: 36px; border-radius: 12px; font-size: 20px; }
+.mc-name { max-width: 100%; font-size: 14px; font-weight: 800; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mini-card .btn.mini { align-self: stretch; padding: 8px 4px; font-size: 12px; }
+.mc-faces { display: flex; gap: 4px; justify-content: center; }
+.mc-face {
+  display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: var(--tint);
+}
+.mc-face.ready { box-shadow: 0 0 0 2px var(--accent); }
+.mc-face.empty { background: none; border: 2px dashed var(--ghost); color: var(--ghost); font-weight: 900; }
+.mc-face-doll { width: 100%; }
+.mc-status { font-size: 11px; font-weight: 800; color: var(--muted); }
+.mc-status.hot { color: var(--accent-dark); }
