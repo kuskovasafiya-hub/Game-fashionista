@@ -418,8 +418,47 @@ def fingertips(body_a):
     return float(np.mean(xs)), y1 - 42      # the handle crosses the fingers, not the tips
 
 
+# Codex draws some bags tiny next to her (a straw basket 104 px wide, a tote 297): any bag smaller than
+# this (opaque box area, handle included) is scaled up to it, by at most BAG_GROW
+BAG_MIN_AREA = 52000
+BAG_GROW = 2.0
+# how much the last fitted bag was scaled up: skin-like pixels (a straw basket) scale with it
+grown = 1.0
+
+
+# the bag must stay inside the figure frame (batch.FRAME_X), or the doll shrinks on every screen
+BAG_FRAME = (165, 795)
+
+
+def grow_bag(im, fx):
+    """Scale a too small bag up around the apex of its handle, so it still hangs from the same point."""
+    a = im[..., 3] > 128
+    ys, xs = np.nonzero(a)
+    y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
+    ax = xs[ys <= y0 + 4].mean()
+    k = min(BAG_GROW, (BAG_MIN_AREA / ((x1 - x0) * (y1 - y0))) ** 0.5)
+    # it will hang from the fingers at fx by the apex ax: keep both sides inside the frame
+    if ax > x0:
+        k = min(k, (fx - BAG_FRAME[0]) / (ax - x0))
+    if x1 > ax:
+        k = min(k, (BAG_FRAME[1] - fx) / (x1 - ax))
+    global grown
+    if k <= 1.02:
+        return im
+    grown = k
+    crop = Image.fromarray(im[y0:y1, x0:x1].clip(0, 255).astype(np.uint8))
+    big = np.asarray(crop.resize((round((x1 - x0) * k), round((y1 - y0) * k)), Image.LANCZOS), dtype=np.float32)
+    out = np.zeros_like(im)
+    nx0 = int(round(ax - (ax - x0) * k))
+    h, w = big.shape[:2]
+    sx0, sy0 = max(nx0, 0), y0
+    out[sy0:sy0 + h, sx0:sx0 + w] = big[:out.shape[0] - sy0, sx0 - nx0:sx0 - nx0 + out.shape[1] - sx0][:h, :w]
+    return out
+
+
 def fit_bag(im, body_a):
-    """Hang the bag by the apex of its handle from her fingers."""
+    """Hang the bag by the apex of its handle from her fingers (a too small one is first scaled up)."""
+    im = grow_bag(im, fingertips(body_a)[0])
     a = im[..., 3] > 128
     ys, xs = np.nonzero(a)
     top = ys.min()
@@ -497,7 +536,7 @@ def verdict(name, r):
     """Problems that make a generation unusable (regenerate it)."""
     kind = name.split('-')[0]
     p = []
-    if r['skin_px'] > 400 and kind not in ('shoes', 'makeup', 'hair', 'body'):
+    if r['skin_px'] > 400 * r.get('grown', 1) ** 2 and kind not in ('shoes', 'makeup', 'hair', 'body'):
         p.append('the doll (skin) is drawn into the item')
     if r['underwear_showing_px'] > 300:
         p.append('underwear shows')
@@ -841,6 +880,8 @@ def main():
         if n:
             sizes = ndi.sum(np.ones_like(lab), lab, range(1, n + 1))
             im[np.isin(lab, [i + 1 for i, sz in enumerate(sizes) if sz < 40]), 3] = 0
+        global grown
+        grown = 1.0
         im, shift = fit(name, im, body_a)
         a = im[..., 3]
         solid = a > 200
@@ -852,6 +893,7 @@ def main():
         on_body = (a > 128) & (body_a > 128)
         report[name] = {
             'shift': shift,
+            'grown': round(grown, 2),
             'opaque_px': int((a > 128).sum()),
             'semi_px': int(((a > 20) & (a < 235)).sum()),
             'skin_px': int(skin.sum()),
