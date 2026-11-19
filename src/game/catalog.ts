@@ -50,7 +50,7 @@ export const SLOT_NAMES: Record<Slot, string> = {
 
 export const SHOPS: Shop[] = [
   { id: 'city', name: 'Городской', about: 'Повседневная мода на каждый день', level: 1, depts: ['clothes', 'shoes', 'accessories'], color: '#FF8FB1', emoji: '🛍️' },
-  { id: 'step', name: 'Шаг', about: 'Только обувь: от кед до шпилек', level: 1, depts: ['shoes'], color: '#7FC8F8', emoji: '👠' },
+  { id: 'step', name: 'Шаг', about: 'Обувь, сумки и украшения', level: 1, depts: ['shoes', 'accessories'], color: '#7FC8F8', emoji: '👠' },
   { id: 'y2k', name: 'Y2K', about: 'Нулевые: блеск, розовый и бабочки', level: 2, depts: ['clothes', 'shoes', 'accessories'], color: '#FF7AD9', emoji: '🦋' },
   { id: 'office', name: 'Офис', about: 'Деловой стиль и строгие линии', level: 3, depts: ['clothes', 'shoes', 'accessories'], color: '#8E9AAF', emoji: '💼' },
   { id: 'glam', name: 'Блеск', about: 'Украшения, серьги и сумочки', level: 5, depts: ['accessories'], color: '#F7C548', emoji: '💎' },
@@ -107,6 +107,8 @@ const ART_SLOT: Record<string, Slot> = {
   // office-a, y2k-a (art-src/v2/batches/office-a.tsv, y2k-a.tsv): fuller early shops
   'top-shirt': 'top', 'top-bow': 'top', 'top-vest': 'top', 'top-cami': 'top', 'top-knitvest': 'top', 'top-peplum': 'top', 'bottom-palazzo': 'bottom', 'bottom-culottes': 'bottom', 'bottom-pleatmidi': 'bottom', 'bottom-woolskirt': 'bottom', 'bottom-cigarette': 'bottom', 'dress-pinafore': 'dress', 'dress-trench': 'dress', 'dress-satinmidi': 'dress', 'dress-blazer': 'dress', 'shoes-oxfords': 'shoes', 'shoes-boots-lace': 'shoes', 'acc-thin': 'glasses', 'acc-bag-brief': 'bag',
   'top-tube': 'top', 'top-corset': 'top', 'top-butterfly': 'top', 'top-velour': 'top', 'top-puffer': 'top', 'top-gingham': 'top', 'bottom-lowrise': 'bottom', 'bottom-cargomini': 'bottom', 'bottom-track': 'bottom', 'bottom-satinmini': 'bottom', 'dress-slip': 'dress', 'dress-haltermini': 'dress', 'dress-denim': 'dress', 'dress-ruched': 'dress', 'shoes-flipflops': 'shoes', 'shoes-skate': 'shoes',
+  // step-a (art-src/v2/batches/step-a.tsv): Шаг with bags and jewellery
+  'shoes-court': 'shoes', 'shoes-knit': 'shoes', 'shoes-slingback': 'shoes', 'shoes-espadrilles': 'shoes', 'shoes-moccasins': 'shoes', 'shoes-slippers': 'shoes', 'shoes-boots-knee': 'shoes', 'shoes-boots-snow': 'shoes', 'shoes-boots-hiking': 'shoes', 'shoes-gladiator': 'shoes', 'acc-bag-frame': 'bag', 'acc-bag-bowling': 'bag', 'acc-bag-pouch': 'bag', 'acc-bag-ring': 'bag', 'acc-studs-heart': 'earrings', 'acc-studs-moon': 'earrings', 'acc-ear-bar': 'earrings', 'acc-neck-heart': 'necklace', 'acc-neck-layered': 'necklace', 'acc-bracelet-chain': 'bracelet',
 };
 
 /** Style tags of each piece of art: what dress codes it fits. */
@@ -155,6 +157,7 @@ const ART_TAGS: Record<string, Tag[]> = {
   'shoes-canvas': ['casual', 'sport'], 'shoes-flatsandals': ['casual', 'beach'], 'shoes-chunky': ['casual', 'sport'], 'shoes-boots-rain': ['casual', 'winter'], 'shoes-boots-cozy': ['casual', 'winter'], 'acc-bag-straw': ['casual', 'beach'], 'acc-bag-saddle': ['casual'], 'acc-bag-canvas': ['casual'], 'acc-bag-hobo': ['casual', 'party'], 'acc-round': ['casual', 'beach'], 'acc-retro': ['casual', 'beach', 'party'],
   'top-shirt': ['office', 'casual'], 'top-bow': ['office', 'evening'], 'top-vest': ['office'], 'top-cami': ['office', 'evening'], 'top-knitvest': ['office', 'casual', 'winter'], 'top-peplum': ['office', 'evening'], 'bottom-palazzo': ['office', 'evening'], 'bottom-culottes': ['office', 'casual'], 'bottom-pleatmidi': ['office', 'evening'], 'bottom-woolskirt': ['office', 'winter'], 'bottom-cigarette': ['office', 'casual'], 'dress-pinafore': ['office', 'casual'], 'dress-trench': ['office', 'winter'], 'dress-satinmidi': ['office', 'evening'], 'dress-blazer': ['office', 'party', 'evening'], 'shoes-oxfords': ['office', 'casual'], 'shoes-boots-lace': ['office', 'winter', 'casual'], 'acc-thin': ['office', 'casual'], 'acc-bag-brief': ['office'],
   'top-tube': ['party', 'beach'], 'top-corset': ['party', 'evening'], 'top-butterfly': ['casual', 'party'], 'top-velour': ['casual', 'sport'], 'top-puffer': ['party', 'winter'], 'top-gingham': ['casual', 'beach', 'party'], 'bottom-lowrise': ['casual', 'party'], 'bottom-cargomini': ['casual', 'party'], 'bottom-track': ['sport', 'casual'], 'bottom-satinmini': ['party', 'evening'], 'dress-slip': ['party', 'evening'], 'dress-haltermini': ['party'], 'dress-denim': ['casual', 'party'], 'dress-ruched': ['party', 'winter'], 'shoes-flipflops': ['beach', 'party'], 'shoes-skate': ['casual', 'sport'],
+  'shoes-court': ['casual', 'sport'], 'shoes-knit': ['sport', 'casual'], 'shoes-slingback': ['office', 'evening'], 'shoes-espadrilles': ['beach', 'casual'], 'shoes-moccasins': ['casual', 'office'], 'shoes-slippers': ['casual', 'winter'], 'shoes-boots-knee': ['winter', 'office', 'evening'], 'shoes-boots-snow': ['winter', 'casual'], 'shoes-boots-hiking': ['winter', 'sport', 'casual'], 'shoes-gladiator': ['beach', 'party'], 'acc-bag-frame': ['evening', 'party', 'office'], 'acc-bag-bowling': ['casual', 'sport'], 'acc-bag-pouch': ['casual', 'party'], 'acc-bag-ring': ['casual', 'party'], 'acc-studs-heart': ['casual', 'party'], 'acc-studs-moon': ['casual', 'evening'], 'acc-ear-bar': ['office', 'casual'], 'acc-neck-heart': ['casual', 'party'], 'acc-neck-layered': ['casual', 'party', 'evening'], 'acc-bracelet-chain': ['casual', 'office'],
 };
 /** A shop adds its own style to everything it sells. */
 const SHOP_TAGS: Record<string, Tag[]> = { glam: ['party'], evening: ['evening'], office: ['office'], sport: ['sport'], y2k: ['party'] };
@@ -421,6 +424,47 @@ add('step', [
   ['shoes-slides', 'Слайды «Белые»', 'common'],
   ['shoes-slides', 'Слайды «Розовые»', 'common', TINT.tintPink],
   ['shoes-boots-combat', 'Ботинки «Гранж»', 'rare'],
+  // step-a: more shoes, plus bags and jewellery for the first level
+  ['shoes-court', 'Кеды «Белая кожа»', 'common'],
+  ['shoes-court', 'Кеды «Пудра»', 'common', 'grayscale(1) brightness(0.72) sepia(1) saturate(0.84) hue-rotate(-60deg) brightness(1.06)'],
+  ['shoes-knit', 'Носки-кроссовки «Графит»', 'common'],
+  ['shoes-knit', 'Носки-кроссовки «Лаванда»', 'common', 'brightness(1.66) sepia(1) saturate(1.08) hue-rotate(-141deg) brightness(1.23)'],
+  ['shoes-slingback', 'Слингбэки «Чёрные»', 'rare'],
+  ['shoes-slingback', 'Слингбэки «Вино»', 'rare', 'brightness(0.61) sepia(1) saturate(4.00) hue-rotate(-67deg) brightness(2.26)'],
+  ['shoes-espadrilles', 'Эспадрильи «Нэви»', 'common'],
+  ['shoes-espadrilles', 'Эспадрильи «Вишня»', 'common', 'sepia(1.00) saturate(4.37) hue-rotate(-54deg) brightness(1.60)'],
+  ['shoes-moccasins', 'Мокасины «Шоколад»', 'common'],
+  ['shoes-moccasins', 'Мокасины «Олива»', 'common', 'sepia(0.91) saturate(1.21) hue-rotate(26deg) brightness(1.59)'],
+  ['shoes-slippers', 'Тапочки «Лаванда»', 'common'],
+  ['shoes-slippers', 'Тапочки «Небо»', 'common', 'saturate(0.98) hue-rotate(-61deg)'],
+  ['shoes-boots-knee', 'Ботфорты «Чёрные»', 'epic'],
+  ['shoes-boots-knee', 'Ботфорты «Шоколад»', 'epic', 'brightness(1.82) sepia(1) saturate(2.06) hue-rotate(-27deg) brightness(0.87)'],
+  ['shoes-boots-snow', 'Дутики «Небо»', 'common'],
+  ['shoes-boots-snow', 'Дутики «Серебро»', 'common', 'sepia(0.60) saturate(0.54) hue-rotate(173deg) brightness(0.96)'],
+  ['shoes-boots-hiking', 'Ботинки «Тропа»', 'common'],
+  ['shoes-boots-hiking', 'Ботинки «Тропа-графит»', 'common', 'sepia(0.57) saturate(0.30) hue-rotate(-148deg) brightness(0.68)'],
+  ['shoes-gladiator', 'Гладиаторы «Золото»', 'rare'],
+  ['shoes-gladiator', 'Гладиаторы «Чёрные»', 'rare', TINT.noir],
+  ['acc-bag-frame', 'Сумка-фермуар «Вишня»', 'rare'],
+  ['acc-bag-frame', 'Сумка-фермуар «Вино»', 'rare', 'hue-rotate(-8deg) saturate(0.85) brightness(0.65)'],
+  ['acc-bag-bowling', 'Сумка-боулинг «Небо»', 'common'],
+  ['acc-bag-bowling', 'Сумка-боулинг «Роза»', 'common', 'saturate(1.59) hue-rotate(124deg)'],
+  ['acc-bag-pouch', 'Клатч-мешочек «Лаванда»', 'common'],
+  ['acc-bag-pouch', 'Клатч-мешочек «Шалфей»', 'common', 'sepia(0.98) saturate(0.68) hue-rotate(53deg) brightness(0.76)'],
+  ['acc-bag-ring', 'Сумка с кольцом «Шоколад»', 'common'],
+  ['acc-bag-ring', 'Сумка с кольцом «Молоко»', 'common', 'brightness(2.79) sepia(1) saturate(0.41) hue-rotate(0deg) brightness(1.56)'],
+  ['acc-studs-heart', 'Серьги «Сердечки»', 'common'],
+  ['acc-studs-heart', 'Серьги «Сердечки-серебро»', 'common', TINT.silver],
+  ['acc-studs-moon', 'Серьги «Луна»', 'common'],
+  ['acc-studs-moon', 'Серьги «Луна-серебро»', 'common', TINT.silver],
+  ['acc-ear-bar', 'Серьги «Палочки»', 'common'],
+  ['acc-ear-bar', 'Серьги «Палочки-роза»', 'common', TINT.tintPink],
+  ['acc-neck-heart', 'Кулон «Сердце»', 'common'],
+  ['acc-neck-heart', 'Кулон «Сердце-серебро»', 'common', TINT.silver],
+  ['acc-neck-layered', 'Цепочки «Двойные»', 'rare'],
+  ['acc-neck-layered', 'Цепочки «Двойные-серебро»', 'rare', TINT.silver],
+  ['acc-bracelet-chain', 'Браслет «Цепочка»', 'common'],
+  ['acc-bracelet-chain', 'Браслет «Цепочка-роза»', 'common', TINT.tintPink],
 ]);
 
 add('glam', [
@@ -673,6 +717,20 @@ const ART_NAMES: Record<string, string> = {
 
 export interface Fixture { id: string; name: string; kind: FixtureKind; look: FixtureLook; items: Item[] }
 
+/** Shoe shelves of a shop that sells little else, by type of shoe (a model not listed goes on a shelf of its own). */
+const SHOE_SHELVES: [id: string, name: string, arts: string[]][] = [
+  ['sneakers', 'Кроссовки и кеды', ['shoes-sneakers', 'shoes-hightops', 'shoes-runners', 'shoes-canvas', 'shoes-chunky', 'shoes-skate', 'shoes-slipons', 'shoes-court', 'shoes-knit']],
+  ['flats', 'Туфли и лоферы', ['shoes-heels', 'shoes-pumps', 'shoes-maryjanes', 'shoes-mules', 'shoes-velvet', 'shoes-glitter', 'shoes-platform', 'shoes-flats', 'shoes-slingback',
+    'shoes-loafers', 'shoes-oxfords', 'shoes-moccasins', 'shoes-espadrilles', 'shoes-slippers']],
+  ['boots', 'Сапоги', ['shoes-boots', 'shoes-whiteboots', 'shoes-boots-riding', 'shoes-boots-knee', 'shoes-boots-rain', 'shoes-boots-snow',
+    'shoes-ankleboots', 'shoes-boots-chelsea', 'shoes-boots-combat', 'shoes-boots-lace', 'shoes-boots-cozy', 'shoes-boots-hiking']],
+  ['sandals', 'Сандалии', ['shoes-sandals', 'shoes-flatsandals', 'shoes-slides', 'shoes-flipflops', 'shoes-gladiator']],
+];
+const JEWEL_SHELVES: [id: string, name: string, slots: Slot[]][] = [
+  ['necklace', 'Колье', ['necklace']], ['earrings', 'Серьги', ['earrings']], ['bracelet', 'Браслеты', ['bracelet']],
+];
+const MAX_FIXTURES = 7;
+
 /**
  * The fixtures of a shop, one per kind of thing it sells. A shop with few kinds (only
  * shoes, only jewellery) splits them by model, so it never stands half empty.
@@ -682,12 +740,37 @@ export function shopFixtures(shopId: string): Fixture[] {
   let list: Fixture[] = KINDS
     .map((k) => ({ id: k.kind, name: k.name, kind: k.kind, look: k.look, items: items.filter((i) => k.slots.includes(i.slot)) }))
     .filter((f) => f.items.length);
-  if (list.length < 4) {
-    list = list.flatMap((f) => {
+  // a shop with few kinds of things (shoes, jewellery) splits them by type, the biggest first, while the room has space:
+  // shoes by kind of shoe, jewellery by what it is, bags stay together, clothes by model
+  const split = (f: Fixture): Fixture[] => {
+    let parts: Fixture[];
+    if (f.kind === 'shoes') {
+      parts = SHOE_SHELVES.map(([id, name, arts]) => ({ ...f, id, name, items: f.items.filter((i) => arts.includes(i.art)) }));
+      const other = f.items.filter((i) => !SHOE_SHELVES.some(([, , arts]) => arts.includes(i.art)));
+      if (other.length) parts.push({ ...f, id: 'other', name: f.name, items: other });
+    } else if (f.kind === 'jewelry') {
+      parts = JEWEL_SHELVES.map(([id, name, slots]) => ({ ...f, id, name, items: f.items.filter((i) => slots.includes(i.slot)) }));
+    } else if (f.kind === 'bags') {
+      parts = [f];
+    } else {
       const arts = [...new Set(f.items.map((i) => i.art))];
-      if (arts.length < 2) return [f];
-      return arts.map((a) => ({ ...f, id: a, name: ART_NAMES[a] ?? f.name, items: f.items.filter((i) => i.art === a) }));
-    });
+      parts = arts.map((a) => ({ ...f, id: a, name: ART_NAMES[a] ?? f.name, items: f.items.filter((i) => i.art === a) }));
+    }
+    parts = parts.filter((p) => p.items.length);
+    return parts.length > 1 ? parts : [f];
+  };
+  if (list.length < 4) {
+    for (const f of [...list].sort((a, b) => b.items.length - a.items.length)) {
+      const parts = split(f);
+      if (list.length - 1 + parts.length > MAX_FIXTURES) continue;
+      list = list.flatMap((x) => (x === f ? parts : [x]));
+    }
   }
-  return list.slice(0, 7);
+  // never more shelves than fit the room: the smallest ones go into the last shelf, so nothing is left unsearchable
+  while (list.length > MAX_FIXTURES) {
+    const last = list.pop()!;
+    const prev = list[list.length - 1];
+    list[list.length - 1] = { ...prev, items: [...prev.items, ...last.items] };
+  }
+  return list;
 }

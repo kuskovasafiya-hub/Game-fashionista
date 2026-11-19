@@ -232,6 +232,15 @@ const LEATHER = ['#d35d7a', '#4f6fae', '#3a3448', '#c9a24a', '#8a563f', '#5aa58a
 const ART_SHOE: Record<string, string> = {
   'shoes-sneakers': 'sneakers', 'shoes-heels': 'heels', 'shoes-boots': 'boots', 'shoes-sandals': 'sandals', 'shoes-loafers': 'loafers',
 };
+/** Which drawn shoe stands for a model on a shelf: by its name, so new models need no entry. */
+function shoeKind(art: string): string {
+  if (ART_SHOE[art]) return ART_SHOE[art];
+  if (/boots/.test(art)) return 'boots';
+  if (/sandals|slides|flipflops|gladiator/.test(art)) return 'sandals';
+  if (/pumps|slingback|mules|velvet|glitter|platform|maryjanes/.test(art)) return 'heels';
+  if (/oxfords|moccasins|flats|espadrilles|slippers|clogs|slipons/.test(art)) return 'loafers';
+  return 'sneakers';
+}
 
 function Shoe({ kind, colour }: { kind: string; colour: string }) {
   const sh = SHOES[kind] ?? SHOES.sneakers;
@@ -299,7 +308,7 @@ function FixtureGoods({ fx, shopId }: { fx: Fixture; shopId: string }) {
     );
   }
   if (fx.look === 'shelf' && fx.kind !== 'bags') {
-    const row = () => pieces(2).map((it) => <Shoe kind={ART_SHOE[it.art] ?? 'sneakers'} colour={pickOf(LEATHER, r)} />);
+    const row = () => pieces(2).map((it) => <Shoe kind={shoeKind(it.art)} colour={pickOf(LEATHER, r)} />);
     return (
       <span class="fx-goods packed shoes">
         <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">

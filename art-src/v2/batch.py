@@ -237,6 +237,14 @@ def post():
     return report
 
 
+def empty(r):
+    """The layer came out blank (a very thin chain can vanish when it is cut out of the edit)."""
+    from PIL import Image
+    import numpy as np
+    files = [f for f in (OUT / f'{r["name"]}.png', OUT / f'{r["name"]}-front.png', OUT / f'{r["name"]}-back.png') if f.exists()]
+    return bool(files) and all((np.asarray(Image.open(f))[..., 3] > 20).sum() < 30 for f in files)
+
+
 def too_wide(r):
     """How far the layer reaches past the figure frame (px), 0 if it fits."""
     from PIL import Image
@@ -280,6 +288,9 @@ def layers(batch, n):
                 status[r['name']] = ['Codex did not draw it (moderation?): rephrase']
             elif rep is None:
                 status[r['name']] = ['no check report']
+                bad.append(r)
+            elif empty(r):
+                status[r['name']] = ['the layer is empty: draw it a little bolder']
                 bad.append(r)
             elif rep.get('ok', True) and too_wide(r) > 0:
                 status[r['name']] = [f'{too_wide(r)} px wider than the figure frame: the doll would shrink everywhere']

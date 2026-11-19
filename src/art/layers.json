@@ -964,6 +964,12 @@
   "w": 189,
   "h": 214
  },
+ "acc-bag-bowling": {
+  "x": 244,
+  "y": 812,
+  "w": 150,
+  "h": 150
+ },
  "acc-bag-brief": {
   "x": 245,
   "y": 810,
@@ -988,6 +994,12 @@
   "w": 199,
   "h": 214
  },
+ "acc-bag-frame": {
+  "x": 262,
+  "y": 812,
+  "w": 116,
+  "h": 138
+ },
  "acc-bag-hobo": {
   "x": 257,
   "y": 811,
@@ -1000,11 +1012,23 @@
   "w": 192,
   "h": 237
  },
+ "acc-bag-pouch": {
+  "x": 199,
+  "y": 811,
+  "w": 136,
+  "h": 157
+ },
  "acc-bag-quilted": {
   "x": 205,
   "y": 811,
   "w": 231,
   "h": 282
+ },
+ "acc-bag-ring": {
+  "x": 246,
+  "y": 812,
+  "w": 148,
+  "h": 228
  },
  "acc-bag-saddle": {
   "x": 247,
@@ -1042,6 +1066,12 @@
   "w": 54,
   "h": 46
  },
+ "acc-bracelet-chain": {
+  "x": 687,
+  "y": 703,
+  "w": 33,
+  "h": 12
+ },
  "acc-bracelet-charm": {
   "x": 681,
   "y": 711,
@@ -1078,6 +1108,12 @@
   "w": 76,
   "h": 43
  },
+ "acc-ear-bar": {
+  "x": 449,
+  "y": 189,
+  "w": 124,
+  "h": 24
+ },
  "acc-ear-chandelier": {
   "x": 447,
   "y": 189,
@@ -1107,6 +1143,18 @@
   "y": 273,
   "w": 155,
   "h": 81
+ },
+ "acc-neck-heart": {
+  "x": 476,
+  "y": 273,
+  "w": 71,
+  "h": 44
+ },
+ "acc-neck-layered": {
+  "x": 462,
+  "y": 273,
+  "w": 99,
+  "h": 38
  },
  "acc-neck-pearl": {
   "x": 471,
@@ -1149,6 +1197,18 @@
   "y": 148,
   "w": 159,
   "h": 47
+ },
+ "acc-studs-heart": {
+  "x": 446,
+  "y": 182,
+  "w": 132,
+  "h": 12
+ },
+ "acc-studs-moon": {
+  "x": 448,
+  "y": 179,
+  "w": 130,
+  "h": 17
  },
  "acc-studs-pearl": {
   "x": 441,
@@ -1425,6 +1485,20 @@
   "h": 194,
   "cut": 1309
  },
+ "shoes-boots-hiking": {
+  "x": 378,
+  "y": 1348,
+  "w": 265,
+  "h": 143,
+  "cut": 1357
+ },
+ "shoes-boots-knee": {
+  "x": 383,
+  "y": 1007,
+  "w": 256,
+  "h": 486,
+  "cut": 1016
+ },
  "shoes-boots-lace": {
   "x": 384,
   "y": 1303,
@@ -1453,6 +1527,13 @@
   "h": 446,
   "cut": 1061
  },
+ "shoes-boots-snow": {
+  "x": 372,
+  "y": 1163,
+  "w": 279,
+  "h": 321,
+  "cut": 1172
+ },
  "shoes-boots": {
   "x": 382,
   "y": 999,
@@ -1479,6 +1560,27 @@
   "w": 251,
   "h": 134,
   "cut": 1372
+ },
+ "shoes-court": {
+  "x": 383,
+  "y": 1343,
+  "w": 256,
+  "h": 150,
+  "cut": 1352
+ },
+ "shoes-espadrilles-foot": {
+  "x": 408,
+  "y": 1381,
+  "w": 205,
+  "h": 26,
+  "skin": true
+ },
+ "shoes-espadrilles": {
+  "x": 384,
+  "y": 1381,
+  "w": 255,
+  "h": 108,
+  "cut": 1390
  },
  "shoes-flats-foot": {
   "x": 403,
@@ -1513,6 +1615,20 @@
   "w": 261,
   "h": 118,
   "cut": 1399
+ },
+ "shoes-gladiator-foot": {
+  "x": 388,
+  "y": 1351,
+  "w": 243,
+  "h": 143,
+  "skin": true
+ },
+ "shoes-gladiator": {
+  "x": 387,
+  "y": 1351,
+  "w": 248,
+  "h": 145,
+  "cut": 1360
  },
  "shoes-glitter-foot": {
   "x": 401,
@@ -1556,6 +1672,20 @@
   "h": 213,
   "cut": 1300
  },
+ "shoes-knit-foot": {
+  "x": 412,
+  "y": 1356,
+  "w": 196,
+  "h": 6,
+  "skin": true
+ },
+ "shoes-knit": {
+  "x": 386,
+  "y": 1356,
+  "w": 249,
+  "h": 134,
+  "cut": 1365
+ },
  "shoes-loafers-foot": {
   "x": 404,
   "y": 1382,
@@ -1583,6 +1713,20 @@
   "w": 249,
   "h": 179,
   "cut": 1336
+ },
+ "shoes-moccasins-foot": {
+  "x": 409,
+  "y": 1371,
+  "w": 203,
+  "h": 34,
+  "skin": true
+ },
+ "shoes-moccasins": {
+  "x": 388,
+  "y": 1371,
+  "w": 246,
+  "h": 120,
+  "cut": 1380
  },
  "shoes-mules-foot": {
   "x": 403,
@@ -1681,6 +1825,20 @@
   "h": 117,
   "cut": 1381
  },
+ "shoes-slingback-foot": {
+  "x": 404,
+  "y": 1344,
+  "w": 213,
+  "h": 89,
+  "skin": true
+ },
+ "shoes-slingback": {
+  "x": 393,
+  "y": 1344,
+  "w": 236,
+  "h": 165,
+  "cut": 1353
+ },
  "shoes-slipons-foot": {
   "x": 409,
   "y": 1291,
@@ -1694,6 +1852,20 @@
   "w": 251,
   "h": 200,
   "cut": 1300
+ },
+ "shoes-slippers-foot": {
+  "x": 407,
+  "y": 1341,
+  "w": 206,
+  "h": 49,
+  "skin": true
+ },
+ "shoes-slippers": {
+  "x": 378,
+  "y": 1341,
+  "w": 265,
+  "h": 153,
+  "cut": 1350
  },
  "shoes-sneakers-foot": {
   "x": 408,
@@ -1794,6 +1966,12 @@
   "w": 824,
   "h": 806
  },
+ "product-acc-bag-bowling": {
+  "x": 34,
+  "y": 54,
+  "w": 956,
+  "h": 914
+ },
  "product-acc-bag-brief": {
   "x": 76,
   "y": 76,
@@ -1818,6 +1996,12 @@
   "w": 860,
   "h": 843
  },
+ "product-acc-bag-frame": {
+  "x": 140,
+  "y": 74,
+  "w": 743,
+  "h": 862
+ },
  "product-acc-bag-hobo": {
   "x": 131,
   "y": 83,
@@ -1830,11 +2014,23 @@
   "w": 791,
   "h": 945
  },
+ "product-acc-bag-pouch": {
+  "x": 69,
+  "y": 252,
+  "w": 876,
+  "h": 509
+ },
  "product-acc-bag-quilted": {
   "x": 77,
   "y": 42,
   "w": 867,
   "h": 943
+ },
+ "product-acc-bag-ring": {
+  "x": 214,
+  "y": 83,
+  "w": 589,
+  "h": 869
  },
  "product-acc-bag-saddle": {
   "x": 104,
@@ -1872,6 +2068,12 @@
   "w": 1130,
   "h": 520
  },
+ "product-acc-bracelet-chain": {
+  "x": 42,
+  "y": 48,
+  "w": 939,
+  "h": 922
+ },
  "product-acc-bracelet-charm": {
   "x": 103,
   "y": 170,
@@ -1908,6 +2110,12 @@
   "w": 916,
   "h": 596
  },
+ "product-acc-ear-bar": {
+  "x": 202,
+  "y": 120,
+  "w": 619,
+  "h": 791
+ },
  "product-acc-ear-chandelier": {
   "x": 207,
   "y": 149,
@@ -1937,6 +2145,18 @@
   "y": 39,
   "w": 1174,
   "h": 1166
+ },
+ "product-acc-neck-heart": {
+  "x": 67,
+  "y": 39,
+  "w": 888,
+  "h": 941
+ },
+ "product-acc-neck-layered": {
+  "x": 51,
+  "y": 53,
+  "w": 917,
+  "h": 914
  },
  "product-acc-neck-pearl": {
   "x": 121,
@@ -1979,6 +2199,18 @@
   "y": 393,
   "w": 969,
   "h": 293
+ },
+ "product-acc-studs-heart": {
+  "x": 56,
+  "y": 356,
+  "w": 911,
+  "h": 367
+ },
+ "product-acc-studs-moon": {
+  "x": 101,
+  "y": 337,
+  "w": 806,
+  "h": 390
  },
  "product-acc-studs-pearl": {
   "x": 65,
@@ -2394,6 +2626,18 @@
   "w": 822,
   "h": 798
  },
+ "product-shoes-boots-hiking": {
+  "x": 58,
+  "y": 85,
+  "w": 911,
+  "h": 862
+ },
+ "product-shoes-boots-knee": {
+  "x": 277,
+  "y": 37,
+  "w": 469,
+  "h": 960
+ },
  "product-shoes-boots-lace": {
   "x": 132,
   "y": 121,
@@ -2411,6 +2655,12 @@
   "y": 42,
   "w": 468,
   "h": 955
+ },
+ "product-shoes-boots-snow": {
+  "x": 134,
+  "y": 53,
+  "w": 756,
+  "h": 919
  },
  "product-shoes-boots": {
   "x": 276,
@@ -2430,6 +2680,18 @@
   "w": 970,
   "h": 830
  },
+ "product-shoes-court": {
+  "x": 60,
+  "y": 136,
+  "w": 904,
+  "h": 786
+ },
+ "product-shoes-espadrilles": {
+  "x": 38,
+  "y": 186,
+  "w": 950,
+  "h": 668
+ },
  "product-shoes-flats": {
   "x": 69,
   "y": 65,
@@ -2447,6 +2709,12 @@
   "y": 77,
   "w": 870,
   "h": 887
+ },
+ "product-shoes-gladiator": {
+  "x": 47,
+  "y": 55,
+  "w": 929,
+  "h": 925
  },
  "product-shoes-glitter": {
   "x": 132,
@@ -2466,6 +2734,12 @@
   "w": 782,
   "h": 898
  },
+ "product-shoes-knit": {
+  "x": 100,
+  "y": 100,
+  "w": 824,
+  "h": 842
+ },
  "product-shoes-loafers": {
   "x": 55,
   "y": 56,
@@ -2477,6 +2751,12 @@
   "y": 65,
   "w": 809,
   "h": 912
+ },
+ "product-shoes-moccasins": {
+  "x": 66,
+  "y": 142,
+  "w": 891,
+  "h": 751
  },
  "product-shoes-mules": {
   "x": 79,
@@ -2526,11 +2806,23 @@
   "w": 897,
   "h": 782
  },
+ "product-shoes-slingback": {
+  "x": 179,
+  "y": 80,
+  "w": 665,
+  "h": 871
+ },
  "product-shoes-slipons": {
   "x": 32,
   "y": 58,
   "w": 960,
   "h": 919
+ },
+ "product-shoes-slippers": {
+  "x": 75,
+  "y": 232,
+  "w": 869,
+  "h": 572
  },
  "product-shoes-sneakers": {
   "x": 55,
