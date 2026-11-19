@@ -5,8 +5,81 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#ffffff" />
   <title>Модный шопинг: Собери образ</title>
+  <!-- the loading screen: inline so it shows at once, before any script or font has arrived -->
+  <style>
+    #loader {
+      position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 14px; padding: 24px; background: radial-gradient(ellipse at 50% 35%, #ffffff 0%, #fbf1f8 45%, #efe4fd 100%);
+      font-family: 'Nunito Variable', 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #3d3155;
+      transition: opacity 0.45s ease, visibility 0.45s;
+    }
+    #loader.done { opacity: 0; visibility: hidden; }
+    #loader .ld-shop { position: relative; width: 160px; height: 190px; }
+    #loader .ld-shop svg { position: absolute; left: 0; width: 100%; overflow: visible; }
+    #loader .ld-back { top: 0; height: 100%; }
+    #loader .ld-front { bottom: 0; height: 110px; filter: drop-shadow(0 12px 16px rgba(240, 111, 159, 0.3)); }
+    #loader .ld-item {
+      position: absolute; bottom: 72px; left: 50%; font-size: 38px; line-height: 1; opacity: 0;
+      margin-left: -19px; animation: ld-pop 2.4s cubic-bezier(.3, .7, .4, 1) infinite;
+    }
+    #loader .ld-item.i1 { --x: -34px; --r: -16deg; animation-delay: 0s; }
+    #loader .ld-item.i2 { --x: 30px; --r: 14deg; animation-delay: 0.6s; }
+    #loader .ld-item.i3 { --x: -8px; --r: -6deg; animation-delay: 1.2s; }
+    #loader .ld-item.i4 { --x: 20px; --r: 10deg; animation-delay: 1.8s; }
+    #loader .ld-spark { position: absolute; font-size: 18px; animation: ld-twinkle 1.4s ease-in-out infinite; }
+    #loader .ld-spark.s1 { left: -6px; top: 40px; color: #f7c548; }
+    #loader .ld-spark.s2 { right: -4px; top: 22px; color: #ff7aa8; font-size: 16px; animation-delay: 0.45s; }
+    #loader .ld-spark.s3 { right: -10px; bottom: 50px; color: #7ccfb5; animation-delay: 0.9s; }
+    #loader .ld-spark.s4 { left: -4px; bottom: 30px; color: #a98bf0; font-size: 14px; animation-delay: 1.2s; }
+    #loader h1 { margin: 6px 0 0; font-size: 28px; font-weight: 900; letter-spacing: 0.2px; }
+    #loader p { margin: 0; font-size: 15px; font-weight: 700; color: #8a7fa3; }
+    #loader .ld-bar { width: min(240px, 70vw); height: 10px; margin-top: 10px; border-radius: 5px; background: #e6dcf8; overflow: hidden; }
+    #loader .ld-bar i {
+      display: block; width: 8%; height: 100%; border-radius: 5px; background: linear-gradient(90deg, #ff9cc2, #b39af0, #8b6ad8);
+      transition: width 0.3s ease;
+    }
+    /* a purchase jumps out of the bag, spins a little at the top and drops back in */
+    @keyframes ld-pop {
+      0% { transform: translate(0, 46px) scale(0.6); opacity: 0; }
+      10% { opacity: 1; }
+      38% { transform: translate(var(--x), -78px) rotate(var(--r)) scale(1); }
+      55% { transform: translate(var(--x), -70px) rotate(var(--r)) scale(1); }
+      82% { transform: translate(0, 40px) scale(0.7); opacity: 1; }
+      100% { transform: translate(0, 46px) scale(0.6); opacity: 0; }
+    }
+    @keyframes ld-twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.7); } 50% { opacity: 1; transform: scale(1.1); } }
+    @media (prefers-reduced-motion: reduce) { #loader .ld-item, #loader .ld-spark { animation: none; }
+      #loader .ld-item.i1 { opacity: 1; transform: translate(-20px, -40px) rotate(-12deg); } }
+  </style>
 </head>
 <body>
+  <div id="loader" role="status" aria-live="polite">
+    <div class="ld-shop" aria-hidden="true">
+      <!-- the inside of the bag and its rope handles, behind the purchases -->
+      <svg class="ld-back" viewBox="0 0 160 190">
+        <path d="M56 84 C52 30 108 30 104 84" fill="none" stroke="#e0619a" stroke-width="5" stroke-linecap="round" />
+        <path d="M20 84 L32 76 H128 L140 84 Z" fill="#d94f88" />
+      </svg>
+      <span class="ld-item i1">👗</span><span class="ld-item i2">👠</span><span class="ld-item i3">👜</span><span class="ld-item i4">💄</span>
+      <!-- the front of the bag, over them -->
+      <svg class="ld-front" viewBox="0 0 160 110">
+        <defs>
+          <linearGradient id="ld-bagfront" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ffb3d1" /><stop offset="1" stop-color="#f2689d" />
+          </linearGradient>
+        </defs>
+        <path d="M20 0 H140 L132 104 Q80 110 28 104 Z" fill="url(#ld-bagfront)" />
+        <path d="M20 0 H140 L139 13 H21 Z" fill="#ffc9de" />
+        <path d="M24 13 H136" stroke="#fff" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.7" />
+        <path d="M120 13 L132 104 Q128 105 124 105 L113 13 Z" fill="#000" opacity="0.06" />
+        <path d="M80 76 C60 62 63 44 75 47 C78.5 48 80 51.5 80 51.5 C80 51.5 81.5 48 85 47 C97 44 100 62 80 76 Z" fill="#fff" opacity="0.92" />
+      </svg>
+      <span class="ld-spark s1">✦</span><span class="ld-spark s2">♥</span><span class="ld-spark s3">✦</span><span class="ld-spark s4">✧</span>
+    </div>
+    <h1>Модный шопинг</h1>
+    <p>Собери образ</p>
+    <div class="ld-bar" aria-label="Загрузка"><i></i></div>
+  </div>
   <div id="app"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>
