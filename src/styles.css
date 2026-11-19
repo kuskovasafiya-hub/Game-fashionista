@@ -1375,3 +1375,11 @@ button:disabled { cursor: default; }
 .ar-switch i { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: transform 0.2s; }
 .audio-row.on .ar-switch { background: var(--accent); }
 .audio-row.on .ar-switch i { transform: translateX(20px); }
+
+/* Wardrobe: the accessories tab narrowed to jewellery, bags or glasses — one row, no scrolling */
+.w-filter { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 0 8px; }
+.wf {
+  flex: 1 1 auto; height: 30px; padding: 0 8px; border: 0; border-radius: 15px; background: #f1ecfa;
+  font: inherit; font-size: 12px; font-weight: 800; color: var(--ink); cursor: pointer; white-space: nowrap;
+}
+.wf.on { background: var(--accent); color: #fff; box-shadow: 0 2px 6px rgba(139, 106, 216, 0.35); }

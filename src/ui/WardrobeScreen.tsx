@@ -21,7 +21,17 @@ const TABS: WTab[] = [
   { icon: 'ring', label: 'Аксессуары и сумки', slots: ['necklace', 'earrings', 'bracelet', 'glasses', 'bag'] },
 ];
 const FIRST_CLOTHES = 3;
-const ownedIn = (slots: Slot[]) => slots.flatMap((s) => ownedInSlot(s));
+/** Owned pieces of these slots, the newest purchase first. */
+const ownedIn = (slots: Slot[]) => slots.flatMap((s) => ownedInSlot(s).map((item, at) => ({ item, at })))
+  .sort((a, b) => b.at - a.at).map((x) => x.item);
+/** Kinds of accessories the accessories tab can be narrowed to. */
+const KINDS: { name: string; slots: Slot[] }[] = [
+  { name: 'Украшения', slots: ['necklace', 'earrings', 'bracelet'] },
+  { name: 'Сумки', slots: ['bag'] },
+  { name: 'Очки', slots: ['glasses'] },
+];
+/** The filter shows up once the tab holds more than this many pieces. */
+const FILTER_FROM = 6;
 
 /**
  * The model on the left, clothes on the right. With `event` it becomes the fitting room:
@@ -30,12 +40,20 @@ const ownedIn = (slots: Slot[]) => slots.flatMap((s) => ownedInSlot(s));
 export function WardrobeScreen({ event, footer }: { event?: Theme; footer?: ComponentChildren }) {
   const g = useGame();
   const [tab, setTab] = useState(FIRST_CLOTHES);
+  const [kind, setKind] = useState<number | null>(null);
+  // a new tab starts unfiltered
+  useEffect(() => { setKind(null); }, [tab]);
   useSceneBackground(event?.id);
   const { look, slots } = TABS[tab];
   // choosing makeup: zoom in to her face and shoulders
   const view = look === 'makeup' ? PORTRAIT_VIEW : FIGURE_VIEW;
   const items = slots ? ownedIn(slots) : [];
-  const shown = event ? [...items].sort((a, b) => Number(fits(b, event.tags)) - Number(fits(a, event.tags))) : items;
+  // accessories: all, or only jewellery, bags or glasses (the kinds she owns)
+  const kinds = items.length > FILTER_FROM && slots && slots.length > 1
+    ? KINDS.map((k, n) => ({ ...k, n })).filter((k) => items.some((i) => k.slots.includes(i.slot))) : [];
+  const picked = kind === null ? items : items.filter((i) => KINDS[kind].slots.includes(i.slot));
+  // the fitting room puts what fits the dress code first (the newest first within each group)
+  const shown = event ? [...picked].sort((a, b) => Number(fits(b, event.tags)) - Number(fits(a, event.tags))) : picked;
 
   return (
     <div class={'screen wardrobe' + (event ? ' fitting' : '')}>
@@ -58,6 +76,12 @@ export function WardrobeScreen({ event, footer }: { event?: Theme; footer?: Comp
           {look === 'hair' && <HairPalette look={g.look} onChange={setLook} />}
           {look && <LookGrid part={look} look={g.look} onChange={setLook} two />}
           {slots && items.length === 0 && <p class="muted center small">Пока пусто. Загляни в магазины!</p>}
+          {kinds.length > 1 && (
+            <div class="w-filter">
+              <button class={'wf' + (kind === null ? ' on' : '')} onClick={() => setKind(null)}>Все</button>
+              {kinds.map((k) => <button class={'wf' + (kind === k.n ? ' on' : '')} onClick={() => setKind(kind === k.n ? null : k.n)}>{k.name}</button>)}
+            </div>
+          )}
           <div class="grid two">
             {shown.map((i) => (
               <div class="card-wrap">
