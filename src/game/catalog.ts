@@ -224,7 +224,9 @@ function add(shop: string, specs: (Spec | Retired)[]) {
     const price = shop === 'starter' ? 0 : Math.round((lo + (hi - lo) * hash(id)) / 10) * 10;
     // about half of the very rare Premium pieces cost coins + diamonds: 1 500 → 6 💎, 3 000 → 12 💎
     const gems = shop === 'premium' && rarity === 'epic' && hash(`${id}:gems`) < 0.5 ? Math.round(price / 250) : undefined;
-    const item: Item = { id, name, art, filter, slot: ART_SLOT[art], rarity, price, gems, shop, tags: [...new Set([...(ART_TAGS[art] ?? []), ...(SHOP_TAGS[shop] ?? [])])] };
+    // the starter set is everyday wear only: party, beach or evening looks need the shops
+    const tags: Tag[] = shop === 'starter' ? ['casual'] : [...new Set([...(ART_TAGS[art] ?? []), ...(SHOP_TAGS[shop] ?? [])])];
+    const item: Item = { id, name, art, filter, slot: ART_SLOT[art], rarity, price, gems, shop, tags };
     ITEMS.push(item);
     ITEM_BY_ID[id] = item;
   });

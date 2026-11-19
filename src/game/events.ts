@@ -161,7 +161,7 @@ export function appeal(outfit: Outfit, tags: Tag[]): number {
 }
 
 /** Typical rival appeal by entry fee: pricier events draw stronger looks. */
-const RIVAL_MEAN = [0, 0.6, 0.66, 0.72];
+const RIVAL_MEAN = [0, 0.68, 0.71, 0.76];
 
 export interface Score {
   /** Dress code match 0..1 (40% of the result). */
@@ -242,12 +242,13 @@ export function rewardFor(ev: GameEvent, starsOrTier: number): Reward {
 }
 
 /**
- * The vote result of a story scene look: about half of a 1-ticket event — coins and XP only;
- * no prize, no tickets (the story is free) and no cups.
+ * The vote result of a story scene look: a small extra — a fifth of a 1-ticket event in coins, a quarter in XP;
+ * no prize, no tickets (the story is free) and no cups. Scenes are passed one after another, so their
+ * results come in batches: anything bigger floods the wallet.
  */
 export function storyVoteReward(starsOrTier: number): Reward {
   const stars = starTier(starsOrTier);
-  return { coins: Math.round((STAR_COINS[stars] * 0.5) / 10) * 10, energy: 0, tickets: 0, gems: 0, xp: Math.round((20 + 10 * stars) / 2) };
+  return { coins: Math.round((STAR_COINS[stars] * 0.2) / 10) * 10, energy: 0, tickets: 0, gems: 0, xp: Math.round((20 + 10 * stars) / 4) };
 }
 
 /* ---------- bots for voting ---------- */
