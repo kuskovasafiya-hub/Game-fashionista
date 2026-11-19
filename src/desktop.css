@@ -1,0 +1,203 @@
+/*
+ * Desktop: a wide landscape window (a computer, or the Yandex Games desktop frame).
+ * The phone layout stays as it is; here the bottom menu moves to the left edge
+ * and the screens spread out over the width.
+ */
+@media (min-width: 860px) and (orientation: landscape) {
+  .app { max-width: 1440px; }
+  .app.has-nav {
+    display: grid; grid-template-columns: 112px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr);
+  }
+  .app.has-nav > .hud { grid-column: 2; grid-row: 1; padding: 14px 24px 10px; }
+  .app.has-nav > .view { grid-column: 2; grid-row: 2; }
+
+  /* the menu: a white column on the left, tabs one under another */
+  .app.has-nav > .navbar {
+    grid-column: 1; grid-row: 1 / 3; grid-template-columns: none; grid-auto-rows: min-content;
+    align-content: center; align-items: center; gap: 22px; padding: 24px 8px;
+    border-radius: 0 32px 32px 0; box-shadow: 4px 0 18px rgba(120, 90, 190, 0.12);
+  }
+  .navbar .nav-label { font-size: 12px; }
+  .navbar .nav-icon { height: 52px; }
+  .navbar .nav-icon svg { width: 38px; height: 38px; }
+  .navbar .nav-item.active .nav-icon svg { width: 46px; height: 46px; }
+  .navbar .nav-item { padding: 8px 4px; border-radius: 20px; transition: background 0.15s; }
+  .navbar .nav-item.active { background: var(--tint); }
+
+  .screen { padding: 8px 28px 24px; }
+  .title { font-size: 26px; }
+  /* the back button sits in the corner of the content, a bit bigger */
+  .back { left: 20px; bottom: 20px; width: 54px; height: 54px; font-size: 24px; }
+  .dbg-fab { bottom: 16px; }
+
+  /* Home: the model on the left half, the story and events stacked on the right */
+  .home {
+    display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-rows: 1fr auto auto 1fr;
+    gap: 18px 24px; padding-top: 8px; padding-bottom: 24px;
+  }
+  .home > .me { grid-column: 1; grid-row: 1 / -1; min-height: 0; padding: 16px 28px 16px 8px; }
+  .home > .story-strip { grid-column: 2; grid-row: 2; }
+  .home > .home-row { grid-column: 2; grid-row: 3; gap: 18px; }
+  .me-doll { max-height: none; }
+  .me-name { font-size: 30px; }
+  .me-level { font-size: 16px; }
+  .story-strip { gap: 18px; padding: 16px; border-radius: 32px; }
+  .ss-pic { width: 120px; height: 120px; border-radius: 24px; }
+  .ss-chapter { font-size: 14px; }
+  .ss-name { font-size: 22px; }
+  .ss-info .muted { font-size: 14px; }
+  .ss-tags .tag-icon { width: 26px; height: 26px; font-size: 18px; }
+  .btn.ss-play { padding: 14px 24px; font-size: 18px; }
+  .mini-card { gap: 10px; padding: 18px 16px; border-radius: 30px; }
+  .feature-tile.sm { width: 46px; height: 46px; border-radius: 14px; font-size: 26px; }
+  .mc-top small { font-size: 14px; }
+  .mc-name { font-size: 18px; }
+  .mini-card .btn.mini { padding: 12px 8px; font-size: 15px; }
+  .mc-face { width: 60px; height: 60px; }
+  .mc-status { font-size: 13px; }
+
+  /* Wardrobe and fitting room: a fixed model column, clothes fill the rest in many columns;
+     the tab icons and the event head sit over the clothes */
+  .wardrobe {
+    --doll-w: 34%; height: 100%; display: grid; padding: 8px 28px 0; column-gap: 24px;
+    grid-template-columns: minmax(0, var(--doll-w)) minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr);
+  }
+  .wardrobe .split { display: contents; }
+  .wardrobe .split-left { grid-column: 1; grid-row: 1 / -1; padding-bottom: 16px; }
+  .wardrobe .fit-head { grid-column: 2; grid-row: 1; }
+  .wardrobe .icon-tabs { grid-column: 2; grid-row: 2; max-width: 640px; gap: 10px; }
+  .wardrobe .split-items { grid-column: 2; grid-row: 3; padding: 2px 4px 90px; }
+  .icon-tab { max-width: 60px; }
+  .split-items .grid.two { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .grid.two .card { padding: 6px 6px 9px; }
+  .card:has(.item-tags), .grid.two .card:has(.item-tags) { padding-bottom: 26px; }
+  .item-tags { left: 8px; bottom: 8px; gap: 2px; }
+  .item-tags .tag-icon { width: 18px; height: 18px; font-size: 14px; }
+  .hair-dot { width: 30px; height: 30px; }
+  .hair-palette { gap: 8px; }
+  .undress { font-size: 13px; padding: 5px 14px; }
+  /* fitting room: submit under the clothes, clear of the back button */
+  .fit-footer { left: calc(28px + var(--doll-w, 34%) + 24px); right: 28px; bottom: 20px; max-width: 520px; }
+  .fit-footer .btn { height: 54px; font-size: 18px; }
+  .fit-title { font-size: 18px; }
+  .fit-head small { font-size: 13px; }
+
+  /* Shops street: bigger houses, wider lots */
+  .street { padding: 4px 28px 20px; }
+  .street-view { --lot: 340px; --caption: 120px; --pave: 20px; border-radius: 36px; }
+  .house { transform: scale(1.3); }
+  .lot-spacer { width: 24px; }
+  .lamp { height: 230px; }
+  .lot-caption { width: 280px; padding: 10px 14px; }
+  .lot-caption b { font-size: 19px; }
+  .lot-caption small { font-size: 13px; }
+  .lot-meta { font-size: 13px; }
+  .street-arrow { width: 52px; height: 52px; font-size: 32px; top: 40%; }
+  .street-arrow.left { left: 16px; }
+  .street-arrow.right { right: 16px; }
+  .street-dots i { width: 10px; height: 10px; }
+  .street-dots i.on { width: 28px; }
+
+  /* Inside a shop: the room is wide, so the fixtures stand in two rows — four along the top wall,
+     three in the middle — instead of the phone's tall room (SPOTS in ShopScreen, set inline) */
+  .shop-floor { padding: 4px 28px 20px; }
+  .shop-bar { gap: 14px; padding: 2px 4px 12px; }
+  .shop-bar .shop-icon { width: 54px; height: 54px; font-size: 30px; }
+  .shop-bar-info b { font-size: 22px; }
+  .shop-bar-info small { font-size: 13px; }
+  .room .fixture { height: 38%; width: 22.5% !important; top: 5% !important; right: auto !important; }
+  .room .fixture:nth-of-type(1) { left: 2.5% !important; }
+  .room .fixture:nth-of-type(2) { left: 26.8% !important; }
+  .room .fixture:nth-of-type(3) { left: 51.1% !important; }
+  .room .fixture:nth-of-type(4) { left: 75.4% !important; }
+  .room .fixture:nth-of-type(n + 5) { top: 52% !important; width: 26% !important; }
+  .room .fixture:nth-of-type(5) { left: 6% !important; }
+  .room .fixture:nth-of-type(6) { left: 37% !important; }
+  .room .fixture:nth-of-type(7) { left: 68% !important; }
+  /* fewer pieces in the middle row: keep it centred */
+  .room .fixture:nth-of-type(5):nth-last-of-type(2) { left: 21% !important; }
+  .room .fixture:nth-of-type(6):last-of-type { left: 53% !important; }
+  .room .fixture:nth-of-type(5):last-of-type { left: 37% !important; }
+  .room-door { width: 130px; height: 28px; }
+
+  /* Events: cards side by side */
+  .event-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(500px, 1fr)); gap: 20px; margin-bottom: 18px; }
+  .ev-pic { height: 250px; }
+  .ev-info { padding: 14px 18px 16px; gap: 4px; }
+  .ev-name { font-size: 20px; }
+  .ev-about { font-size: 14px; }
+
+  /* Story: the chapters as a grid of panels */
+  .story-map { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 20px; align-items: start; }
+  .story-map > .title { grid-column: 1 / -1; margin-bottom: 0; }
+  .story-map > .panel { margin: 0; }
+
+  /* result screens: the title card and the buttons stay a readable width around the model */
+  .sr-head, .sr-foot { width: min(560px, 100%); margin-left: auto; margin-right: auto; }
+
+  /* Voting lobby: the event's info on the left of its bar, the button on the right */
+  .vote-lobby { padding-bottom: 20px; }
+  .vote-lobby .feature-body {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 24px; align-items: center; padding: 14px 20px 16px;
+  }
+  .vote-lobby .feature-body > * { grid-column: 1; }
+  .vote-lobby .feature-body > .btn { grid-column: 2; grid-row: 1 / span 3; width: 320px; margin: 0; }
+  .vote-lobby .feature-name { font-size: 20px; }
+  .vote-lobby .story { width: 76px; }
+  .vote-lobby .story-ring { width: 70px; height: 70px; }
+
+  /* Voting: the pair fills the screen height, the two models a little closer together */
+  .screen.vote { height: 100%; padding-bottom: 20px; }
+  .vote > * { width: min(100%, 1100px); margin-left: auto; margin-right: auto; }
+  .vote-pair { flex: 1 1 0; min-height: 0; gap: 12%; padding: 14px 8%; }
+  .vote-side { height: 100%; }
+  .vote-name { font-size: 16px; padding: 4px 16px; }
+  .vote-foot { flex: none; }
+
+  /* Character creation (no menu yet): like the wardrobe — the model on the left, everything else on the right */
+  .create {
+    width: 100%; max-width: 1200px; margin: 0 auto; padding: 20px 32px 24px; display: grid; column-gap: 32px;
+    grid-template-columns: minmax(0, 36%) minmax(0, 1fr); grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+  }
+  .create > * { grid-column: 2; }
+  .create .split { display: contents; }
+  .create .split-left { grid-column: 1; grid-row: 1 / -1; }
+  .create .split-items { grid-row: 4; padding: 2px 4px 8px; }
+  .create .title { grid-row: 1; font-size: 28px; margin: 0 0 12px; }
+  .create .icon-tabs { grid-row: 2; width: 100%; max-width: 640px; margin: 0 auto; gap: 10px; }
+  .create .tab-label { grid-row: 3; }
+  .create .name-hint { grid-row: 5; }
+  .create .create-footer { grid-row: 6; width: 100%; max-width: 640px; margin: 0 auto; }
+}
+
+/* a mouse: things you can press react to hovering */
+@media (hover: hover) and (pointer: fine) {
+  .btn:not(:disabled):hover { filter: brightness(1.05); transform: translateY(-1px); }
+  .card:hover, .icon-tab:hover, .nav-item:hover .nav-icon { transform: translateY(-2px); }
+  .card, .btn { transition: transform 0.12s, filter 0.12s, box-shadow 0.12s; }
+  .card:hover { box-shadow: inset 0 -4px 0 var(--rc, transparent), 0 6px 14px rgba(120, 90, 190, 0.16); }
+  .nav-item:not(.active):hover .nav-icon svg { opacity: 0.9; }
+  .back:hover { transform: scale(1.06); }
+}
+
+/* short desktop windows: the houses shrink so the house and caption still fit */
+@media (min-width: 860px) and (orientation: landscape) and (max-height: 820px) {
+  .house { transform: scale(1.1); }
+  .lamp { height: 195px; }
+}
+@media (min-width: 860px) and (orientation: landscape) and (max-height: 700px) {
+  .house { transform: scale(0.9); }
+  .lamp { height: 160px; }
+  .street-view { --caption: 104px; }
+}
+
+/* narrower desktop windows (Yandex Games frame, small laptops): the home's right column needs the room */
+@media (min-width: 860px) and (orientation: landscape) and (max-width: 1180px) {
+  .home { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); }
+  .ss-pic { width: 88px; height: 88px; }
+  .ss-name { font-size: 18px; }
+  .btn.ss-play { padding: 12px 16px; font-size: 16px; }
+  .mini-card { padding: 14px 12px; }
+  .mini-card .btn.mini { font-size: 13px; }
+  .mc-face { width: 48px; height: 48px; }
+}

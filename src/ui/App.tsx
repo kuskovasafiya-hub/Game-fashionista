@@ -77,7 +77,7 @@ export function App() {
   );
 
   return (
-    <div class="app">
+    <div class="app has-nav">
       <Hud onEnergy={() => setEnergyOpen(true)} onTickets={() => setTicketsOpen(true)} />
       <div class="view">
         <main class="main" key={route.name}>

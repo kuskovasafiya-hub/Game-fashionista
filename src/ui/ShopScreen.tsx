@@ -46,7 +46,8 @@ export function ShopsScreen({ open, focus }: { open: (shopId: string) => void; f
     // back from a shop: stand in front of it again
     const i = focus ? SHOPS.findIndex((s) => s.id === focus) : -1;
     const el = lots()[i];
-    if (el) { centre(el, false); setAt(i); }
+    if (el) centre(el, false);
+    onScroll();
     // a mouse wheel walks the street one house at a time
     const sc = scroller.current!;
     let cool = 0;
@@ -55,7 +56,9 @@ export function ShopsScreen({ open, focus }: { open: (shopId: string) => void; f
       e.preventDefault();
       if (Date.now() < cool) return;
       cool = Date.now() + 350;
-      const here = Math.round(sc.scrollLeft / (lots()[0]?.offsetWidth || 1));
+      const mid = sc.scrollLeft + sc.clientWidth / 2;
+      const dist = lots().map((el) => Math.abs(el.offsetLeft + el.offsetWidth / 2 - mid));
+      const here = dist.indexOf(Math.min(...dist));
       const el2 = lots()[Math.min(SHOPS.length - 1, Math.max(0, here + Math.sign(e.deltaY)))];
       if (el2) centre(el2, true);
     };
@@ -63,9 +66,15 @@ export function ShopsScreen({ open, focus }: { open: (shopId: string) => void; f
     return () => sc.removeEventListener('wheel', wheel);
   }, []);
 
+  // the house nearest the middle of the view; on a wide desktop street several are in sight
+  // and the ends can't be centred, so the arrows go by how far the street can still scroll
+  const [ends, setEnds] = useState({ start: true, end: false });
   const onScroll = () => {
     const sc = scroller.current!;
-    setAt(Math.max(0, Math.min(SHOPS.length - 1, Math.round(sc.scrollLeft / (lots()[0]?.offsetWidth || 1)))));
+    const mid = sc.scrollLeft + sc.clientWidth / 2;
+    const dist = lots().map((el) => Math.abs(el.offsetLeft + el.offsetWidth / 2 - mid));
+    setAt(dist.indexOf(Math.min(...dist)));
+    setEnds({ start: sc.scrollLeft <= 1, end: sc.scrollLeft >= sc.scrollWidth - sc.clientWidth - 1 });
   };
 
   return (
@@ -78,8 +87,8 @@ export function ShopsScreen({ open, focus }: { open: (shopId: string) => void; f
           {SHOPS.map((s, i) => <Lot shop={s} index={i} found={g.discovered} level={g.level} open={() => open(s.id)} />)}
           <span class="lot-spacer" />
         </div>
-        {at > 0 && <button class="street-arrow left" onClick={() => step(-1)} aria-label="Назад по улице">‹</button>}
-        {at < SHOPS.length - 1 && <button class="street-arrow right" onClick={() => step(1)} aria-label="Дальше по улице">›</button>}
+        {!ends.start && <button class="street-arrow left" onClick={() => step(-1)} aria-label="Назад по улице">‹</button>}
+        {!ends.end && <button class="street-arrow right" onClick={() => step(1)} aria-label="Дальше по улице">›</button>}
       </div>
       <div class="street-dots">
         {SHOPS.map((s, i) => <i class={i === at ? 'on' : ''} style={{ '--sc': s.color }} />)}
