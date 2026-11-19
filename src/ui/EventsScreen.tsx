@@ -79,27 +79,29 @@ export function EventCard({ ev, now, onOpen }: { ev: GameEvent; now: number; onO
   const entry = g.entries.find((e) => e.key === ev.key);
   const locked = g.level < ev.level;
   const model = useMemo(() => showcaseLook(ev), [ev.key]);
+  // compact: the scene with the model on the left, the rest on the right, so two cards fit one screen
   return (
-    <div class={'feature' + (locked ? ' locked' : '')} style={{ '--ec': ev.color }}>
-      <div class="feature-bar">
-        <span class="feature-tile coral">{ev.emoji}</span>
-        <b class="feature-count">
-          {locked ? <>🔒 ур. {ev.level}</> : entry ? '✓ Участвую' : <>🎟 {ev.cost}</>}
-        </b>
-        <span class="feature-tile gift" title={prize ? `Главный приз: ${prize.name}` : undefined}>
-          {prize && <ItemThumb item={prize} />}
-        </span>
-        <span class="feature-timer">⏱ {timeLeft(ev.end - now)}</span>
-      </div>
-      <div class="feature-img" style={{ '--bg': eventBg(ev.id) }} onClick={() => { if (!locked) onOpen(); }}>
+    <div class={'ev-card' + (locked ? ' locked' : '')} style={{ '--ec': ev.color }}>
+      <div class="ev-pic" style={{ '--bg': eventBg(ev.id) }} onClick={() => { if (!locked) onOpen(); }}>
         <Doll class="feature-model" look={model.look} outfit={model.outfit} view={FIGURE_VIEW} />
+        <span class="feature-tile coral sm ev-emoji">{ev.emoji}</span>
+        <span class="ev-timer">⏱ {timeLeft(ev.end - now)}</span>
       </div>
-      <div class="feature-body">
-        <b class="feature-name">{ev.name}</b>
-        <small class="muted">{ev.about}</small>
-        <DressCode tags={ev.tags} label />
+      <div class="ev-info">
+        <b class="ev-name">{ev.name}</b>
+        <small class="muted ev-about">{ev.about}</small>
+        <DressCode tags={ev.tags} />
+        <div class="ev-meta">
+          {prize && (
+            <span class="ev-prize" title={`Главный приз: ${prize.name}`}>
+              <span class="ev-prize-pic"><ItemThumb item={prize} /></span>
+              <small>Главный<br />приз</small>
+            </span>
+          )}
+          <b class="ev-cost">{locked ? <>🔒 ур. {ev.level}</> : entry ? '✓ Участвую' : <>🎟 {ev.cost}</>}</b>
+        </div>
         <button class="btn primary" disabled={locked} onClick={onOpen}>
-          {locked ? `Откроется на ${ev.level} уровне` : entry ? 'Мой образ' : 'Участвовать'}
+          {locked ? `С ${ev.level} уровня` : entry ? 'Мой образ' : 'Участвовать'}
         </button>
       </div>
     </div>

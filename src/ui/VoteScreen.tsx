@@ -43,18 +43,18 @@ export function VoteLobby({ vote, toEvents, onLevelUp }: {
       <h2 class="stories-title">Мои образы</h2>
       <LookStories entries={mine} now={now} onOpen={setOpen} toEvents={toEvents} />
 
-      <section class="panel">
-        <h2 class="panel-title">Голосование</h2>
-        {on ? (
-          <VoteCard ev={on} now={now} onVote={() => vote(on.key)} />
-        ) : (
+      {on ? (
+        <VoteCard ev={on} now={now} onVote={() => vote(on.key)} />
+      ) : (
+        <section class="panel">
+          <h2 class="panel-title">Голосование</h2>
           <div class="vote-empty">
             <p>Сейчас голосовать не за что.</p>
             <p class="muted small">Голосовать можно в сценах истории, которые ты прошла, и в ивентах, куда ты отправила образ.</p>
             <button class="btn primary" onClick={toEvents}>К ивентам</button>
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
       {open && openEntry && <WaitModal entryKey={open} now={now} onClose={() => setOpen(null)} />}
     </div>
