@@ -34,7 +34,6 @@ export function HomeScreen({ pulse, toWardrobe, toEvents, toVote, openEvent, pla
           <Doll class="doll" look={g.look} outfit={g.outfit} view={FIGURE_VIEW} />
         </button>
         <div class="me-info">
-          <h2 class="me-name">{g.name}</h2>
           <span class="me-level">Уровень {g.level}</span>
           <span class="xpbar"><i style={{ width: `${(g.xp / need) * 100}%` }} /></span>
           <small class="muted">{g.xp} / {need} опыта</small>

@@ -27,7 +27,6 @@ export function CreateScreen() {
     top: DEFAULT_TOP, bottom: DEFAULT_BOTTOM, shoes: 'starter-shoes-sneakers-1',
   });
   const [tab, setTab] = useState(0);
-  const [name, setName] = useState('');
 
   const toggle = (slot: Slot, id: string, required = false) => {
     const next = { ...outfit };
@@ -44,7 +43,6 @@ export function CreateScreen() {
     setOutfit(next);
   };
   const items = (slots: Slot[]) => STARTER.filter((i) => slots.includes(i.slot));
-  const done = name.trim().length > 0;
 
   const { look: part, slots, required } = TABS[tab];
   // choosing makeup: zoom in to her face and shoulders
@@ -80,16 +78,9 @@ export function CreateScreen() {
           )}
         </div>
       </div>
-      {!done && <p class="name-hint">Придумай имя модницы — и можно начинать</p>}
+      {/* the model has no name: one button and she is ready */}
       <div class="create-footer">
-        <input
-          class="input" maxLength={16} placeholder="Имя модницы" value={name} enterKeyHint="done"
-          onInput={(e) => setName(e.currentTarget.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter' && done) createCharacter(name.trim(), look, outfit); }}
-        />
-        <button class="btn primary" disabled={!done} onClick={() => createCharacter(name.trim(), look, outfit)}>
-          Готово ✨
-        </button>
+        <button class="btn primary" onClick={() => createCharacter('', look, outfit)}>Готово ✨</button>
       </div>
     </div>
   );

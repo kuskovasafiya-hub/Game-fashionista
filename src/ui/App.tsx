@@ -165,7 +165,7 @@ export function App() {
         <Modal>
           <Sound name="gift" delay={150} />
           <div class="burst gift-burst">🎁</div>
-          <h2>Привет, {g.name}!</h2>
+          <h2>Добро пожаловать!</h2>
           <p class="muted">Подарок на новоселье:</p>
           <ul class="gift-list">
             <li data-reward="coins"><b><Coin /></b>+{fmt(GIFT_COINS)}<small>на покупки</small></li>
