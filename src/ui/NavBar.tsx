@@ -10,6 +10,41 @@ const ICONS: Record<Tab, string> = {
   events: 'M2.5 7.5l5 4L12 4l4.5 7.5 5-4-1.8 11.3a1.5 1.5 0 0 1-1.5 1.2H5.8a1.5 1.5 0 0 1-1.5-1.2L2.5 7.5z',
 };
 
+/** Top and bottom colour of each tab's icon. */
+const COLOURS: Record<Tab, [string, string]> = {
+  shops: ['#ffb3d9', '#e2569b'],
+  vote: ['#ff9a9a', '#ee3f6a'],
+  home: ['#c9b2ff', '#7a52e0'],
+  events: ['#ffe27a', '#f0a312'],
+};
+
+/** Glossy highlight on each icon; the crown also gets gems. */
+const DECOR: Record<Tab, ComponentChildren> = {
+  shops: <ellipse class="nav-gloss" cx="8" cy="12.5" rx="2.2" ry="1.2" />,
+  vote: <ellipse class="nav-gloss" cx="7" cy="7.5" rx="2.4" ry="1.4" transform="rotate(-30 7 7.5)" />,
+  home: <ellipse class="nav-gloss" cx="7.5" cy="9.5" rx="2.2" ry="1.1" transform="rotate(-35 7.5 9.5)" />,
+  events: <>
+    <circle cx="12" cy="15" r="1.6" fill="#ee3f6a" />
+    <circle cx="7.5" cy="16" r="1.1" fill="#4fb8f0" />
+    <circle cx="16.5" cy="16" r="1.1" fill="#4fb8f0" />
+  </>,
+};
+
+function NavDefs() {
+  return (
+    <svg class="nav-defs" width="0" height="0" aria-hidden="true">
+      <defs>
+        {(Object.keys(COLOURS) as Tab[]).map((t) => (
+          <linearGradient id={`nav-g-${t}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color={COLOURS[t][0]} />
+            <stop offset="1" stop-color={COLOURS[t][1]} />
+          </linearGradient>
+        ))}
+      </defs>
+    </svg>
+  );
+}
+
 const LABELS: Record<Tab, string> = {
   shops: 'Магазины', vote: 'Голосование', home: 'Главная', events: 'Ивенты',
 };
@@ -47,11 +82,16 @@ export function NavBar({ active, go, badges, locked = [], pulse }: {
       <span class="nav-label">{LABELS[t]}</span>
     </button>
   );
+  // "candy" icons: each tab its own colour gradient with a glossy highlight (gradients in NavDefs)
   const svg = (t: Tab) => (
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d={ICONS[t]} /></svg>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d={ICONS[t]} fill={`url(#nav-g-${t})`} />
+      {DECOR[t]}
+    </svg>
   );
   return (
     <nav class="navbar">
+      <NavDefs />
       {item('shops', svg('shops'))}
       {item('vote', svg('vote'))}
       {item('home', svg('home'))}

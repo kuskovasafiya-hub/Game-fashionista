@@ -570,11 +570,13 @@ button:disabled { cursor: default; }
 .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 2px 0; color: #d9d0ea; }
 .nav-item:active .nav-icon { transform: scale(0.92); }
 .nav-icon { position: relative; display: grid; place-items: center; height: 46px; transition: transform 0.1s; }
-.nav-icon svg { width: 32px; height: 32px; fill: currentColor; }
+.nav-icon svg { width: 34px; height: 34px; opacity: 0.65; filter: saturate(0.8); transition: width 0.15s, height 0.15s, opacity 0.15s; }
+.nav-gloss { fill: #fff; opacity: 0.6; }
+.nav-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 .nav-label { font-size: 10px; font-weight: 800; color: #a99fc0; white-space: nowrap; }
-.nav-item.active { color: var(--accent); }
 .nav-item.active .nav-label { color: var(--accent-dark); }
-.nav-item.active .nav-icon svg { filter: drop-shadow(0 2px 0 var(--accent-dark)); }
+/* the open tab: full colour, a bit bigger */
+.nav-item.active .nav-icon svg { width: 40px; height: 40px; opacity: 1; filter: drop-shadow(0 2px 3px rgba(90, 60, 160, 0.25)); }
 .nav-badge {
   position: absolute; top: 2px; right: -9px; display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px;
   border-radius: 10px; border: 2px solid #fff; background: var(--red); color: #fff; font-size: 11px; font-weight: 900;
@@ -608,7 +610,7 @@ button:disabled { cursor: default; }
 .vote-lobby .feature-body .btn { margin-top: 8px; padding: 11px 16px; font-size: 17px; }
 .vote-empty { padding: 4px 8px 6px; text-align: center; font-weight: 700; }
 .vote-empty p { margin: 4px 0; }
-.nav-item.locked .nav-icon svg { opacity: 0.6; }
+.nav-item.locked .nav-icon svg { opacity: 0.3; filter: grayscale(0.8); }
 .nav-lock { position: absolute; top: 4px; right: -8px; font-size: 13px; filter: grayscale(0.3); }
 
 /* My looks as round stories */
