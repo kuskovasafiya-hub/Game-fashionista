@@ -8,7 +8,7 @@ import {
 import { createPortal } from 'preact/compat';
 import { useNow } from './EventsScreen';
 import { rng, seedOf } from '../game/events';
-import { Coin, ItemCard, Modal, Price, RarityTag, fmt, plural } from './common';
+import { Coin, DressCode, ItemCard, Modal, Price, RarityTag, fmt, plural } from './common';
 import { flyRewards, flyTo, picture } from './fx';
 
 /** Shop window order: the big pieces first, then shoes and accessories. */
@@ -611,6 +611,8 @@ function FindScreen({ r, fx, shopId, onClose }: {
         </div>
         <div class="find-info">
           <h2>{item.name}</h2>
+          {/* which dress codes it fits, with names, so the icons are learnt while shopping */}
+          <span class="find-style"><DressCode tags={item.tags} /></span>
           {r.lucky && <p class="muted small lucky">Такие вещи попадаются нечасто — а тебе повезло в первый же день!</p>}
           <p class="price"><Price item={item} /></p>
         </div>

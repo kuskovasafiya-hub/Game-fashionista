@@ -110,8 +110,10 @@ export function EventCard({ ev, now, onOpen }: { ev: GameEvent; now: number; onO
 
 /* ---------- one event: fitting room or the sent look ---------- */
 
-export function EventScreen({ eventKey, onDone, onTickets, toVote }: {
+export function EventScreen({ eventKey, onDone, onTickets, toVote, voteHere }: {
   eventKey: string; onDone: () => void; onTickets: () => void; toVote: () => void;
+  /** Straight into a voting round of this event. */
+  voteHere: () => void;
 }) {
   const g = useGame();
   const now = useNow();
@@ -124,7 +126,7 @@ export function EventScreen({ eventKey, onDone, onTickets, toVote }: {
   if (!ev) return <div class="screen"><p class="muted center">Ивент не найден</p></div>;
 
   // the sent look is its own screen, like a story scene result (the fitting room is gone)
-  if (entry) return <EventSent ev={ev} justSent={sent} onDone={onDone} toVote={toVote} />;
+  if (entry) return <EventSent ev={ev} justSent={sent} onDone={onDone} toVote={toVote} voteHere={voteHere} />;
 
   const closed = ev.end <= now;
   const submit = () => {
@@ -160,7 +162,11 @@ export function EventScreen({ eventKey, onDone, onTickets, toVote }: {
         <Modal onClose={() => setConfirm(false)}>
           <h2>Отправить образ?</h2>
           <div class="confirm-doll"><Doll class="doll" look={g.look} outfit={g.outfit} /></div>
-          <p>Дресс-код: <b>{match}%</b>{match < 60 && <><br /><small class="muted">Маловато — вещи с ✓ поднимут оценку</small></>}</p>
+          <p>Дресс-код: <b>{match}%</b>
+            {match < 30
+              ? <><br /><b class="warn">Почти ничего не подходит — оценка будет низкой</b></>
+              : match < 60 && <><br /><small class="muted">Маловато — вещи с иконками дресс-кода поднимут оценку</small></>}
+          </p>
           <p class="muted small">Спишется {ev.cost} {ticketWord(ev.cost)}. Один образ на ивент — изменить его потом нельзя.</p>
           <button class="btn primary" onClick={send}>Отправить за 🎟 {ev.cost}</button>
           <button class="btn" onClick={() => setConfirm(false)}>Ещё подумаю</button>
@@ -174,7 +180,7 @@ export function EventScreen({ eventKey, onDone, onTickets, toVote }: {
  * A look sent to an event, on the event picture: title card with the status, the model in
  * the scene, buttons at the bottom. Shown right after sending and whenever the event is reopened.
  */
-function EventSent({ ev, justSent, onDone, toVote }: { ev: GameEvent; justSent: boolean; onDone: () => void; toVote: () => void }) {
+function EventSent({ ev, justSent, onDone, toVote, voteHere }: { ev: GameEvent; justSent: boolean; onDone: () => void; toVote: () => void; voteHere: () => void }) {
   const now = useNow();
   useSceneBackground(ev.id);
   const entry = entryFor(ev.key);
@@ -196,7 +202,7 @@ function EventSent({ ev, justSent, onDone, toVote }: { ev: GameEvent; justSent: 
       <div class="sr-foot">
         {ready
           ? <button class="btn primary" onClick={toVote}>Узнать результат</button>
-          : <button class="btn primary" onClick={toVote}>Голосовать</button>}
+          : <button class="btn primary" onClick={voteHere}>Голосовать</button>}
         <button class="btn" onClick={onDone}>К ивентам</button>
       </div>
     </div>

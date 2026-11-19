@@ -82,7 +82,11 @@ export function CreateScreen() {
       </div>
       {!done && <p class="name-hint">Придумай имя модницы — и можно начинать</p>}
       <div class="create-footer">
-        <input class="input" maxLength={16} placeholder="Имя модницы" value={name} onInput={(e) => setName(e.currentTarget.value)} />
+        <input
+          class="input" maxLength={16} placeholder="Имя модницы" value={name} enterKeyHint="done"
+          onInput={(e) => setName(e.currentTarget.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && done) createCharacter(name.trim(), look, outfit); }}
+        />
         <button class="btn primary" disabled={!done} onClick={() => createCharacter(name.trim(), look, outfit)}>
           Готово ✨
         </button>

@@ -70,7 +70,7 @@ export function WardrobeScreen({ event, footer }: { event?: Theme; footer?: Comp
           </div>
           {slots && <p class="muted small center">
             {event
-              ? 'Подходит вещь хотя бы с одной иконкой ивента — такие стоят первыми.'
+              ? 'Подходит вещь хотя бы с одной иконкой дресс-кода — такие стоят первыми.'
               : 'Нажми на вещь, чтобы надеть или снять.'}
           </p>}
         </div>

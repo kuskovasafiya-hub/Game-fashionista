@@ -107,7 +107,7 @@ export function App() {
           {route.name === 'event' && (
             <EventScreen
               eventKey={route.key} onDone={() => setRoute({ name: 'events' })} onTickets={() => setTicketsOpen(true)}
-              toVote={() => go('vote')}
+              toVote={() => go('vote')} voteHere={() => setRoute({ name: 'voting', key: route.key })}
             />
           )}
           {route.name === 'vote' && (

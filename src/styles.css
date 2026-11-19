@@ -1194,6 +1194,8 @@ button:disabled { cursor: default; }
 @keyframes drop { from { transform: translateY(-110%) scale(0.6) rotate(-8deg); opacity: 0; } 60% { opacity: 1; } }
 .find-info { flex: none; text-align: center; }
 .find-info h2 { margin: 4px 0 0; font-size: 22px; }
+.find-style { display: flex; justify-content: center; margin: 6px 0 2px; }
+.find-style .chips { justify-content: center; }
 .find-info .price { margin: 2px 0; }
 .find-actions { flex: none; }
 .find-actions .btn-row .btn { margin-top: 6px; }
@@ -1353,3 +1355,4 @@ button:disabled { cursor: default; }
 .mc-face-doll { width: 100%; }
 .mc-status { font-size: 11px; font-weight: 800; color: var(--muted); }
 .mc-status.hot { color: var(--accent-dark); }
+.warn { color: #e0455f; font-size: 14px; }
