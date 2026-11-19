@@ -4,7 +4,7 @@ import { STARTER, type Slot } from '../game/catalog';
 import { createCharacter } from '../game/store';
 import { ItemCard, UndressButton } from './common';
 import { Icon, type IconName } from './icons';
-import { LookGrid, type LookPart } from './LookEditor';
+import { HairPalette, LookGrid, type LookPart } from './LookEditor';
 
 /** Same round icon tabs as the wardrobe: her look first, then the starter clothes. */
 interface CTab { icon: IconName; label: string; slots?: Slot[]; look?: LookPart; required?: boolean }
@@ -27,8 +27,6 @@ export function CreateScreen() {
     top: DEFAULT_TOP, bottom: DEFAULT_BOTTOM, shoes: 'starter-shoes-sneakers-1',
   });
   const [tab, setTab] = useState(0);
-  /** In the hair tab: hair colours instead of hairstyles, behind the colour wheel button. */
-  const [dye, setDye] = useState(false);
   const [name, setName] = useState('');
 
   const toggle = (slot: Slot, id: string, required = false) => {
@@ -71,18 +69,8 @@ export function CreateScreen() {
           <UndressButton onClick={() => setOutfit({})} disabled={!Object.keys(outfit).length} />
         </div>
         <div class="split-items">
-          {part === 'hair' && (
-            <div class="hair-head">
-              <b>{dye ? 'Цвет волос' : 'Причёска'}</b>
-              <button
-                class={'icon-tab colour-btn' + (dye ? ' active' : '')} onClick={() => setDye(!dye)}
-                title={dye ? 'Причёски' : 'Цвет волос'} aria-label={dye ? 'Причёски' : 'Цвет волос'}
-              >
-                <Icon name="colour" />
-              </button>
-            </div>
-          )}
-          {part && <LookGrid part={part === 'hair' && dye ? 'colour' : part} look={look} onChange={setLook} two />}
+          {part === 'hair' && <HairPalette look={look} onChange={setLook} />}
+          {part && <LookGrid part={part} look={look} onChange={setLook} two />}
           {slots && (
             <div class="grid two">
               {items(slots).map((i) => (

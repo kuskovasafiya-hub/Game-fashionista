@@ -24,6 +24,11 @@ export const HAIRSTYLES: HairStyle[] = [
   { name: 'Косы', art: 'hair-braids' },
   { name: 'Хвост', art: 'hair-pony' },
   { name: 'Пикси', art: 'hair-pixie' },
+  { name: 'Заколки', art: 'hair-clips' },
+  { name: 'Палочки', art: 'hair-sticks' },
+  { name: 'Маллет', art: 'hair-mullet' },
+  { name: 'Рожки', art: 'hair-spacebuns' },
+  { name: 'Бант', art: 'hair-bow' },
 ];
 
 /**

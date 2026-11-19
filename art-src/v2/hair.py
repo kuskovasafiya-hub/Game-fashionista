@@ -8,7 +8,9 @@ target ramp. Shading, strands and line art stay where they were; the ramp's firs
 is the line art.
 
 The ids and order must match HAIR_COLOURS in src/art/Doll.tsx ('natural' = the drawn
-colour, no files). Run by build.py; on its own it rewrites only the hair colour files
+colour, no files). Accessories drawn into a hairstyle (clips, sticks, a bow) keep their
+own colour: in the styles listed in ACCENTED, pixels whose hue is far from the hair's
+own hue and that are clearly coloured are left as drawn. Run by build.py; on its own it rewrites only the hair colour files
 from out/hair-*.png and the boxes already in src/art/layers.json.
 """
 import json
@@ -38,6 +40,8 @@ COLOURS = {
     'blue': ('#0e1a36', '#244278', '#4f8ad0', '#bfe0ff'),
 }
 STOPS = np.array([0.0, 0.12, 0.55, 1.0])
+# styles with accessories drawn in a colour clearly unlike the hair
+ACCENTED = {'hair-clips', 'hair-sticks', 'hair-bow'}
 
 
 def hex_lab(h):
@@ -68,6 +72,18 @@ def recolour(lab, lo, hi, ramp):
     return skin.lab_to_srgb(out)
 
 
+def accent_mask(lab, alpha, hair_hue):
+    """Accessory pixels: clearly coloured and at least 35 degrees of hue away from the
+    hair (closed and grown by a pixel so their anti-aliased rims stay too)."""
+    from scipy import ndimage as ndi
+    chroma = np.hypot(lab[..., 1], lab[..., 2])
+    hue = np.degrees(np.arctan2(lab[..., 2], lab[..., 1]))
+    diff = np.abs((hue - hair_hue + 180) % 360 - 180)
+    m = (alpha > 30) & (chroma > 14) & (diff > 35)
+    m = ndi.binary_opening(m, iterations=1)
+    return ndi.binary_dilation(ndi.binary_closing(m, iterations=2), iterations=1) & (alpha > 0)
+
+
 def write(layers):
     """Every colour of every hair layer in `layers` (the boxes build.py just saved)."""
     n = 0
@@ -78,12 +94,20 @@ def write(layers):
         labs = {nm: skin.srgb_to_lab(im[..., :3]) for nm, im in imgs.items()}
         hair_l = np.concatenate([labs[nm][..., 0][im[..., 3] > 200] for nm, im in imgs.items()])
         lo, hi = np.percentile(hair_l, [1, 99.5])
+        keep = {}
+        if style in ACCENTED:
+            ab = np.concatenate([labs[nm][..., 1:][im[..., 3] > 200] for nm, im in imgs.items()])
+            hair_hue = np.degrees(np.arctan2(np.median(ab[:, 1]), np.median(ab[:, 0])))
+            keep = {nm: accent_mask(labs[nm], im[..., 3], hair_hue) for nm, im in imgs.items()}
         for nm, im in imgs.items():
             box = layers[nm]
             sl = (slice(box['y'], box['y'] + box['h']), slice(box['x'], box['x'] + box['w']))
             lab = labs[nm][sl]
             for c, ramp in RAMPS.items():
                 out = np.dstack([recolour(lab, lo, hi, ramp), im[sl][..., 3]])
+                if nm in keep:
+                    k = keep[nm][sl]
+                    out[k, :3] = im[sl][k, :3]
                 Image.fromarray(out.clip(0, 255).round().astype(np.uint8)).save(
                     ART / f'{nm}~{c}.webp', 'WEBP', quality=88, method=6)
                 n += 1

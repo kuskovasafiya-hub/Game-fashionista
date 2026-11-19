@@ -180,7 +180,7 @@ def main():
             hc = hair_checks(front, back, base)
             if hc['cap_showing_px'] > 200:
                 problems.append("the doll's hair cap shows")
-            if hc['above_head_px'] > 25 and not name.startswith(('hair-curly', 'hair-afro')):
+            if hc['above_head_px'] > 25 and not name.startswith(('hair-curly', 'hair-afro', 'hair-sticks', 'hair-spacebuns', 'hair-bow')):
                 problems.append('hair sits too high above the head')
         report[name] = {
             'ok': not problems, 'problems': problems,

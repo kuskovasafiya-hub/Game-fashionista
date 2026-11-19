@@ -327,12 +327,19 @@ button:disabled { cursor: default; }
 /* look tabs: hair + colour, makeup + skin behind a two-way switch */
 .icon-tab .icon-swatch { width: 74%; opacity: 0.6; transition: opacity 0.15s; }
 .icon-tab.active .icon-swatch { opacity: 1; }
-/* the hair tab's title and the colour wheel that switches it to hair colours */
-.hair-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 2px 8px 4px; }
-.hair-head b { font-size: 14px; font-weight: 800; color: var(--ink); }
-.hair-head .colour-btn { width: 40px; max-width: none; flex: none; }
-.hair-head .colour-btn .icon-swatch { opacity: 1; }
-.fitting .hair-head b { padding: 3px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.86); }
+/* hair colours pinned above the hairstyle cards, flush under the tab row (covering the
+   list's 2px padding, no rounded top for cards to peek through); wraps to two rows in a narrow column
+   so every colour is always in sight */
+.hair-palette {
+  position: sticky; top: -2px; z-index: 2; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px;
+  margin: -2px -2px 8px; padding: 8px 10px 6px; border-radius: 0 0 18px 18px; background: #fff;
+  box-shadow: 0 2px 8px rgba(60, 40, 110, 0.12);
+}
+.hair-dot {
+  flex: none; width: 24px; height: 24px; padding: 0; border-radius: 50%;
+  border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line);
+}
+.hair-dot.selected { box-shadow: 0 0 0 2px var(--accent); }
 .look-grid.two .card.face { aspect-ratio: auto; }
 .look-grid.two .card.face .thumb { height: auto; width: 100%; }
 

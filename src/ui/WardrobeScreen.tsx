@@ -6,7 +6,7 @@ import { dressCodeMatch, fits, type Theme } from '../game/events';
 import { equip, ownedInSlot, setLook, undressAll, useGame } from '../game/store';
 import { DressCode, ItemCard, UndressButton } from './common';
 import { Icon, type IconName } from './icons';
-import { LookGrid, type LookPart } from './LookEditor';
+import { HairPalette, LookGrid, type LookPart } from './LookEditor';
 
 /** Wardrobe tabs, as round icons: her look first, then clothes; bags and jewellery share the ring. */
 interface WTab { icon: IconName; label: string; slots?: Slot[]; look?: LookPart }
@@ -30,8 +30,6 @@ const ownedIn = (slots: Slot[]) => slots.flatMap((s) => ownedInSlot(s));
 export function WardrobeScreen({ event, footer }: { event?: Theme; footer?: ComponentChildren }) {
   const g = useGame();
   const [tab, setTab] = useState(FIRST_CLOTHES);
-  /** In the hair tab: hair colours instead of hairstyles, behind the colour wheel button. */
-  const [dye, setDye] = useState(false);
   useSceneBackground(event?.id);
   const { look, slots } = TABS[tab];
   // choosing makeup: zoom in to her face and shoulders
@@ -57,18 +55,8 @@ export function WardrobeScreen({ event, footer }: { event?: Theme; footer?: Comp
           <UndressButton onClick={undressAll} disabled={!Object.keys(g.outfit).length} />
         </div>
         <div class="split-items">
-          {look === 'hair' && (
-            <div class="hair-head">
-              <b>{dye ? 'Цвет волос' : 'Причёска'}</b>
-              <button
-                class={'icon-tab colour-btn' + (dye ? ' active' : '')} onClick={() => setDye(!dye)}
-                title={dye ? 'Причёски' : 'Цвет волос'} aria-label={dye ? 'Причёски' : 'Цвет волос'}
-              >
-                <Icon name="colour" />
-              </button>
-            </div>
-          )}
-          {look && <LookGrid part={look === 'hair' && dye ? 'colour' : look} look={g.look} onChange={setLook} two />}
+          {look === 'hair' && <HairPalette look={g.look} onChange={setLook} />}
+          {look && <LookGrid part={look} look={g.look} onChange={setLook} two />}
           {slots && items.length === 0 && <p class="muted center small">Пока пусто. Загляни в магазины!</p>}
           <div class="grid two">
             {shown.map((i) => (
