@@ -10,6 +10,7 @@ import { useNow } from './EventsScreen';
 import { rng, seedOf } from '../game/events';
 import { Coin, DressCode, ItemCard, Modal, Price, RarityTag, fmt, plural } from './common';
 import { flyRewards, flyTo, picture } from './fx';
+import { sfx } from '../game/sound';
 
 /** Shop window order: the big pieces first, then shoes and accessories. */
 const WINDOW_ORDER: Slot[] = ['dress', 'top', 'bottom', 'shoes', 'bag', 'necklace', 'earrings', 'bracelet', 'glasses'];
@@ -538,6 +539,8 @@ function FindScreen({ r, fx, shopId, onClose }: {
   const rc = REVEAL_COLOUR[item.rarity];
   const special = item.rarity !== 'common';
 
+  useEffect(() => { sfx('dig'); }, []);
+  useEffect(() => { if (phase === 'reveal') sfx(item.rarity === 'epic' ? 'epic' : item.rarity === 'rare' ? 'rare' : 'find'); }, [phase === 'reveal']);
   useEffect(() => {
     const t1 = setTimeout(() => setPhase((p) => (p === 'dig' && special ? 'hint' : p)), HINT_MS);
     const t2 = setTimeout(() => setPhase('reveal'), DIG_MS);
@@ -550,6 +553,7 @@ function FindScreen({ r, fx, shopId, onClose }: {
   const purchase = () => {
     const from = document.querySelector('.find-item');
     const b = buy(item.id);
+    if (b.ok) sfx('buy');
     // the piece flies down to the wardrobe (behind «Главная»), which hops and shows +1
     if (b.ok) flyTo(from, '.navbar [data-tab="home"] .nav-icon', picture(thumbSrc(item), item.filter), { plus: '+1' });
     if (b.ok && b.shelfGems) setBought(b);
@@ -628,7 +632,7 @@ function FindScreen({ r, fx, shopId, onClose }: {
                 <button class="btn" onClick={() => setTryOn(!tryOn)}>{tryOn ? '👗 Вещь' : '🪞 Примерить'}</button>
                 <button class="btn" onClick={() => onClose(r.levelUp)}>Пропустить</button>
               </div>
-              <button class="btn primary" disabled={!afford} onClick={purchase}>
+              <button class="btn primary" data-sound="none" disabled={!afford} onClick={purchase}>
                 {afford ? <>Купить за <Price item={item} /></> : short}
               </button>
             </>

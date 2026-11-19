@@ -5,6 +5,7 @@ import { StoryCard } from './StoryScreen';
 import { useState } from 'preact/hooks';
 import { eventsOpen as eventsOpenFor, useGame, xpToNext, type LevelUp } from '../game/store';
 import { DailyButton, DailyModal } from './DailyTasks';
+import { AudioButton, AudioModal } from './common';
 import { HEAD_VIEW, timeLeft, useNow } from './EventsScreen';
 
 /**
@@ -23,10 +24,12 @@ export function HomeScreen({ pulse, toWardrobe, toEvents, toVote, openEvent, pla
   const need = xpToNext(g.level);
   const eventsOpen = eventsOpenFor(g);
   const [daily, setDaily] = useState(false);
+  const [audio, setAudio] = useState(false);
 
   return (
     <div class="screen home">
       <section class="panel me">
+        <AudioButton onClick={() => setAudio(true)} />
         <button class="me-doll" onClick={toWardrobe} aria-label="Гардероб">
           <Doll class="doll" look={g.look} outfit={g.outfit} view={FIGURE_VIEW} />
         </button>
@@ -51,6 +54,7 @@ export function HomeScreen({ pulse, toWardrobe, toEvents, toVote, openEvent, pla
         </div>
       )}
       {daily && <DailyModal onClose={() => setDaily(false)} onLevelUp={onLevelUp} />}
+      {audio && <AudioModal onClose={() => setAudio(false)} />}
     </div>
   );
 }

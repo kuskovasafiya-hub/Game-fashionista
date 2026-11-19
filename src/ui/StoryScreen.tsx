@@ -3,7 +3,7 @@ import { Doll, FIGURE_VIEW } from '../art/Doll';
 import { STORY_RESULT_MS, dressCodeMatch, starTier, type Theme } from '../game/events';
 import { CHAPTERS, STORY_STEPS, chapterOf, stepById, type StoryStep } from '../game/story';
 import { eventsOpen, playStory, storyNext, storyOpen, useGame, type LevelUp, type StoryResult } from '../game/store';
-import { Coin, DressCode, Modal, TagIcon, fmt } from './common';
+import { Coin, DressCode, Modal, Sound, TagIcon, fmt } from './common';
 import { Stars, eventBg } from './EventsScreen';
 import { flyRewards } from './fx';
 import { WardrobeScreen, useSceneBackground } from './WardrobeScreen';
@@ -202,6 +202,7 @@ function SceneResult({ step, result, after, play, toMap, toShops, toEvents, retr
       ) : (
         <>
           <div class="sr-head">
+            <Sound name="fail" />
             <h2>Не совсем в тему 🤔</h2>
             <p>Дресс-код: <b>{Math.round(result.match * 100)}%</b>, нужно от {Math.round(step.need * 100)}%</p>
           </div>

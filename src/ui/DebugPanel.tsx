@@ -5,6 +5,7 @@ import {
   useGame, xpLeft, xpToNext, type LevelUp,
 } from '../game/store';
 import { Coin, fmt } from './common';
+import { sfx, type Sfx } from '../game/sound';
 
 /** Shown in `npm run dev` always; in a production build only with `?debug` in the URL. */
 export const DEBUG_ENABLED =
@@ -88,6 +89,16 @@ export function DebugPanel({ onClose, onLevelUp }: { onClose: () => void; onLeve
             <Btn onClick={() => debugPatch({ gems: 0 })}>0</Btn>
           </div>
           <NumSet label="Точно" value={g.gems} onSet={(gems) => debugPatch({ gems })} />
+        </section>
+
+        <section>
+          <h3>🔊 Звуки</h3>
+          <div class="dbg-row">
+            {(['find', 'rare', 'epic', 'buy', 'level', 'gift', 'unlock', 'ticket', 'send', 'fail'] as Sfx[]).map((s) => (
+              <Btn onClick={() => sfx(s)}>{s}</Btn>
+            ))}
+            <Btn onClick={() => [0, 1, 2, 3, 4].forEach((k) => setTimeout(() => sfx('star', k), k * 180))}>stars</Btn>
+          </div>
         </section>
 
         <section>

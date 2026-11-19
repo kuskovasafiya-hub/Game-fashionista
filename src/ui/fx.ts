@@ -1,3 +1,4 @@
+import { sfx, type Sfx } from '../game/sound';
 /**
  * Little flying things, drawn straight into `.app` so they outlive the screen they start on:
  * a bought piece flies to the wardrobe, reward coins fly into the wallet.
@@ -29,7 +30,7 @@ export function bump(el: Element, plus?: string) {
  * the target hops as each one lands.
  */
 export function flyTo(from: Element | null | undefined, toSel: string, make: () => HTMLElement, opts: {
-  count?: number; delay?: number; plus?: string;
+  count?: number; delay?: number; plus?: string; /** Played as each copy lands. */ sound?: Sfx;
 } = {}) {
   const app = appEl();
   const to = app?.querySelector(toSel);
@@ -54,6 +55,7 @@ export function flyTo(from: Element | null | undefined, toSel: string, make: () 
     ], { duration: calm() ? 1 : 820, delay: (opts.delay ?? 0) + i * 80, easing: 'ease-in-out', fill: 'both' });
     anim.onfinish = () => {
       el.remove();
+      if (opts.sound) sfx(opts.sound);
       bump(to, i === n - 1 ? opts.plus : undefined);
     };
   }
@@ -72,8 +74,8 @@ const coin = () => {
 };
 
 /** What each `data-reward` chip turns into, and where in the HUD it flies. */
-const REWARD_FLY: Record<string, { to: string; make: () => HTMLElement; count: number }> = {
-  coins: { to: '[data-cur="coins"] i', make: coin, count: 7 },
+const REWARD_FLY: Record<string, { to: string; make: () => HTMLElement; count: number; sound?: Sfx }> = {
+  coins: { to: '[data-cur="coins"] i', make: coin, count: 7, sound: 'coin' },
   gems: { to: '[data-cur="gems"] i', make: emoji('💎'), count: 3 },
   energy: { to: '[data-cur="energy"] i', make: emoji('☕'), count: 3 },
   tickets: { to: '[data-cur="tickets"] i', make: emoji('🎟'), count: 2 },
@@ -84,7 +86,7 @@ const REWARD_FLY: Record<string, { to: string; make: () => HTMLElement; count: n
 export function flyRewards(delay = 0, root: ParentNode | null = appEl()) {
   root?.querySelectorAll<HTMLElement>('[data-reward]').forEach((el, k) => {
     const f = REWARD_FLY[el.dataset.reward!];
-    if (f) flyTo(el, f.to, f.make, { count: f.count, delay: delay + k * 120 });
+    if (f) flyTo(el, f.to, f.make, { count: f.count, delay: delay + k * 120, sound: f.sound ?? 'pop' });
   });
 }
 

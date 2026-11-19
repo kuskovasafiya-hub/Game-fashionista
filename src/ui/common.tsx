@@ -4,6 +4,7 @@ import { ENERGY_MAX, adsLeft, tickEnergy, useGame, watchAd, xpToNext, type Level
 import { RARITY, TAG_ICONS, TAG_NAMES, type Item, type Tag } from '../game/catalog';
 import { ItemThumb } from '../art/Doll';
 import { flyRewards } from './fx';
+import { audioPrefs, onAudioPrefs, setAudioPrefs, sfx, type Sfx } from '../game/sound';
 
 export const fmt = (n: number) => n.toLocaleString('ru-RU');
 
@@ -79,9 +80,16 @@ export function EnergyModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+/** Plays a sound once when it appears (put it inside a modal or screen). */
+export function Sound({ name, delay = 0 }: { name: Sfx; delay?: number }) {
+  useEffect(() => { const t = setTimeout(() => sfx(name), delay); return () => clearTimeout(t); }, []);
+  return null;
+}
+
 export function LevelUpModal({ lu, onClose }: { lu: LevelUp; onClose: () => void }) {
   return (
     <Modal onClose={onClose}>
+      <Sound name="level" />
       <div class="burst">⭐</div>
       <h2>Уровень {lu.level}!</h2>
       <ul class="rewards">
@@ -254,4 +262,36 @@ export function Rolling({ value }: { value: number }) {
     return () => cancelAnimationFrame(raf);
   }, [value]);
   return <>{fmt(shown)}</>;
+}
+
+/** Music and sounds, each on or off (remembered on this device). */
+export function AudioModal({ onClose }: { onClose: () => void }) {
+  const [p, setP] = useState(audioPrefs());
+  useEffect(() => onAudioPrefs(() => setP(audioPrefs())), []);
+  const row = (key: 'music' | 'sfx', icon: string, name: string) => (
+    <button class={'audio-row' + (p[key] ? ' on' : '')} role="switch" aria-checked={p[key]} onClick={() => setAudioPrefs({ [key]: !p[key] })}>
+      <span class="ar-icon">{icon}</span>
+      <b>{name}</b>
+      <span class="ar-switch"><i /></span>
+    </button>
+  );
+  return (
+    <Modal onClose={onClose}>
+      <h2>Звук</h2>
+      <div class="audio-rows">
+        {row('music', '🎵', 'Музыка')}
+        {row('sfx', '🔔', 'Звуки')}
+      </div>
+      <button class="btn" onClick={onClose}>Готово</button>
+    </Modal>
+  );
+}
+
+/** A small round button that opens the sound settings. */
+export function AudioButton({ onClick }: { onClick: () => void }) {
+  const [p, setP] = useState(audioPrefs());
+  useEffect(() => onAudioPrefs(() => setP(audioPrefs())), []);
+  return (
+    <button class="audio-btn" aria-label="Звук" onClick={onClick}>{p.music || p.sfx ? '🔊' : '🔇'}</button>
+  );
 }

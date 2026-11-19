@@ -12,7 +12,7 @@ import { CreateScreen } from './CreateScreen';
 import { DEBUG_ENABLED, DebugPanel } from './DebugPanel';
 import { ShopScreen, ShopsScreen } from './ShopScreen';
 import { WardrobeScreen } from './WardrobeScreen';
-import { CoachHand, Coin, Dots, EnergyModal, Hud, LevelUpModal, Modal, fmt, type CoachHint } from './common';
+import { CoachHand, Coin, Dots, EnergyModal, Hud, LevelUpModal, Modal, Sound, fmt, type CoachHint } from './common';
 import { HomeScreen } from './HomeScreen';
 import { flyRewards } from './fx';
 import { NavBar, type Tab } from './NavBar';
@@ -163,6 +163,7 @@ export function App() {
       )}
       {g.tut === 'gift' && (
         <Modal>
+          <Sound name="gift" delay={150} />
           <div class="burst gift-burst">🎁</div>
           <h2>Привет, {g.name}!</h2>
           <p class="muted">Подарок на новоселье:</p>
@@ -175,6 +176,7 @@ export function App() {
       )}
       {showUnlock && (
         <Modal>
+          <Sound name="unlock" delay={300} />
           <div class="unlock-burst" aria-hidden="true"><span class="ub-rays" /><span class="ub-lock">🔒</span><span class="ub-crown">👑</span></div>
           <h2>Открылись ивенты!</h2>
           <p class="how-row" aria-label="Собери образ, отправь за билетик, другие проголосуют, получи приз">

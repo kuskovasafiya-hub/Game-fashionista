@@ -1,3 +1,4 @@
+import { sfx } from '../game/sound';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Doll, FIGURE_VIEW, ItemThumb, artUrl } from '../art/Doll';
 import { ITEM_BY_ID } from '../game/catalog';
@@ -241,6 +242,8 @@ export function VoteScreen({ targetKey, onLevelUp, onDone, onNext }: {
     if (picked) return;
     const share = side === 'a' ? pair.shareA : 100 - pair.shareA;
     const r = castVote(share >= 50);
+    sfx('vote');
+    if (r.ticket) setTimeout(() => sfx('ticket'), 500);
     setPicked(side);
     setGotTicket(r.ticket);
     setStats((st) => ({ votes: st.votes + 1, majority: st.majority + (r.majority ? 1 : 0) }));

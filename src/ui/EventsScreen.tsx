@@ -1,9 +1,10 @@
+import { sfx } from '../game/sound';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Doll, FIGURE_VIEW, ItemThumb, artUrl } from '../art/Doll';
 import { ITEM_BY_ID } from '../game/catalog';
 import { activeEvents, dressCodeMatch, starsText, eventByKey, hasClothes, showcaseLook, type GameEvent } from '../game/events';
 import { enterEvent, entryFor, useGame } from '../game/store';
-import { DressCode, Modal, plural } from './common';
+import { Sound, DressCode, Modal, plural } from './common';
 import { WardrobeScreen, useSceneBackground } from './WardrobeScreen';
 
 /** Themed scene behind the dolls; the event colour shows until the picture loads. */
@@ -32,6 +33,12 @@ export function timeLeft(ms: number) {
 
 /** Five stars, filled fractionally (3,35 → three full stars and a third of the fourth), with the number. */
 export function Stars({ n, animate, label }: { n: number; animate?: boolean; label?: boolean }) {
+  // each star chimes as it pops in, a little higher than the one before
+  useEffect(() => {
+    if (!animate) return;
+    const ts = [1, 2, 3, 4, 5].filter((k) => n - (k - 1) > 0).map((k) => setTimeout(() => sfx('star', k - 1), (0.25 + k * 0.18) * 1000 + 150));
+    return () => ts.forEach(clearTimeout);
+  }, [animate]);
   return (
     <span class={'stars' + (animate ? ' animate' : '')} title={starsText(n)}>
       {[1, 2, 3, 4, 5].map((k) => {
@@ -196,6 +203,7 @@ function EventSent({ ev, justSent, onDone, toVote, voteHere }: { ev: GameEvent; 
           {entry.claimed ? <li><Stars n={entry.score.stars} label /></li>
             : !ready && <li>⏱ {timeLeft(entry.resultAt - now)}</li>}
         </ul>
+        {justSent && <Sound name="send" />}
         {justSent && <p class="muted small">Модницы голосуют. А пока голосуй сама — теперь можно и в этом ивенте!</p>}
       </div>
       <div class="sr-doll"><Doll class="doll" look={entry.look} outfit={entry.outfit} /></div>

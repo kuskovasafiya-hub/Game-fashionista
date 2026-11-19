@@ -445,7 +445,7 @@ button:disabled { cursor: default; }
 }
 .home > .panel { margin: 0; }
 /* the model takes whatever height is left, so the whole home fits one screen */
-.me { flex: 1 1 0; min-height: 150px; display: flex; align-items: center; gap: 8px; padding: 6px 16px 6px 4px; }
+.me { position: relative; flex: 1 1 0; min-height: 150px; display: flex; align-items: center; gap: 8px; padding: 6px 16px 6px 4px; }
 .me-doll {
   flex: none; display: flex; justify-content: center; width: 44%; height: 100%; max-height: 420px;
   background: radial-gradient(ellipse at 50% 88%, #fff 0 30%, transparent 62%);
@@ -1358,3 +1358,20 @@ button:disabled { cursor: default; }
 .mc-status { font-size: 11px; font-weight: 800; color: var(--muted); }
 .mc-status.hot { color: var(--accent-dark); }
 .warn { color: #e0455f; font-size: 14px; }
+
+/* Sound settings */
+.audio-btn {
+  position: absolute; top: 10px; right: 10px; z-index: 2; width: 36px; height: 36px; border: 0; border-radius: 50%;
+  background: var(--tint, #efe7fd); font-size: 18px; line-height: 36px; cursor: pointer;
+}
+.audio-rows { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 14px; }
+.audio-row {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; border: 0; border-radius: 18px;
+  background: var(--tint, #efe7fd); font: inherit; font-size: 16px; cursor: pointer; text-align: left;
+}
+.audio-row b { flex: 1; }
+.ar-icon { font-size: 22px; }
+.ar-switch { position: relative; width: 46px; height: 26px; border-radius: 13px; background: #d6cfe3; transition: background 0.2s; }
+.ar-switch i { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: transform 0.2s; }
+.audio-row.on .ar-switch { background: var(--accent); }
+.audio-row.on .ar-switch i { transform: translateX(20px); }
