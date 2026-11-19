@@ -2,7 +2,9 @@ import { Doll, FIGURE_VIEW } from '../art/Doll';
 import { activeEvents } from '../game/events';
 import { voteTargetByKey } from '../game/vote';
 import { StoryCard } from './StoryScreen';
-import { eventsOpen as eventsOpenFor, useGame, xpToNext } from '../game/store';
+import { useState } from 'preact/hooks';
+import { eventsOpen as eventsOpenFor, useGame, xpToNext, type LevelUp } from '../game/store';
+import { DailyButton, DailyModal } from './DailyTasks';
 import { HEAD_VIEW, timeLeft, useNow } from './EventsScreen';
 
 /**
@@ -10,16 +12,17 @@ import { HEAD_VIEW, timeLeft, useNow } from './EventsScreen';
  * the next story scene in one row, and — once events are open — the current event and her sent looks side by side
  * (her looks show up already after her first story scene).
  */
-export function HomeScreen({ pulse, toWardrobe, toEvents, toVote, openEvent, play, toStory }: {
+export function HomeScreen({ pulse, toWardrobe, toEvents, toVote, openEvent, play, toStory, onLevelUp }: {
   /** Tutorial: what to tap next pulses. */
   pulse?: 'wardrobe' | 'story';
   toWardrobe: () => void; toEvents: () => void; toVote: () => void; openEvent: (key: string) => void;
-  play: (id: string) => void; toStory: () => void;
+  play: (id: string) => void; toStory: () => void; onLevelUp: (lu: LevelUp) => void;
 }) {
   const g = useGame();
   const now = useNow();
   const need = xpToNext(g.level);
   const eventsOpen = eventsOpenFor(g);
+  const [daily, setDaily] = useState(false);
 
   return (
     <div class="screen home">
@@ -35,6 +38,7 @@ export function HomeScreen({ pulse, toWardrobe, toEvents, toVote, openEvent, pla
           <button class={'btn teal' + (pulse === 'wardrobe' ? ' coach-pulse' : '')} data-coach="wardrobe" onClick={toWardrobe}>
             Гардероб
           </button>
+          <DailyButton onOpen={() => setDaily(true)} />
         </div>
       </section>
 
@@ -46,6 +50,7 @@ export function HomeScreen({ pulse, toWardrobe, toEvents, toVote, openEvent, pla
           <LooksMini now={now} toVote={toVote} toEvents={toEvents} />
         </div>
       )}
+      {daily && <DailyModal onClose={() => setDaily(false)} onLevelUp={onLevelUp} />}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { EVENTS_LEVEL } from '../game/events';
 import { shopFixtures } from '../game/catalog';
 import {
-  GIFT_COINS, NEWBIE_SEARCHES, TUT_BUYS, TUT_RARE_ID, luckyPending, boughtCount, canVote, claimGift, eventsOpen as eventsOpenFor,
+  GIFT_COINS, NEWBIE_SEARCHES, TUT_BUYS, TUT_RARE_ID, luckyPending, boughtCount, canVote, claimGift, refreshDaily, eventsOpen as eventsOpenFor,
   reachTut, resultsReady, storyNext, useGame, type LevelUp, type Save,
 } from '../game/store';
 import { StoryMap, StoryScene } from './StoryScreen';
@@ -34,6 +34,9 @@ export function App() {
   /** «Позже» on the events-unlocked card: the hand then points at the tab instead. */
   const [unlockSeen, setUnlockSeen] = useState(false);
   const now = useNow(5000);
+
+  // today's tasks: handed out after the tutorial and again at every local midnight
+  useEffect(() => { refreshDaily(); }, [now, g.tut]);
 
   // tutorial: opening the wardrobe moves her on to the story; visiting events ends it
   useEffect(() => {
@@ -90,6 +93,7 @@ export function App() {
               play={play}
               toStory={() => setRoute({ name: 'story' })}
               openEvent={(key) => setRoute({ name: 'event', key })}
+              onLevelUp={setLevelUp}
             />
           )}
           {route.name === 'shops' && <ShopsScreen open={(id) => setRoute({ name: 'shop', id })} focus={route.from} />}

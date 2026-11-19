@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { DEFAULT_LOOK, type Look, type Outfit } from '../art/Doll';
 import { DEPT_SLOTS, ITEM_BY_ID, RARITY, SHOPS, STARTER, shopFixtures, shopItems, type Dept, type Item, type Rarity, type Slot } from './catalog';
-import { DUP_PRIZE_GEMS, EVENTS_LEVEL, RESULT_DELAY_MS, STORY_RESULT_MS, activeEvents, storyVoteReward, starsFor, dressCodeMatch, eventByKey, hasClothes, rewardFor, scoreLook, seedOf, type Reward, type Score } from './events';
+import { DUP_PRIZE_GEMS, EVENTS_LEVEL, RESULT_DELAY_MS, STORY_RESULT_MS, activeEvents, storyVoteReward, starsFor, dressCodeMatch, eventByKey, hasClothes, rewardFor, rng, scoreLook, seedOf, type Reward, type Score } from './events';
 import { STORY_STEPS, chapterOf, migrateStoryStars, stepById, storyReward, storyStars, type StoryReward } from './story';
 
 export const ENERGY_MAX = 20;
@@ -84,6 +84,8 @@ export interface Save {
   tut: TutStage;
   /** Searches left that skip the shelf cooldown (newcomer's gift). */
   freeSearches: number;
+  /** Today's tasks (from the end of the tutorial); replaced at local midnight. */
+  daily: Daily | null;
 }
 
 /**
@@ -112,7 +114,7 @@ function fresh(): Save {
     coins: 1500, gems: 10, energy: ENERGY_MAX, energyTs: Date.now(),
     level: 1, xp: 0, pityRare: 0, pityEpic: 0, adsDay: '', adsCount: 0,
     tickets: START_TICKETS, votes: 0, entries: [], voteUnlocked: false, story: {}, shelfAt: {},
-    tut: 'gift', freeSearches: 0,
+    tut: 'gift', freeSearches: 0, daily: null,
   };
 }
 
@@ -387,6 +389,7 @@ export function search(shopId: string, fixtureId: string): SearchResult | null {
     shelfAt: free ? state.shelfAt : { ...state.shelfAt, [shelfKey(shopId, fixtureId)]: Date.now() + SHELF_COOLDOWN_MS },
     freeSearches: free ? state.freeSearches - 1 : 0,
   };
+  next = taskDone(next, 'search');
   let levelUp: LevelUp | null;
   [next, levelUp] = withXp(next, 2);
   commit(next);
@@ -422,6 +425,7 @@ export function buy(itemId: string): BuyResult {
   if (boughtCount(next) >= TUT_BUYS) next = reached(next, 'story');
   let levelUp: LevelUp | null;
   [next, levelUp] = withXp(next, RARITY[item.rarity].xp);
+  next = taskDone(next, 'buy');
   commit(next);
   return { ok: true, levelUp, shelfGems };
 }
@@ -470,7 +474,7 @@ export function playStory(stepId: string): StoryResult | StoryError {
     energy: state.energy + reward.energy,
   };
   if (stars > 0) {
-    next = reached(next, 'events');
+    next = taskDone(reached(next, 'events'), 'story');
     const key = 'story:' + stepId;
     const at = Date.now();
     const entry: Entry = {
@@ -484,6 +488,97 @@ export function playStory(stepId: string): StoryResult | StoryError {
   if (reward.xp) [next, levelUp] = withXp(next, reward.xp);
   commit(next);
   return { stars, match, best, reward, levelUp };
+}
+
+/* ---------- daily tasks ---------- */
+
+export type TaskKind = 'search' | 'buy' | 'story' | 'event' | 'vote';
+export interface DailyTask { kind: TaskKind; need: number; done: number; claimed: boolean }
+export interface Daily { day: string; tasks: DailyTask[]; chest: boolean }
+
+/** What each task asks and pays. XP is small: tasks are a reason to come back, not a way to level up. */
+export const TASKS: Record<TaskKind, { need: number; coins: number; xp: number; tickets?: number }> = {
+  search: { need: 5, coins: 120, xp: 10 },
+  buy: { need: 3, coins: 150, xp: 10 },
+  story: { need: 1, coins: 150, xp: 10 },
+  event: { need: 1, coins: 100, xp: 10, tickets: 1 },
+  vote: { need: 10, coins: 100, xp: 10 },
+};
+export const DAILY_TASKS = 3;
+/** The chest for finishing all of today's tasks. */
+export const CHEST = { gems: 2, tickets: 1 };
+
+/** The local calendar day: tasks change at the player's midnight. */
+export const localDay = (t = Date.now()) => {
+  const d = new Date(t);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+/** Milliseconds to the player's next midnight. */
+export const msToMidnight = (t = Date.now()) => {
+  const d = new Date(t);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime() - t;
+};
+
+/** Today's tasks: always one in the shops, the rest from what she can do right now. */
+function newDaily(s: Save, day: string): Daily {
+  const r = rng(seedOf(`daily:${day}:${s.name}`));
+  const step = storyNext(s);
+  const can: TaskKind[] = ['buy'];
+  if (step && storyOpen(step.id, s)) can.push('story');
+  if (eventsOpen(s)) can.push('event');
+  if (canVote(s)) can.push('vote');
+  const kinds: TaskKind[] = ['search'];
+  while (kinds.length < DAILY_TASKS && can.length) kinds.push(can.splice(Math.floor(r() * can.length), 1)[0]);
+  return { day, chest: false, tasks: kinds.map((kind) => ({ kind, need: TASKS[kind].need, done: 0, claimed: false })) };
+}
+
+/** Tasks start once the tutorial is over; a new day brings new ones. */
+const dailyDue = (s: Save, day = localDay()) => s.tut === 'done' && s.created && s.daily?.day !== day;
+
+/** Called by the app every tick: hands out the day's tasks when they are due. */
+export function refreshDaily() {
+  const day = localDay();
+  if (dailyDue(state, day)) commit({ ...state, daily: newDaily(state, day) });
+}
+
+/** One more step of a task kind (nothing if today has no such task or it is already done). */
+function taskDone(s: Save, kind: TaskKind, n = 1): Save {
+  const day = localDay();
+  const d = dailyDue(s, day) ? newDaily(s, day) : s.daily;
+  if (!d || d.day !== day) return s;
+  return { ...s, daily: { ...d, tasks: d.tasks.map((t) => (t.kind === kind ? { ...t, done: Math.min(t.need, t.done + n) } : t)) } };
+}
+
+/** Tasks done but not paid out yet, plus the chest when it is ready: the number on the button. */
+export const dailyToClaim = (s: Save = state) => {
+  if (!s.daily || s.daily.day !== localDay()) return 0;
+  const tasks = s.daily.tasks.filter((t) => t.done >= t.need && !t.claimed).length;
+  const chest = !s.daily.chest && s.daily.tasks.every((t) => t.claimed) ? 1 : 0;
+  return tasks + chest;
+};
+
+export function claimTask(i: number): LevelUp | null {
+  const d = state.daily;
+  const t = d?.tasks[i];
+  if (!d || d.day !== localDay() || !t || t.claimed || t.done < t.need) return null;
+  const pay = TASKS[t.kind];
+  let next: Save = {
+    ...state,
+    coins: state.coins + pay.coins,
+    tickets: state.tickets + (pay.tickets ?? 0),
+    daily: { ...d, tasks: d.tasks.map((x, k) => (k === i ? { ...x, claimed: true } : x)) },
+  };
+  let levelUp: LevelUp | null;
+  [next, levelUp] = withXp(next, pay.xp);
+  commit(next);
+  return levelUp;
+}
+
+export function claimChest(): boolean {
+  const d = state.daily;
+  if (!d || d.day !== localDay() || d.chest || !d.tasks.every((t) => t.claimed)) return false;
+  commit({ ...state, gems: state.gems + CHEST.gems, tickets: state.tickets + CHEST.tickets, daily: { ...d, chest: true } });
+  return true;
 }
 
 /* ---------- events ---------- */
@@ -509,7 +604,7 @@ export function enterEvent(key: string): EnterError | null {
     resultAt: at + RESULT_DELAY_MS,
     score: scoreLook(state.outfit, ev, seedOf(`${key}:${at}`)),
   };
-  commit({ ...state, tickets: state.tickets - ev.cost, entries: [...state.entries, entry], voteUnlocked: true });
+  commit(taskDone({ ...state, tickets: state.tickets - ev.cost, entries: [...state.entries, entry], voteUnlocked: true }, 'event'));
   return null;
 }
 
@@ -574,6 +669,7 @@ export function castVote(majority: boolean): VoteResult {
     coins: state.coins + (majority ? MAJORITY_COINS : 0),
     tickets: state.tickets + (ticket ? 1 : 0),
   };
+  next = taskDone(next, 'vote');
   let levelUp: LevelUp | null = null;
   if (ticket) [next, levelUp] = withXp(next, 5);
   commit(next);
