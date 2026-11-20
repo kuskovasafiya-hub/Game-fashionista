@@ -2,7 +2,7 @@ import { sfx } from '../game/sound';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Doll, FIGURE_VIEW, ItemThumb, artUrl } from '../art/Doll';
 import { ITEM_BY_ID } from '../game/catalog';
-import { activeEvents, dressCodeMatch, starsText, eventByKey, hasClothes, showcaseLook, type GameEvent } from '../game/events';
+import { RESULT_DELAY_MS, activeEvents, dressCodeMatch, starsText, eventByKey, hasClothes, showcaseLook, type GameEvent } from '../game/events';
 import { enterEvent, entryFor, useGame } from '../game/store';
 import { Sound, DressCode, Modal, plural } from './common';
 import { WardrobeScreen, useSceneBackground } from './WardrobeScreen';
@@ -69,7 +69,7 @@ export function EventsScreen({ open }: { open: (key: string) => void }) {
         {events.map((ev) => <EventCard ev={ev} now={now} onOpen={() => open(ev.key)} />)}
       </div>
       <p class="muted small center">
-        Подбери образ под дресс-код и отправь его на ивент. Через 30 минут другие модницы проголосуют,
+        Подбери образ под дресс-код и отправь его на ивент. Через {Math.round(RESULT_DELAY_MS / 60000)} минут другие модницы проголосуют,
         и ты получишь от 1 до 5 звёзд. Результат — во вкладке «Голосование».
       </p>
     </div>

@@ -77,9 +77,13 @@ const SLOT_MS = 4 * 3600 * 1000;
 /** Track starts are staggered so new events appear more often than once per slot. */
 const TRACK_OFFSET = [0, 1.33, 2.67].map((h) => h * 3600 * 1000);
 const EPOCH = Date.UTC(2026, 0, 1);
-export const RESULT_DELAY_MS = 30 * 60 * 1000;
-/** A story scene look stays on vote for less: the scene itself is already judged. */
-export const STORY_RESULT_MS = 20 * 60 * 1000;
+/**
+ * How long a sent look stays on vote before its result. 5 minutes for the first playtest, so a
+ * tester sees the whole loop (send → vote → result) in one sitting; before release: back to ~15–20.
+ */
+export const RESULT_DELAY_MS = 5 * 60 * 1000;
+/** A story scene look: the same for now (it was 20 minutes, events 30). */
+export const STORY_RESULT_MS = 5 * 60 * 1000;
 
 export interface GameEvent extends EventTemplate {
   /** Instance id: `<track>.<slot>`, stable across devices. */
